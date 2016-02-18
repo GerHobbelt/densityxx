@@ -1,12 +1,14 @@
 // see LICENSE.md for license.
 #pragma once
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stddef.h>
 
 #define DENSITYXX_MAJOR_VERSION 0
 #define DENSITYXX_MINOR_VERSION 12
