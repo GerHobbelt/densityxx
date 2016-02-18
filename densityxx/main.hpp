@@ -1,41 +1,58 @@
 // see LICENSE.md for license.
 #pragma once
 
-#include "densityxx/format.hpp"
 #include "densityxx/block.hpp"
 
 namespace density {
     // encode.
     typedef enum {
-        ENCODE_STATE_READY = 0,
-        ENCODE_STATE_STALL_ON_INPUT,
-        ENCODE_STATE_STALL_ON_OUTPUT,
-        ENCODE_STATE_ERROR
-    } ENCODE_STATE;
+        encode_state_ready = 0,
+        encode_state_stall_on_input,
+        encode_state_stall_on_output,
+        encode_state_error
+    } encode_state_t;
 
     typedef enum {
-        ENCODE_PROCESS_WRITE_HEADER,
-        ENCODE_PROCESS_WRITE_BLOCKS,
-        ENCODE_PROCESS_WRITE_FOOTER,
-    } ENCODE_PROCESS;
+        encode_process_write_header,
+        encode_process_write_blocks,
+        encode_process_write_footer,
+    } encode_process_t;
 
 #pragma pack(push)
 #pragma pack(4)
-    class encode_state_t {
+    class encode_t {
     public:
-        ENCODE_PROCESS process;
-        COMPRESSION_MODE compressionMode;
-        BLOCK_TYPE blockType;
-        const struct stat *fileAttributes;
+        encode_process_t process;
+        compression_mode_t compression_mode;
+        block_type_t block_type;
+        const struct stat *file_attributes;
 
-        uint_fast64_t totalRead;
-        uint_fast64_t totalWritten;
+        uint_fast64_t total_read, total_written;
 
-        block_encode_state_t *blockEncodeState;
+        block_encode_t block_encode;
 
-        ENCODE_STATE init(memory_location_t *, const COMPRESSION_MODE, const BLOCK_TYPE);
-        ENCODE_STATE continue_(memory_teleport_t *, memory_location_t *);
-        ENCODE_STATE finish(memory_teleport_t *, memory_location_t *);
+        encode_state_t
+        init(location_t *RESTRICT out, const compression_mode_t mode,
+             const block_type_t block_type);
+        encode_state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        encode_state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
+    private:
+        inline encode_state_t exit_process(encode_process_t process, encode_state_t state)
+        {   this->process = process; return state; }
+
+        encode_state_t write_header(location_t *RESTRICT out,
+                                    const compression_mode_t compression_mode,
+                                    const block_type_t block_type);
+        encode_state_t write_footer(location_t *RESTRICT out);
+
+        inline void
+        update_totals(teleport_t *RESTRICT in, location_t *RESTRICT out,
+                      const uint_fast64_t available_in_before,
+                      const uint_fast64_t available_out_before)
+        {
+            total_read += available_in_before - in->available_bytes();
+            total_written += available_out_before - out->available_bytes;
+        }
     };
 #pragma pack(pop)
 
@@ -47,36 +64,49 @@ namespace density {
 #endif
 
     typedef enum {
-        DECODE_STATE_READY = 0,
-        DECODE_STATE_STALL_ON_INPUT,
-        DECODE_STATE_STALL_ON_OUTPUT,
-        DECODE_STATE_INTEGRITY_CHECK_FAIL,
-        DECODE_STATE_ERROR
-    } DECODE_STATE;
+        decode_state_ready = 0,
+        decode_state_stall_on_input,
+        decode_state_stall_on_output,
+        decode_state_integrity_check_fail,
+        decode_state_error
+    } decode_state_t;
 
     typedef enum {
-        DECODE_PROCESS_READ_HEADER,
-        DECODE_PROCESS_READ_BLOCKS,
-        DECODE_PROCESS_READ_FOOTER,
-    } DECODE_PROCESS;
-    
+        decode_process_read_header,
+        decode_process_read_blocks,
+        decode_process_read_footer,
+    } decode_process_t;
+
 #pragma pack(push)
 #pragma pack(4)
-    class decode_state_t {
+    class decode_t {
     public:
-        DECODE_PROCESS process;
+        decode_process_t process;
 
-        uint_fast64_t totalRead;
-        uint_fast64_t totalWritten;
+        uint_fast64_t total_read, total_written;
 
         main_header_t header;
         main_footer_t footer;
 
-        block_decode_state_t *blockDecodeState;
+        block_decode_t block_decode;
 
-        DECODE_STATE init(memory_teleport_t *);
-        DECODE_STATE continue_(memory_teleport_t *, memory_location_t *);
-        DECODE_STATE finish(memory_teleport_t *, memory_location_t *);
+        decode_state_t init(teleport_t *in);
+        decode_state_t continue_(teleport_t *in, location_t *out);
+        decode_state_t finish(teleport_t *in, location_t *out);
+    private:
+        inline decode_state_t
+        exit_process(decode_process_t process, decode_state_t decode_state)
+        {   this->process = process; return decode_state; }
+        decode_state_t read_header(teleport_t *RESTRICT in);
+        decode_state_t read_footer(teleport_t *RESTRICT in);
+        inline void
+        update_totals(teleport_t *RESTRICT in, location_t *RESTRICT out,
+                      const uint_fast64_t available_in_before,
+                      const uint_fast64_t available_out_before)
+        {
+            total_read += available_in_before - in->available_bytes_reserved(DENSITY_DECODE_END_DATA_OVERHEAD);
+            total_written += available_out_before - out->available_bytes;
+        }
     };
 #pragma pack(pop)
 }

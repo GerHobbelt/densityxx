@@ -39,18 +39,21 @@
 
 #define DENSITY_BITSIZEOF(x) (8 * sizeof(x))
 
+#define DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE_SHIFT    6
+#define DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE          (1 << DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE_SHIFT)
+
 #define RESTRICT
 
 namespace density {
     typedef enum {
-        COMPRESSION_MODE_COPY = 0,
-        COMPRESSION_MODE_CHAMELEON_ALGORITHM = 1,
-        COMPRESSION_MODE_CHEETAH_ALGORITHM = 2,
-        COMPRESSION_MODE_LION_ALGORITHM = 3,
-    } COMPRESSION_MODE;
+        compression_mode_copy = 0,
+        compression_mode_chameleon_algorithm = 1,
+        compression_mode_cheetah_algorithm = 2,
+        compression_mode_lion_algorithm = 3,
+    } compression_mode_t;
 
     typedef enum {
-        BLOCK_TYPE_DEFAULT = 0,                      // Standard, no integrity check
-        BLOCK_TYPE_WITH_HASHSUM_INTEGRITY_CHECK = 1  // Add data integrity check to the stream
-    } BLOCK_TYPE;
+        block_type_default = 0,                      // Standard, no integrity check
+        block_type_with_hashsum_integrity_check = 1  // Add data integrity check to the stream
+    } block_type_t;
 }

@@ -4,7 +4,7 @@
 #include "globals.hpp"
 
 namespace density {
-    class memory_location_t {
+    class location_t {
     public:
         uint8_t *pointer;
         uint_fast64_t available_bytes;
@@ -25,12 +25,12 @@ namespace density {
         inline uint_fast64_t used(void) const
         {   return initial_available_bytes - available_bytes; }
     };
-    class memory_teleport_t {
+    class teleport_t {
     public:
         uint8_t *originalPointer;
         uint8_t *writePointer;
-        memory_location_t staging;
-        memory_location_t direct;
+        location_t staging;
+        location_t direct;
     private:
         inline void rewind_staging_pointers(void)
         {   staging.pointer = writePointer = originalPointer; }
@@ -49,7 +49,7 @@ namespace density {
         inline void reset_staging_buffer(void)
         {   rewind_staging_pointers(); staging.available_bytes = 0; }
 
-        inline memory_location_t *read(const uint_fast64_t bytes)
+        inline location_t *read(const uint_fast64_t bytes)
         {   uint_fast64_t addonBytes;
             if (DENSITY_UNLIKELY(staging.available_bytes)) {
                 if (staging.available_bytes >= bytes) {
@@ -83,11 +83,11 @@ namespace density {
             }
         }
 
-        inline memory_location_t *
+        inline location_t *
         read_reserved(const uint_fast64_t bytes, const uint_fast64_t reserved)
         {   return read(bytes + reserved); }
 
-        inline memory_location_t *
+        inline location_t *
         read_remaining_reserved(const uint_fast64_t reserved)
         {   return read_reserved(available_bytes_reserved(reserved), reserved); }
 
@@ -100,7 +100,7 @@ namespace density {
             return DENSITY_UNLIKELY(reserved >= contained) ? 0: contained - reserved; }
 
         inline void
-        copy(memory_location_t *RESTRICT out, const uint_fast64_t bytes)
+        copy(location_t *RESTRICT out, const uint_fast64_t bytes)
         {   uint_fast64_t fromStaging = 0;
             uint_fast64_t fromDirect = 0;
 
@@ -138,7 +138,7 @@ namespace density {
             out->available_bytes -= fromDirect;
         }
             
-        inline void copy_remaining(memory_location_t *out)
+        inline void copy_remaining(location_t *out)
         {   return copy(out, available_bytes()); }
     };
 }

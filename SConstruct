@@ -8,4 +8,5 @@ env = Environment(CCFLAGS = ['-g', '-Wall', '-flto', '-Ofast',
                   CPPDEFINES = [('_FILE_OFFSET_BITS', 64)],
                   CPPPATH = ['.'],
                   PROGSUFFIX = '.exe')
+objs = map(lambda src: env.Object(src)[0], glob(pathjoin('densityxx', '*.cpp')))
 env.Program(pathjoin('tests', 'compile'), pathjoin('tests', 'compile.cpp'))

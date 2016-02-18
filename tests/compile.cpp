@@ -2,6 +2,7 @@
 #include "densityxx/spookyhash.hpp"
 #include "densityxx/memory.hpp"
 #include "densityxx/format.hpp"
+#include "densityxx/kernel.hpp"
 #include "densityxx/block.hpp"
 #include "densityxx/main.hpp"
 #include "densityxx/api.hpp"
