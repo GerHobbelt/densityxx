@@ -27,21 +27,33 @@ namespace density {
     };
     class teleport_t {
     public:
-        uint8_t *originalPointer;
-        uint8_t *writePointer;
+        uint8_t *original_pointer;
+        uint8_t *write_pointer;
         location_t staging;
         location_t direct;
+
+        inline teleport_t(const uint_fast64_t size)
+        {
+            staging.pointer = (uint8_t *)malloc(size);
+            staging.available_bytes = 0;
+            write_pointer = original_pointer = staging.pointer;
+            direct.available_bytes = 0;
+        }
+        inline ~teleport_t()
+        {
+            free(staging.original_pointer);
+        }
     private:
         inline void rewind_staging_pointers(void)
-        {   staging.pointer = writePointer = originalPointer; }
+        {   staging.pointer = write_pointer = original_pointer; }
     public:
         inline void
-        change_input_buffer(uint8_t *RESTRICT in, const uint_fast64_t availableIn)
-        {   direct.encapsulate(in, availableIn); }
+        change_input_buffer(const uint8_t *RESTRICT in, const uint_fast64_t availableIn)
+        {   direct.encapsulate((uint8_t *)in, availableIn); }
 
         inline void copy_from_direct_buffer_to_staging_buffer(void)
-        {   DENSITY_MEMCPY(writePointer, direct.pointer, direct.available_bytes);
-            writePointer += direct.available_bytes;
+        {   DENSITY_MEMCPY(write_pointer, direct.pointer, direct.available_bytes);
+            write_pointer += direct.available_bytes;
             staging.available_bytes += direct.available_bytes;
             direct.pointer += direct.available_bytes;
             direct.available_bytes = 0; }
@@ -61,8 +73,8 @@ namespace density {
                         direct.available_bytes += staging.available_bytes;
                         return &direct;
                     } else { // Copy missing bytes from direct input buffer
-                        DENSITY_MEMCPY(writePointer, direct.pointer, addonBytes);
-                        writePointer += addonBytes;
+                        DENSITY_MEMCPY(write_pointer, direct.pointer, addonBytes);
+                        write_pointer += addonBytes;
                         staging.available_bytes += addonBytes;
                         direct.pointer += addonBytes;
                         direct.available_bytes -= addonBytes;
