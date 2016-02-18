@@ -23,7 +23,7 @@ namespace density {
     // mode_marker.
 #pragma pack(push)
 #pragma pack(4)
-    class mode_marker_t {
+    class block_mode_marker_t {
     public:
         uint8_t mode; // activeBlockMode
         uint8_t reserved;

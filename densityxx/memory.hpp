@@ -34,6 +34,10 @@ namespace density {
     private:
         inline void rewind_staging_pointers(void)
         {   staging.pointer = writePointer = originalPointer; }
+    public:
+        inline void
+        change_input_buffer(uint8_t *RESTRICT in, const uint_fast64_t availableIn)
+        {   direct.encapsulate(in, availableIn); }
 
         inline void copy_from_direct_buffer_to_staging_buffer(void)
         {   DENSITY_MEMCPY(writePointer, direct.pointer, direct.available_bytes);
@@ -41,10 +45,6 @@ namespace density {
             staging.available_bytes += direct.available_bytes;
             direct.pointer += direct.available_bytes;
             direct.available_bytes = 0; }
-    public:
-        inline void
-        change_input_buffer(uint8_t *RESTRICT in, const uint_fast64_t availableIn)
-        {   direct.encapsulate(in, availableIn); }
 
         inline void reset_staging_buffer(void)
         {   rewind_staging_pointers(); staging.available_bytes = 0; }
