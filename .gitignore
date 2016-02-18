@@ -1,7 +1,11 @@
+*~
+.sconsign.dblite
+
 # Compiled Object files
 *.slo
 *.lo
 *.o
+*.os
 *.obj
 
 # Precompiled Headers
