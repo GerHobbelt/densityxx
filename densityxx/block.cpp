@@ -6,8 +6,9 @@ namespace density {
     block_encode_state_t
     block_encode_t::init(kernel_encode_t *kernel_encode, const block_type_t block_type)
     {
-        current_mode = target_mode = kernel_encode->mode();
         this->kernel_encode = kernel_encode;
+        target_mode = kernel_encode ? kernel_encode->mode(): compression_mode_copy;
+        current_mode = target_mode;
         this->block_type = block_type;
         total_read = total_written = 0;
         if (block_type == block_type_with_hashsum_integrity_check) update = true;
@@ -242,7 +243,8 @@ namespace density {
                          const main_header_parameters_t parameters,
                          const uint_fast8_t end_data_overhead)
     {
-        current_mode = target_mode = kernel_decode->mode();
+        target_mode = kernel_decode ? kernel_decode->mode(): compression_mode_copy;
+        current_mode = target_mode;
         this->block_type = block_type;
         this->kernel_decode = kernel_decode;
         read_block_header_content = parameters.as_bytes[0] ? true: false;

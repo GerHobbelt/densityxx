@@ -458,6 +458,7 @@ main(int argc, char *argv[])
             case 'h': usage(argv[0]); break;
             default: break;
             }
+            break;
         default:
             if (in.origin_type == density::header_origin_type_file) {
                 char *lastsep = strrchr(argv[idx], SHARC_PATH_SEPARATOR);

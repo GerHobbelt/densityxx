@@ -1,7 +1,7 @@
 // see LICENSE.md for license.
 #pragma once
 
-#include "densityxx/globals.hpp"
+#include "densityxx/main.hpp"
 
 namespace density {
     // buffer.
@@ -54,15 +54,11 @@ namespace density {
         stream_process_decompression_finished,
     } stream_process_t;
 
-    class encode_t;
-    class decode_t;
-    class teleport_t;
-    class location_t;
     class stream_t {
     private:
         stream_process_t process;
-        encode_t *encode;
-        decode_t *decode;
+        encode_t encode;
+        decode_t decode;
     public:
         teleport_t *in;
         location_t *out;
