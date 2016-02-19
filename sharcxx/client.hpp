@@ -1,7 +1,8 @@
 // see LICENSE.md for license.
 #pragma once
 
-#include "densityxx/client.hpp"
+#include "densityxx/api.hpp"
+#include "sharcxx/header.hpp"
 
 #define SHARC_ACTION_COMPRESS         0
 #define SHARC_ACTION_DECOMPRESS       1
@@ -68,16 +69,21 @@
 #endif
 
 namespace density {
-    class client_io {
+    class client_io_t {
+    public:
         char *name;
         FILE *stream;
         header_origin_type_t origin_type;
-    public:
+
         FILE* check_open_file(const char*, const char*, const bool);
-        void version(void);
-        void usage(void);
-        void compress(client_io * const, const compression_mode_t,
+        static void version(void);
+        static void usage(void);
+        void compress(client_io_t * const, const compression_mode_t,
                       const bool, const bool, const char*, const char*);
-        void decompress(client_io * const, const bool, const char*, const char*);
+        void decompress(client_io_t * const, const bool, const char*, const char*);
+    private:
+        void exit_error(const char *message);
+        void format_decimal(uint64_t number);
+        uint_fast64_t reload_input_buffer(const client_io_t *RESTRICT io_in);
     };
 }

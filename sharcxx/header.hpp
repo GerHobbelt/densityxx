@@ -31,12 +31,17 @@ namespace density {
         header_generic_t header_generic;
         header_file_information_t header_file_information;
     public:
+        static uint_fast32_t
+        write(FILE *RESTRICT wfp, const header_origin_type_t header_origin_type,
+              const struct stat *RESTRICT stat);
+
         inline bool check_validity(void) const
         {   return header_generic.magic_number == SHARC_HEADER_MAGIC_NUMBER; }
+        inline header_origin_type_t origin_type(void) const
+        {   return (header_origin_type_t)header_generic.origin_type; }
+        inline uint64_t original_file_size(void) const
+        {   return header_file_information.original_file_size; }
         uint_fast32_t read(FILE *RESTRICT rfp);
-        uint_fast32_t write(FILE *RESTRICT wfp,
-                            const header_origin_type_t header_origin_type,
-                            const struct stat *RESTRICT stat);
         bool restore_file_attributes(const char *RESTRICT file_name);
     };
 #pragma pack(pop)
