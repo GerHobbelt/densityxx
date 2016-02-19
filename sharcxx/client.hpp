@@ -1,8 +1,11 @@
 // see LICENSE.md for license.
 #pragma once
 
+#include <string>
 #include "densityxx/api.hpp"
 #include "sharcxx/header.hpp"
+
+#define SHARC_ESCAPE_CHARACTER   ((char)27)
 
 #define SHARC_ACTION_COMPRESS         0
 #define SHARC_ACTION_DECOMPRESS       1
@@ -13,11 +16,9 @@
 #define SHARC_INTEGRITY_CHECKS        true
 #define SHARC_NO_INTEGRITY_CHECK      false
 
-#define SHARC_STDIN                   "stdin"
-#define SHARC_STDOUT                  "stdout"
-#define SHARC_STDIN_COMPRESSED        "stdin.sharc"
+#define SHARC_STDIO                   "stdio"
+#define SHARC_STDIO_COMPRESSED        "stdio.sharc"
 
-#define SHARC_OUTPUT_PATH_MAX_SIZE    256
 #define SHARC_FILE_OUTPUT_PATH        false
 #define SHARC_FIXED_OUTPUT_PATH       true
 
@@ -71,19 +72,22 @@
 namespace density {
     class client_io_t {
     public:
-        char *name;
+        std::string name;
         FILE *stream;
         header_origin_type_t origin_type;
 
-        FILE* check_open_file(const char*, const char*, const bool);
-        static void version(void);
-        static void usage(void);
+        inline client_io_t(void)
+        {   name = ""; stream = NULL; origin_type = header_origin_type_file; }
         void compress(client_io_t * const, const compression_mode_t,
-                      const bool, const bool, const char*, const char*);
-        void decompress(client_io_t * const, const bool, const char*, const char*);
+                      const bool, const bool,
+                      const std::string &, const std::string &);
+        void decompress(client_io_t * const, const bool,
+                        const std::string &, const std::string &);
     private:
-        void exit_error(const char *message);
-        void format_decimal(uint64_t number);
-        uint_fast64_t reload_input_buffer(const client_io_t *RESTRICT io_in);
+        uint_fast64_t reload_input_buffer(stream_t *RESTRICT stream) const;
+        uint_fast64_t empty_output_buffer(stream_t *RESTRICT stream) const;
+        void action_required(uint_fast64_t *read, uint_fast64_t *written,
+                             const client_io_t *RESTRICT io_out, stream_t *RESTRICT stream,
+                             const stream_state_t stream_state, const char *error_message);
     };
 }

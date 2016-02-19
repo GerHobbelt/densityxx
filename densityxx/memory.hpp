@@ -39,10 +39,7 @@ namespace density {
             write_pointer = original_pointer = staging.pointer;
             direct.available_bytes = 0;
         }
-        inline ~teleport_t()
-        {
-            free(staging.original_pointer);
-        }
+        inline ~teleport_t() { free(original_pointer); }
     private:
         inline void rewind_staging_pointers(void)
         {   staging.pointer = write_pointer = original_pointer; }
