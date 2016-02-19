@@ -1,0 +1,33 @@
+// see LICENSE.md for license.
+#pragma once
+
+#include "densityxx/kernel.hpp"
+
+namespace density {
+    class lion_encode_t: public kernel_encode_t {
+    public:
+        lion_encode_t(void);
+        virtual ~lion_encode_t();
+
+        virtual compression_mode_t mode(void) const
+        {   return compression_mode_lion_algorithm; }
+        virtual kernel_encode_state_t
+        process(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        virtual kernel_encode_state_t
+        finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
+    };
+
+    class lion_decode_t: public kernel_decode_t {
+    public:
+        lion_decode_t(const main_header_parameters_t parameters,
+                      const uint_fast8_t end_data_overhead);
+        virtual ~lion_decode_t();
+
+        virtual compression_mode_t mode(void) const
+        {   return compression_mode_lion_algorithm; }
+        virtual kernel_decode_state_t
+        process(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        virtual kernel_decode_state_t
+        finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
+    };
+}

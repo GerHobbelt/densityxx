@@ -1,4 +1,7 @@
 #include "densityxx/main.hpp"
+#include "densityxx/chameleon.hpp"
+#include "densityxx/cheetah.hpp"
+#include "densityxx/lion.hpp"
 
 namespace density {
     // encode.
@@ -6,6 +9,7 @@ namespace density {
     encode_t::init(location_t *RESTRICT out, const compression_mode_t mode,
                    const block_type_t block_type)
     {
+        kernel_encode_t *kernel_encode;
         compression_mode = mode;
         this->block_type = block_type;
         total_read = total_written = 0;
@@ -15,22 +19,19 @@ namespace density {
             return exit_process(encode_process_write_header, encode_state);
 #endif
         switch (mode) {
-        case compression_mode_copy:
-            block_encode.init(NULL, block_type);
-            break;
-#if 0 // FIXME.
+        case compression_mode_copy: kernel_encode = NULL; break;
         case compression_mode_chameleon_algorithm:
-            block_encode.init(new chameleon_block_encode_t(), block_type);
+            kernel_encode = new chameleon_encode_t();
             break;
         case compression_mode_cheetah_algorithm:
-            block_encode.init(new cheetah_block_encode_t(), block_type);
+            kernel_encode = new cheetah_encode_t();
             break;
         case compression_mode_lion_algorithm:
-            block_encode.init(new lion_block_encode_t(), block_type);
+            kernel_encode = new lion_encode_t();
             break;
-#endif
-        default: break;
+        default: return encode_state_error;
         }
+        block_encode.init(kernel_encode, block_type);
         return exit_process(encode_process_write_blocks, encode_state_ready);
     }
 
@@ -124,6 +125,7 @@ namespace density {
     decode_state_t
     decode_t::init(teleport_t *in)
     {
+        kernel_decode_t *kernel_decode;
         total_read = total_written = 0;
 #if DENSITY_WRITE_MAIN_HEADER == DENSITY_YES
         decode_state_t decode_state;
@@ -131,30 +133,24 @@ namespace density {
             return exit_process(decode_process_read_header, decode_state);
 #endif
         switch (header.compression_mode) {
-        case compression_mode_copy:
-            block_decode.init(NULL, (block_type_t)header.block_type, header.parameters,
-                              DENSITY_DECODE_END_DATA_OVERHEAD);
-            break;
-#if 0
+        case compression_mode_copy: kernel_decode = NULL; break;
         case compression_mode_chameleon_algorithm:
-            block_decode.init(compression_mode_chameleon_algorithm,
-                              (block_type_t)header.block_type, header.parameters,
-                              DENSITY_DECODE_END_DATA_OVERHEAD);
+            kernel_decode = new chameleon_decode_t(header.parameters,
+                                                   DENSITY_DECODE_END_DATA_OVERHEAD);
             break;
-        case density_compression_mode_cheetah_algorithm:
-            block_decode.init(&compression_mode_cheetah_algorithm,
-                              (block_type_t)header.block_type, header.parameters,
-                              DENSITY_DECODE_END_DATA_OVERHEAD);
+        case compression_mode_cheetah_algorithm:
+            kernel_decode = new cheetah_decode_t(header.parameters,
+                                                 DENSITY_DECODE_END_DATA_OVERHEAD);
             break;
-        case density_compression_mode_lion_algorithm:
-            block_decode.init(compression_mode_lion_algorithm,
-                              (block_type_t)header.block_type, header.parameters,
-                              DENSITY_DECODE_END_DATA_OVERHEAD);
+        case compression_mode_lion_algorithm:
+            kernel_decode = new lion_decode_t(header.parameters,
+                                              DENSITY_DECODE_END_DATA_OVERHEAD);
             break;
-#endif
-        default:
-            return decode_state_error;
+        default: return decode_state_error;
         }
+        block_decode.init(kernel_decode,
+                          (block_type_t)header.block_type, header.parameters,
+                          DENSITY_DECODE_END_DATA_OVERHEAD);
         return exit_process(decode_process_read_blocks, decode_state_ready);
     }
     
