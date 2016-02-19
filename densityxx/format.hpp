@@ -32,7 +32,7 @@ namespace density {
         inline uint_fast32_t write(location_t *out)
         {   out->write(this, sizeof(*this)); return sizeof(*this); }
         inline uint_fast32_t write(location_t *out, const compression_mode_t mode)
-        {   this->mode = mode; return write(out); }
+        {   this->mode = mode; reserved = 0; return write(out); }
     };
 #pragma pack(pop)
 
@@ -85,6 +85,7 @@ namespace density {
             version[2] = DENSITYXX_REVISION;
             this->compression_mode = compression_mode;
             this->block_type = block_type;
+            reserved[0] = reserved[1] = reserved[2] = 0;
             this->parameters = parameters;
             return write(out); }
     };
