@@ -17,6 +17,7 @@ namespace density {
 
 #pragma pack(push)
 #pragma pack(4)
+    //--- dictionary ---
     typedef uint64_t chameleon_signature_t;
     typedef struct {
         uint32_t as_uint32_t;
