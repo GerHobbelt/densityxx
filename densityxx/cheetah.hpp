@@ -11,8 +11,10 @@ namespace density {
 
         virtual compression_mode_t mode(void) const
         {   return compression_mode_cheetah_algorithm; }
+
+        virtual kernel_encode_state_t init(void);
         virtual kernel_encode_state_t
-        process(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
         virtual kernel_encode_state_t
         finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
     };
@@ -26,7 +28,7 @@ namespace density {
         virtual compression_mode_t mode(void) const
         {   return compression_mode_cheetah_algorithm; }
         virtual kernel_decode_state_t
-        process(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
         virtual kernel_decode_state_t
         finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
     };

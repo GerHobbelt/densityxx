@@ -11,7 +11,13 @@ namespace density {
         // FIXME: NOT IMPLEMENTED YET.
     }
     kernel_encode_state_t
-    lion_encode_t::process(teleport_t *RESTRICT in, location_t *RESTRICT out)
+    lion_encode_t::init(void)
+    {
+        // FIXME: NOT IMPLEMENTED YET.
+        return kernel_encode_state_ready;
+    }
+    kernel_encode_state_t
+    lion_encode_t::continue_(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
         // FIXME: NOT IMPLEMENTED YET.
         return kernel_encode_state_ready;
@@ -35,7 +41,7 @@ namespace density {
         // FIXME: NOT IMPLEMENTED YET.
     }
     kernel_decode_state_t
-    lion_decode_t::process(teleport_t *RESTRICT in, location_t *RESTRICT out)
+    lion_decode_t::continue_(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
         // FIXME: NOT IMPLEMENTED YET.
         return kernel_decode_state_ready;

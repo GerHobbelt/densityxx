@@ -20,8 +20,10 @@ namespace density {
         virtual ~kernel_encode_t() {}
 
         virtual compression_mode_t mode(void) const = 0;
+
+        virtual kernel_encode_state_t init(void) = 0;
         virtual kernel_encode_state_t
-        process(teleport_t *RESTRICT in, location_t *RESTRICT out) = 0;
+        continue_(teleport_t *RESTRICT in, location_t *RESTRICT out) = 0;
         virtual kernel_encode_state_t
         finish(teleport_t *RESTRICT in, location_t *RESTRICT out) = 0;
     };
@@ -43,8 +45,9 @@ namespace density {
         virtual ~kernel_decode_t() {}
 
         virtual compression_mode_t mode(void) const = 0;
+
         virtual kernel_decode_state_t
-        process(teleport_t *RESTRICT in, location_t *RESTRICT out) = 0;
+        continue_(teleport_t *RESTRICT in, location_t *RESTRICT out) = 0;
         virtual kernel_decode_state_t
         finish(teleport_t *RESTRICT in, location_t *RESTRICT out) = 0;
     };

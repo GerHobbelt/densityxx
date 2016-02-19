@@ -74,7 +74,7 @@ namespace density {
             update_totals(in, out, available_in_before, available_out_before);
             goto write_block_footer;
         } else { // current_mode == target_mode
-            kernel_encode_state = kernel_encode->process(in, out);
+            kernel_encode_state = kernel_encode->continue_(in, out);
             update_totals(in, out, available_in_before, available_out_before);
             switch (kernel_encode_state) {
             case kernel_encode_state_stall_on_input:
@@ -314,7 +314,7 @@ namespace density {
             update_totals(in, out, available_in_before, available_out_before);
             goto read_block_footer;
         } else { // current_mode == target_mode
-            kernel_decode_state = kernel_decode->process(in, out);
+            kernel_decode_state = kernel_decode->continue_(in, out);
             update_totals(in, out, available_in_before, available_out_before);
             switch (kernel_decode_state) {
             case kernel_decode_state_stall_on_input:
