@@ -14,6 +14,14 @@
 #define DENSITYXX_MINOR_VERSION 12
 #define DENSITYXX_REVISION      5
 
+#define DENSITY_YES  1
+#define DENSITY_NO   0
+
+#define DENSITY_WRITE_MAIN_HEADER  DENSITY_YES
+#define DENSITY_WRITE_MAIN_FOOTER  DENSITY_YES
+
+#define DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT  DENSITY_NO
+
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define LITTLE_ENDIAN_64(b)   ((uint64_t)b)
 #define LITTLE_ENDIAN_32(b)   ((uint32_t)b)
@@ -33,6 +41,8 @@
 #error Unknow endianness
 #endif
 
+#define RESTRICT
+
 #define DENSITY_MEMCPY  __builtin_memcpy
 #define DENSITY_MEMMOVE  __builtin_memmove
 
@@ -43,8 +53,6 @@
 
 #define DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE_SHIFT    6
 #define DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE          (1 << DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE_SHIFT)
-
-#define RESTRICT
 
 namespace density {
     typedef enum {

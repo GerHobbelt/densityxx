@@ -6,11 +6,11 @@ namespace density {
     encode_t::init(location_t *RESTRICT out, const compression_mode_t mode,
                    const block_type_t block_type)
     {
-        encode_state_t encode_state;
         compression_mode = mode;
         this->block_type = block_type;
         total_read = total_written = 0;
 #if DENSITY_WRITE_MAIN_HEADER == DENSITY_YES
+        encode_state_t encode_state;
         if ((encode_state = write_header(out, mode, block_type)))
             return exit_process(encode_process_write_header, encode_state);
 #endif
@@ -63,7 +63,6 @@ namespace density {
     encode_state_t
     encode_t::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
-        encode_state_t encode_state;
         block_encode_state_t block_encode_state;
         uint_fast64_t available_in_before, available_out_before;
         // Dispatch
@@ -85,6 +84,7 @@ namespace density {
         }
     write_footer:
 #if DENSITY_WRITE_MAIN_FOOTER == DENSITY_YES && DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
+        encode_state_t encode_state;
         if ((encode_state = write_footer(out)))
             return exit_process(encode_process_write_footer, encode_state);
 #endif
@@ -124,9 +124,9 @@ namespace density {
     decode_state_t
     decode_t::init(teleport_t *in)
     {
-        decode_state_t decode_state;
         total_read = total_written = 0;
 #if DENSITY_WRITE_MAIN_HEADER == DENSITY_YES
+        decode_state_t decode_state;
         if ((decode_state = read_header(in)))
             return exit_process(decode_process_read_header, decode_state);
 #endif
@@ -189,7 +189,6 @@ namespace density {
     decode_state_t
     decode_t::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
-        decode_state_t decode_state;
         block_decode_state_t block_decode_state;
         uint_fast64_t available_in_before, available_out_before;
         switch (process) {
@@ -212,9 +211,9 @@ namespace density {
         }
     read_footer:
 #if DENSITY_WRITE_MAIN_FOOTER == DENSITY_YES && DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
+        decode_state_t decode_state;
         if ((decode_state = read_footer(in))) return decode_state;
 #endif
-        //if (state->header.compression_mode != compression_mode_copy) block_decode.free()
         return decode_state_ready;
     }
 

@@ -136,7 +136,7 @@ namespace density {
     stream_t::compress_init(const compression_mode_t compression_mode,
                             const block_type_t block_type)
     {
-        if (process ^ stream_process_prepared)
+        if (process != stream_process_prepared)
             return stream_state_error_invalid_internal_state;
         stream_state_t stream_state = check_conformity();
         if (stream_state) return stream_state;
@@ -155,11 +155,10 @@ namespace density {
     stream_state_t
     stream_t::compress_continue(void)
     {
-        if (process ^ stream_process_compression_started) {
-            if (process ^ stream_process_compression_inited)
+        if (process != stream_process_compression_started) {
+            if (process != stream_process_compression_inited)
                 return stream_state_error_invalid_internal_state;
-            else
-                process = stream_process_compression_started;
+            process = stream_process_compression_started;
         }
         stream_state_t stream_state = check_conformity();
         if (stream_state) return stream_state;
@@ -174,11 +173,10 @@ namespace density {
     stream_state_t
     stream_t::compress_finish(void)
     {
-        if (process ^ stream_process_compression_started) {
-            if (process ^ stream_process_compression_inited)
+        if (process != stream_process_compression_started) {
+            if (process != stream_process_compression_inited)
                 return stream_state_error_invalid_internal_state;
-            else
-                process = stream_process_compression_started;
+            process = stream_process_compression_started;
         }
         stream_state_t stream_state = check_conformity();
         if (stream_state) return stream_state;
@@ -193,8 +191,9 @@ namespace density {
     }
 
     stream_state_t
-    stream_t::decompress_init(stream_header_information_t *RESTRICT headerInformation) {
-        if (process ^ stream_process_prepared)
+    stream_t::decompress_init(stream_header_information_t *RESTRICT header_information)
+    {
+        if (process != stream_process_prepared)
             return stream_state_error_invalid_internal_state;
         stream_state_t stream_state = check_conformity();
         if (stream_state) return stream_state;
@@ -207,13 +206,13 @@ namespace density {
         total_bytes_read = &decode.total_read;
         total_bytes_written = &decode.total_written;
         process = stream_process_decompression_inited;
-        if (headerInformation != NULL) {
+        if (header_information != NULL) {
             main_header_t header = decode.header;
-            headerInformation->major_version = header.version[0];
-            headerInformation->minor_version = header.version[1];
-            headerInformation->revision = header.version[2];
-            headerInformation->compression_mode = (compression_mode_t)header.compression_mode;
-            headerInformation->block_type = (block_type_t)header.block_type;
+            header_information->major_version = header.version[0];
+            header_information->minor_version = header.version[1];
+            header_information->revision = header.version[2];
+            header_information->compression_mode = (compression_mode_t)header.compression_mode;
+            header_information->block_type = (block_type_t)header.block_type;
         }
         return stream_state_ready;
     }
@@ -221,11 +220,10 @@ namespace density {
     stream_state_t
     stream_t::decompress_continue(void)
     {
-        if (process ^ stream_process_decompression_started) {
-            if (process ^ stream_process_decompression_inited)
+        if (process != stream_process_decompression_started) {
+            if (process != stream_process_decompression_inited)
                 return stream_state_error_invalid_internal_state;
-            else
-                process = stream_process_decompression_started;
+            process = stream_process_decompression_started;
         }
         stream_state_t stream_state = check_conformity();
         if (stream_state) return stream_state;
@@ -242,11 +240,10 @@ namespace density {
     stream_state_t
     stream_t::decompress_finish(void)
     {
-        if (process ^ stream_process_decompression_started) {
-            if (process ^ stream_process_decompression_inited)
+        if (process != stream_process_decompression_started) {
+            if (process != stream_process_decompression_inited)
                 return stream_state_error_invalid_internal_state;
-            else
-                process = stream_process_decompression_started;
+            process = stream_process_decompression_started;
         }
         decode_state_t decode_state = decode.finish(in, out);
         switch (decode_state) {
