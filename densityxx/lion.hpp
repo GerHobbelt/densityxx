@@ -21,12 +21,11 @@ namespace density {
 
     class lion_decode_t: public kernel_decode_t {
     public:
-        lion_decode_t(const main_header_parameters_t parameters,
-                      const uint_fast8_t end_data_overhead);
-        virtual ~lion_decode_t();
-
         virtual compression_mode_t mode(void) const
         {   return compression_mode_lion_algorithm; }
+
+        kernel_decode_state_t
+        init(const main_header_parameters_t parameters, const uint_fast8_t end_data_overhead);
         virtual kernel_decode_state_t
         continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
         virtual kernel_decode_state_t

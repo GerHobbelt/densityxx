@@ -12,6 +12,7 @@ namespace density {
         this->block_type = block_type;
         total_read = total_written = 0;
         if (block_type == block_type_with_hashsum_integrity_check) update = true;
+        if (kernel_encode != NULL) kernel_encode->init();
         return exit_process(block_encode_process_write_block_header,
                             block_encode_state_ready);
     }
@@ -254,6 +255,7 @@ namespace density {
             update = true;
             this->end_data_overhead += sizeof(block_footer_t);
         }
+        if (kernel_decode != NULL) kernel_decode->init(parameters, this->end_data_overhead);
         return exit_process(block_decode_process_read_block_header, block_decode_state_ready);
     }
     block_decode_state_t

@@ -135,16 +135,13 @@ namespace density {
         switch (header.compression_mode) {
         case compression_mode_copy: kernel_decode = NULL; break;
         case compression_mode_chameleon_algorithm:
-            kernel_decode = new chameleon_decode_t(header.parameters,
-                                                   DENSITY_DECODE_END_DATA_OVERHEAD);
+            kernel_decode = new chameleon_decode_t();
             break;
         case compression_mode_cheetah_algorithm:
-            kernel_decode = new cheetah_decode_t(header.parameters,
-                                                 DENSITY_DECODE_END_DATA_OVERHEAD);
+            kernel_decode = new cheetah_decode_t();
             break;
         case compression_mode_lion_algorithm:
-            kernel_decode = new lion_decode_t(header.parameters,
-                                              DENSITY_DECODE_END_DATA_OVERHEAD);
+            kernel_decode = new lion_decode_t();
             break;
         default: return decode_state_error;
         }

@@ -5,6 +5,16 @@
 
 namespace density {
 #define DENSITY_CHAMELEON_HASH_BITS         16
+#define DENSITY_CHAMELEON_HASH_MULTIPLIER   (uint32_t)0x9D6EF916lu
+#define DENSITY_CHAMELEON_HASH_ALGORITHM(value32)                       \
+    (uint16_t)((value32 * DENSITY_CHAMELEON_HASH_MULTIPLIER) >>         \
+               (32 - DENSITY_CHAMELEON_HASH_BITS))
+
+    typedef enum {
+        chameleon_signature_flag_chunk = 0x0,
+        chameleon_signature_flag_map = 0x1,
+    }  chameleon_signature_flag_t;
+
 #pragma pack(push)
 #pragma pack(4)
     typedef uint64_t chameleon_signature_t;
@@ -27,9 +37,6 @@ namespace density {
 
     class chameleon_encode_t: public kernel_encode_t {
     public:
-        chameleon_encode_t(void);
-        virtual ~chameleon_encode_t();
-
         virtual compression_mode_t mode(void) const
         {   return compression_mode_chameleon_algorithm; }
 
@@ -74,12 +81,11 @@ namespace density {
 
     class chameleon_decode_t: public kernel_decode_t {
     public:
-        chameleon_decode_t(const main_header_parameters_t parameters,
-                           const uint_fast8_t end_data_overhead);
-        virtual ~chameleon_decode_t();
-
         virtual compression_mode_t mode(void) const
         {   return compression_mode_chameleon_algorithm; }
+
+        virtual kernel_decode_state_t
+        init(const main_header_parameters_t parameters, const uint_fast8_t end_data_overhead);
         virtual kernel_decode_state_t
         continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
         virtual kernel_decode_state_t
@@ -101,14 +107,18 @@ namespace density {
         exit_process(chameleon_decode_process_t process,
                      kernel_decode_state_t kernel_decode_state)
         {   this->process = process; return kernel_decode_state; }
-
         kernel_decode_state_t check_state(location_t *RESTRICT out);
         void read_signature(location_t *RESTRICT in);
-        void process_compressed(const uint16_t hash, location_t *RESTRICT out);
-        void process_uncompressed(const uint32_t chunk, location_t *RESTRICT out);
-        void decode_kernel(location_t *RESTRICT in, location_t *RESTRICT out,
-                           const bool compressed);
-        const bool test_compressed(const uint_fast8_t shift);
+        inline void process_compressed(const uint16_t hash, location_t *RESTRICT out)
+        {   DENSITY_MEMCPY(out->pointer, &dictionary.entries[hash].as_uint32_t,
+                           sizeof(uint32_t)); }
+        inline void process_uncompressed(const uint32_t chunk, location_t *RESTRICT out)
+        {   const uint16_t hash = DENSITY_CHAMELEON_HASH_ALGORITHM(chunk);
+            dictionary.entries[hash].as_uint32_t = chunk;
+            DENSITY_MEMCPY(out->pointer, &chunk, sizeof(uint32_t)); }
+        void kernel(location_t *RESTRICT in, location_t *RESTRICT out, const bool compressed);
+        inline const bool test_compressed(const uint_fast8_t shift) const
+        {   return (bool)((signature >> shift) & chameleon_signature_flag_map); }
         void process_data(location_t *RESTRICT in, location_t *RESTRICT out);
     };
 #pragma pack(pop)
