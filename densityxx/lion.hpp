@@ -60,8 +60,6 @@ namespace density {
 
         // data members.
         uint8_t usages[DENSITY_LION_NUMBER_OF_FORMS];
-        void (*attachments[DENSITY_LION_NUMBER_OF_FORMS])
-        (location_t *, location_t *, uint16_t *const, uint32_t *const);
         lion_form_node_t forms_pool[DENSITY_LION_NUMBER_OF_FORMS];
         lion_form_node_t *forms_index[DENSITY_LION_NUMBER_OF_FORMS];
         uint8_t next_available_form;
@@ -260,10 +258,7 @@ namespace density {
         void dictionary_d(location_t *RESTRICT in, location_t *RESTRICT out,
                           uint16_t *RESTRICT const hash, uint32_t *RESTRICT const chunk);
         void plain(location_t *, location_t *, uint16_t *const, uint32_t *const);
-        inline void
-        chunk(location_t *RESTRICT in, location_t *RESTRICT out, const lion_form_t form)
-        {   uint16_t hash; uint32_t chunk;
-            form_data.attachments[form](in, out, &hash, &chunk); }
+        void chunk(location_t *RESTRICT in, location_t *RESTRICT out, const lion_form_t form);
         const lion_form_t read_form(location_t *RESTRICT in);
         void process_form(location_t *RESTRICT in, location_t *RESTRICT out);
         void process_unit(location_t *RESTRICT in, location_t *RESTRICT out);

@@ -591,6 +591,23 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         last_chunk = *chunk;
         last_hash = *hash;
     }
+    void
+    lion_decode_t::chunk(location_t *RESTRICT in, location_t *RESTRICT out,
+                         const lion_form_t form)
+    {
+        uint16_t hash; uint32_t chunk;
+        switch (form) {
+        case lion_form_predictions_a: prediction_a(in, out, &hash, &chunk); break;
+        case lion_form_predictions_b: prediction_b(in, out, &hash, &chunk); break;
+        case lion_form_predictions_c: prediction_c(in, out, &hash, &chunk); break;
+        case lion_form_dictionary_a: dictionary_a(in, out, &hash, &chunk); break;
+        case lion_form_dictionary_b: dictionary_b(in, out, &hash, &chunk); break;
+        case lion_form_dictionary_c: dictionary_c(in, out, &hash, &chunk); break;
+        case lion_form_dictionary_d: dictionary_d(in, out, &hash, &chunk); break;
+        case lion_form_plain: plain(in, out, &hash, &chunk); break;
+        default: break;
+        }
+    }
     const lion_form_t
     lion_decode_t::read_form(location_t *RESTRICT in)
     {
@@ -690,16 +707,6 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
             reset_cycle = ((uint_fast64_t) 1 << reset_dictionary_cycle_shift) - 1;
         this->end_data_overhead = end_data_overhead;
         form_data.init();
-#if 0
-        form_data.attachments[0] = &prediction_a;
-        form_data.attachments[1] = &prediction_b;
-        form_data.attachments[2] = &prediction_c;
-        form_data.attachments[3] = &dictionary_a;
-        form_data.attachments[4] = &dictionary_b;
-        form_data.attachments[5] = &dictionary_c;
-        form_data.attachments[6] = &dictionary_d;
-        form_data.attachments[7] = &plain;
-#endif
         last_hash = 0;
         last_chunk = 0;
         return exit_process(lion_decode_process_check_block_state, kernel_decode_state_ready);
