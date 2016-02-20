@@ -2,17 +2,21 @@
 #include "sharcxx/client.hpp"
 #include "sharcxx/chrono.hpp"
 
+#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
+#define SHARC_ESC_BOLD_START    "\33[1m"
+#define SHARC_ESC_RED_START     "\33[1;31m"
+#define SHARC_ESC_END           "\33[0m"
+#else
+#define SHARC_ESC_BOLD_START    ""
+#define SHARC_ESC_RED_START     ""
+#define SHARC_ESC_END           ""
+#endif
+
 static void version(void)
 {
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-    printf("%c[1m", SHARC_ESCAPE_CHARACTER);
-#endif
-    printf("DensityXX %i.%i.%i",
-           DENSITYXX_MAJOR_VERSION, DENSITYXX_MINOR_VERSION, DENSITYXX_REVISION);
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-    printf("%c[0m", SHARC_ESCAPE_CHARACTER);
-#endif
-    printf("\n");
+    printf("%sDensityXX %i.%i.%i%s\n", SHARC_ESC_BOLD_START,
+           DENSITYXX_MAJOR_VERSION, DENSITYXX_MINOR_VERSION, DENSITYXX_REVISION,
+           SHARC_ESC_END);
     printf("Copyright (C) 2016 Charles Wang\n");
     printf("Copyright (C) 2013 Guillaume Voirin\n");
     printf("Built for %s (%s endian system, %u bits) using GCC %d.%d.%d, %s %s\n",
@@ -24,21 +28,9 @@ static void usage(const char *arg0)
 {
     version();
     printf("\nSuperfast compression\n\n");
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-    printf("%c[1m", SHARC_ESCAPE_CHARACTER);
-#endif
-    printf("Usage :\n");
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-    printf("%c[0m", SHARC_ESCAPE_CHARACTER);
-#endif
+    printf("%sUsage :%s\n", SHARC_ESC_BOLD_START, SHARC_ESC_END);
     printf("  %s [OPTIONS]... [FILES]...\n\n", arg0);
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-    printf("%c[1m", SHARC_ESCAPE_CHARACTER);
-#endif
-    printf("Available options :\n");
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-    printf("%c[0m", SHARC_ESCAPE_CHARACTER);
-#endif
+    printf("%sAvailable options :%s\n", SHARC_ESC_BOLD_START, SHARC_ESC_END);
     printf("  -c[LEVEL]   Compress files using LEVEL if specified (default)\n");
     printf("              LEVEL can have the following values (as values become higher,\n");
     printf("              compression ratio increases and speed diminishes) :\n");
@@ -64,26 +56,23 @@ namespace density {
     static void
     exit_error(const char *message)
     {
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-        fprintf(stderr, "%c[1;31m", SHARC_ESCAPE_CHARACTER);
-#endif
-        fprintf(stderr, "Sharc error");
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-        fprintf(stderr, "%c[0m", SHARC_ESCAPE_CHARACTER);
-#endif
-        fprintf(stderr, " : %s\n", message);
+        fprintf(stderr, "%sSharc error:%s %s\n",
+                SHARC_ESC_RED_START, SHARC_ESC_END, message);
         exit(0);
     }
-    static void
+    static std::string
     format_decimal(uint64_t number)
     {
+        char buf[128], *cur = buf, *last = buf + sizeof(buf);
         uint64_t mod = 1;
         while (number / mod > 1000) mod *= 1000;
-        printf("%u", (unsigned)(number / mod));
+        cur += snprintf(cur, last - buf, "%u", (unsigned)(number / mod));
         while (mod > 1) {
             mod /= 1000;
-            printf(",%03u", (unsigned)(number / mod % 1000));
+            cur += snprintf(cur, last - buf,
+                            ",%03u", (unsigned)(number / mod % 1000));
         }
+        return std::string(buf);
     }
     static FILE *
     check_open_file(const char *file_name, const char *options, const bool check_overwrite)
@@ -224,49 +213,18 @@ namespace density {
                 fclose(this->stream);
                 double ratio = (100.0 * total_written) / total_read;
                 double speed = (1.0 * total_read) / (elapsed * 1000.0 * 1000.0);
-                printf("Compressed ");
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[1m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf("%s", in_file_path.c_str());
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[0m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf(" (");
-                format_decimal(total_read);
-                printf(" bytes) to ");
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[1m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf("%s", out_file_path.c_str());
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[0m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf(" (");
-                format_decimal(total_written);
-                printf(" bytes)");
+                printf("Compressed %s%s%s(%s bytes) to %s%s%s(%s bytes)",
+                       SHARC_ESC_BOLD_START, in_file_path.c_str(), SHARC_ESC_END,
+                       format_decimal(total_read).c_str(),
+                       SHARC_ESC_BOLD_START, out_file_path.c_str(), SHARC_ESC_END,
+                       format_decimal(total_written).c_str());
                 printf(" %s %.1lf%% (User time %.3lfs %s %.0lf MB/s)\n",
                        SHARC_ARROW, ratio, elapsed, SHARC_ARROW, speed);
             } else {
-                printf("Compressed ");
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[1m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf("%s", name.c_str());
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[0m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf(" to ");
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[1m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf("%s", out_file_path.c_str());
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[0m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf(", ");
-                format_decimal(total_written);
-                printf(" bytes written.\n");
+                printf("Compressed %s%s%s to %s%s%s, %s bytes written.\n",
+                       SHARC_ESC_BOLD_START, name.c_str(), SHARC_ESC_END,
+                       SHARC_ESC_BOLD_START, out_file_path.c_str(), SHARC_ESC_END,
+                       format_decimal(total_written).c_str());
             }
         }
         delete stream;
@@ -350,49 +308,18 @@ namespace density {
                 }
                 double ratio = (100.0 * total_written) / total_read;
                 double speed = (1.0 * total_written) / (elapsed * 1000.0 * 1000.0);
-                printf("Decompressed ");
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[1m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf("%s", in_file_path.c_str());
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[0m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf(" (");
-                format_decimal(total_read);
-                printf(" bytes) to ");
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[1m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf("%s", out_file_path.c_str());
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[0m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf(" (");
-                format_decimal(total_written);
-                printf(" bytes)");
+                printf("Decompressed %s%s%s(%s bytes) to %s%s%s(%s bytes)",
+                       SHARC_ESC_BOLD_START, in_file_path.c_str(), SHARC_ESC_END,
+                       format_decimal(total_read).c_str(),
+                       SHARC_ESC_BOLD_START, out_file_path.c_str(), SHARC_ESC_END,
+                       format_decimal(total_written).c_str());
                 printf(" %s %.1lf%% (User time %.3lfs %s %.0lf MB/s)\n",
                        SHARC_ARROW, ratio, elapsed, SHARC_ARROW, speed);
             } else {
-                printf("Decompressed ");
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[1m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf("%s", name.c_str());
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[0m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf(" to ");
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[1m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf("%s", out_file_path.c_str());
-#ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-                printf("%c[0m", SHARC_ESCAPE_CHARACTER);
-#endif
-                printf(", ");
-                format_decimal(total_written);
-                printf(" bytes written.\n");
+                printf("Decompressed %s%s%s to %s%s%s, %s bytes written.\n",
+                       SHARC_ESC_BOLD_START, name.c_str(), SHARC_ESC_END,
+                       SHARC_ESC_BOLD_START, out_file_path.c_str(), SHARC_ESC_END,
+                       format_decimal(total_written).c_str());
             }
         }
         delete stream;

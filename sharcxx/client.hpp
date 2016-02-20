@@ -5,8 +5,6 @@
 #include "densityxx/api.hpp"
 #include "sharcxx/header.hpp"
 
-#define SHARC_ESCAPE_CHARACTER   ((char)27)
-
 #define SHARC_ACTION_COMPRESS         0
 #define SHARC_ACTION_DECOMPRESS       1
 

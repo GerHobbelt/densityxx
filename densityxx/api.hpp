@@ -20,7 +20,7 @@ namespace density {
 
     buffer_processing_result_t
     buffer_compress(const uint8_t *in, const uint_fast64_t szin,
-                    uint8_t* out, const uint_fast64_t szout,
+                    uint8_t *out, const uint_fast64_t szout,
                     const compression_mode_t compression_mode,
                     const block_type_t block_type);
     buffer_processing_result_t
