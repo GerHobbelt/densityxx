@@ -58,7 +58,7 @@ namespace density {
     {
         fprintf(stderr, "%sSharc error:%s %s\n",
                 SHARC_ESC_RED_START, SHARC_ESC_END, message);
-        exit(0);
+        exit(-1);
     }
     static std::string
     format_decimal(uint64_t number)
@@ -418,5 +418,5 @@ main(int argc, char *argv[])
             break;
         }
     }
-    return true;
+    return 0;
 }
