@@ -16,6 +16,9 @@ namespace density {
 
     class kernel_encode_t {
     public:
+        kernel_encode_t(void) {}
+        virtual ~kernel_encode_t() {}
+
         virtual compression_mode_t mode(void) const = 0;
 
         virtual kernel_encode_state_t init(void) = 0;
@@ -37,6 +40,9 @@ namespace density {
 
     class kernel_decode_t {
     public:
+        kernel_decode_t(void) {}
+        virtual ~kernel_decode_t() {}
+
         virtual compression_mode_t mode(void) const = 0;
 
         virtual kernel_decode_state_t

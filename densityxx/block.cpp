@@ -172,6 +172,7 @@ namespace density {
                 return exit_process(block_encode_process_write_block_footer,
                                     block_encode_state);
         if (in->available_bytes()) goto write_block_header;
+        if (kernel_encode != NULL) delete kernel_encode;
         return block_encode_state_ready;
     }
 
@@ -416,6 +417,7 @@ namespace density {
                 return exit_process(block_decode_process_read_block_footer,
                                     block_decode_state);
         if (in->available_bytes_reserved(end_data_overhead)) goto read_block_header;
+        if (kernel_decode != NULL) delete kernel_decode;
         return block_decode_state_ready;
     }
 
