@@ -101,7 +101,7 @@ namespace density {
         uint_fast16_t last_hash;
         uint_fast8_t shift;
         uint_fast32_t signatures_count;
-        uint_fast8_t efficiency_checked;
+        bool efficiency_checked;
         cheetah_decode_process_t process;
         uint_fast8_t end_data_overhead;
         main_header_parameters_t parameters;
