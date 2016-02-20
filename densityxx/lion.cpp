@@ -61,8 +61,8 @@ namespace density {
     lion_form_data_t::flatten(const uint8_t usage)
     {
         if (DENSITY_UNLIKELY(usage & 0x80))
-            *(uint64_t *) usages =
-                (*(uint64_t *) usages >> 1) & 0x7f7f7f7f7f7f7f7fllu; // Flatten usage values
+            *(uint64_t *)usages =
+                (*(uint64_t *)usages >> 1) & 0x7f7f7f7f7f7f7f7fllu; // Flatten usage values
     }
 
     const lion_form_t

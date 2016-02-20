@@ -1,6 +1,7 @@
 // see LICENSE.md for license.
 #include "sharcxx/client.hpp"
 #include "sharcxx/chrono.hpp"
+#include <stdarg.h>
 
 #ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
 #define SHARC_ESC_BOLD_START    "\33[1m"
@@ -54,10 +55,13 @@ namespace density {
     static uint8_t output_buffer[SHARC_PREFERRED_BUFFER_SIZE];
 
     static void
-    exit_error(const char *message)
+    exit_error(const char *message_format, ...)
     {
-        fprintf(stderr, "%sSharc error:%s %s\n",
-                SHARC_ESC_RED_START, SHARC_ESC_END, message);
+        va_list ap;
+        va_start(ap, message_format);
+        fprintf(stderr, "%sSharc error:%s ", SHARC_ESC_RED_START, SHARC_ESC_END);
+        vfprintf(stderr, message_format, ap);
+        va_end(ap);
         exit(-1);
     }
     static std::string
@@ -99,9 +103,8 @@ namespace density {
         uint_fast64_t read = (uint_fast64_t)
             fread(input_buffer, sizeof(uint8_t), SHARC_PREFERRED_BUFFER_SIZE, this->stream);
         stream->update_input(input_buffer, read);
-        if (read < SHARC_PREFERRED_BUFFER_SIZE)
-            if (ferror(this->stream))
-                exit_error("Error reading file");
+        if (read < SHARC_PREFERRED_BUFFER_SIZE && ferror(this->stream))
+            exit_error("Error reading file");
         return read;
     }
 
@@ -111,9 +114,8 @@ namespace density {
         uint_fast64_t available = stream->output_available_for_use();
         uint_fast64_t written = (uint_fast64_t)
             fwrite(output_buffer, sizeof(uint8_t), (size_t)available, this->stream);
-        if (written < available)
-            if (ferror(this->stream))
-                exit_error("Error writing file");
+        if (written < available && ferror(this->stream))
+            exit_error("Error writing file");
         stream->update_output(output_buffer, SHARC_PREFERRED_BUFFER_SIZE);
         return written;
     }
@@ -302,10 +304,11 @@ namespace density {
             if (origin_type == header_origin_type_file) {
                 total_read += *stream->total_bytes_read;
                 fclose(this->stream);
-                if (header.origin_type() == header_origin_type_file) {
-                    if (total_written != header.original_file_size())
-                        exit_error("Input file is corrupt !");
-                }
+                if (header.origin_type() == header_origin_type_file &&
+                    total_written != header.original_file_size())
+                    exit_error("Input file is corrupt(%llu != %llu)!\n",
+                               (unsigned long long)total_written,
+                               (unsigned long long)header.original_file_size());
                 double ratio = (100.0 * total_written) / total_read;
                 double speed = (1.0 * total_written) / (elapsed * 1000.0 * 1000.0);
                 printf("Decompressed %s%s%s(%s bytes) to %s%s%s(%s bytes)",
