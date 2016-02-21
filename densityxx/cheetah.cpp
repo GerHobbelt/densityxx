@@ -1,3 +1,4 @@
+// see LICENSE.md for license.
 #include "densityxx/cheetah.hpp"
 #include "densityxx/mathmacros.hpp"
 
@@ -261,7 +262,7 @@ namespace density {
         }
         return kernel_decode_state_ready;
     }
-    void
+    inline void
     cheetah_decode_t::read_signature(location_t *RESTRICT in)
     {
         DENSITY_MEMCPY(&signature, in->pointer, sizeof(signature));
@@ -269,7 +270,7 @@ namespace density {
         shift = 0;
         signatures_count++;
     }
-    void
+    inline void
     cheetah_decode_t::process_predicted(location_t *RESTRICT out)
     {
         const uint32_t chunk = dictionary.prediction_entries[last_hash].next_chunk_prediction;

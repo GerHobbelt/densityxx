@@ -1,3 +1,4 @@
+// see LICENSE.md for license.
 #include "densityxx/api.hpp"
 #include "densityxx/main.hpp"
 

@@ -1,6 +1,5 @@
 // see LICENSE.md for license.
 #pragma once
-
 #include "densityxx/kernel.hpp"
 
 namespace density {
@@ -154,7 +153,7 @@ namespace density {
         void push_to_proximity_signature(const uint64_t content, const uint_fast8_t bits);
         void push_to_signature(location_t *RESTRICT out, const uint64_t content,
                                const uint_fast8_t bits);
-        void push_zero_to_signature(location_t *RESTRICT out, const uint_fast8_t bits);
+        //void push_zero_to_signature(location_t *RESTRICT out, const uint_fast8_t bits);
         inline void
         push_code_to_signature(location_t *RESTRICT out, const lion_entropy_code_t code)
         {   push_to_signature(out, code.value, code.bit_length); }

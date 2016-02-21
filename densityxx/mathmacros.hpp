@@ -1,3 +1,4 @@
+// see LICENSE.md for license.
 #pragma once
 
 #define DENSITY_FORMAT(v)               0##v##llu

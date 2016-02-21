@@ -1,3 +1,4 @@
+// see LICENSE.md for license.
 #include "densityxx/lion.hpp"
 #include "densityxx/mathmacros.hpp"
 
@@ -92,7 +93,7 @@ namespace density {
     }
 
     //--- encode ---
-    void
+    inline void
     lion_encode_t::prepare_new_signature(location_t *RESTRICT out)
     {
         signature = (lion_signature_t *) (out->pointer);
@@ -158,7 +159,7 @@ namespace density {
             push_to_proximity_signature(content, bits);
         }
     }
-
+#if 0
     void
     lion_encode_t::push_zero_to_signature(location_t *RESTRICT out, const uint_fast8_t bits)
     {
@@ -178,7 +179,7 @@ namespace density {
             shift = bits;
         }
     }
-
+#endif
 #define DENSITY_LION_KERNEL_PUSH_SAVE(LION_FORM, VAR)                   \
         push_code_to_signature(out, form_data.get_encoding(LION_FORM)); \
         DENSITY_MEMCPY(out->pointer, &VAR, sizeof(VAR));                \

@@ -1,6 +1,5 @@
 // see LICENSE.md for license.
 #pragma once
-
 #include "densityxx/kernel.hpp"
 
 namespace density {

@@ -1,3 +1,4 @@
+// see LICENSE.md for license.
 #include "densityxx/chameleon.hpp"
 #include "densityxx/mathmacros.hpp"
 
@@ -27,7 +28,8 @@ namespace density {
 #define DENSITY_CHAMELEON_ENCODE_PROCESS_UNIT_SIZE                      \
     (DENSITY_BITSIZEOF(chameleon_signature_t) * sizeof(uint32_t))
 
-    void chameleon_encode_t::prepare_new_signature(location_t *RESTRICT out)
+    void
+    chameleon_encode_t::prepare_new_signature(location_t *RESTRICT out)
     {
         signatures_count++;
         shift = 0;
@@ -252,7 +254,7 @@ namespace density {
         return kernel_decode_state_ready;
     }
 
-    void
+    inline void
     chameleon_decode_t::read_signature(location_t *RESTRICT in)
     {
         DENSITY_MEMCPY(&signature, in->pointer, sizeof(signature));

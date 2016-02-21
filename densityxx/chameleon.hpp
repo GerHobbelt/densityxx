@@ -1,6 +1,5 @@
 // see LICENSE.md for license.
 #pragma once
-
 #include "densityxx/kernel.hpp"
 
 namespace density {
@@ -65,7 +64,6 @@ namespace density {
         exit_process(chameleon_encode_process_t process,
                      kernel_encode_state_t kernel_encode_state)
         {   this->process = process; return kernel_encode_state; }
-
         void prepare_new_signature(location_t *RESTRICT out);
         kernel_encode_state_t prepare_new_block(location_t *RESTRICT out);
         kernel_encode_state_t check_state(location_t *RESTRICT out);
