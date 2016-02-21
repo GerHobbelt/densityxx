@@ -89,48 +89,14 @@ namespace density {
     }
 
     // stream.
-    stream_t::stream_t(void)
-    {
-        in = new teleport_t(DENSITY_STREAM_MEMORY_TELEPORT_BUFFER_SIZE);
-        out = new location_t();
-    }
-    stream_t::~stream_t()
-    {
-        delete in;
-        delete out;
-    }
     stream_state_t
     stream_t::prepare(const uint8_t *RESTRICT in, const uint_fast64_t available_in,
                       uint8_t *RESTRICT out, const uint_fast64_t available_out)
     {
-        this->in->reset_staging_buffer();
+        this->in.reset_staging_buffer();
         update_input(in, available_in);
         update_output(out, available_out);
         process = stream_process_prepared;
-        return stream_state_ready;
-    }
-    stream_state_t
-    stream_t::update_input(const uint8_t *RESTRICT in, const uint_fast64_t available_in)
-    {
-        this->in->change_input_buffer(in, available_in);
-        return stream_state_ready;
-    }
-    stream_state_t
-    stream_t::update_output(uint8_t *RESTRICT out, const uint_fast64_t available_out)
-    {
-        this->out->encapsulate(out, available_out);
-        return stream_state_ready;
-    }
-    uint_fast64_t
-    stream_t::output_available_for_use(void) const
-    {
-        return out->used();
-    }
-    stream_state_t
-    stream_t::check_conformity(void) const
-    {
-        if (out->initial_available_bytes < DENSITY_MINIMUM_OUTPUT_BUFFER_SIZE)
-            return stream_state_error_output_buffer_too_small;
         return stream_state_ready;
     }
     stream_state_t
@@ -141,7 +107,7 @@ namespace density {
             return stream_state_error_invalid_internal_state;
         stream_state_t stream_state = check_conformity();
         if (stream_state) return stream_state;
-        encode_state_t encode_state = encode.init(out, compression_mode, block_type);
+        encode_state_t encode_state = encode.init(&out, compression_mode, block_type);
         switch (encode_state) {
         case encode_state_ready: break;
         case encode_state_stall_on_input: return stream_state_stall_on_input;
@@ -163,7 +129,7 @@ namespace density {
         }
         stream_state_t stream_state = check_conformity();
         if (stream_state) return stream_state;
-        encode_state_t encode_state = encode.continue_(in, out);
+        encode_state_t encode_state = encode.continue_(&in, &out);
         switch (encode_state) {
         case encode_state_ready: return stream_state_ready;
         case encode_state_stall_on_input: return stream_state_stall_on_input;
@@ -181,7 +147,7 @@ namespace density {
         }
         stream_state_t stream_state = check_conformity();
         if (stream_state) return stream_state;
-        encode_state_t encode_state = encode.finish(in, out);
+        encode_state_t encode_state = encode.finish(&in, &out);
         switch (encode_state) {
         case encode_state_ready: break;
         case encode_state_stall_on_output: return stream_state_stall_on_output;
@@ -198,7 +164,7 @@ namespace density {
             return stream_state_error_invalid_internal_state;
         stream_state_t stream_state = check_conformity();
         if (stream_state) return stream_state;
-        decode_state_t decode_state = decode.init(in);
+        decode_state_t decode_state = decode.init(&in);
         switch (decode_state) {
         case decode_state_ready: break;
         case decode_state_stall_on_input: return stream_state_stall_on_input;
@@ -228,7 +194,7 @@ namespace density {
         }
         stream_state_t stream_state = check_conformity();
         if (stream_state) return stream_state;
-        decode_state_t decode_state = decode.continue_(in, out);
+        decode_state_t decode_state = decode.continue_(&in, &out);
         switch (decode_state) {
         case decode_state_ready: return stream_state_ready;
         case decode_state_stall_on_input: return stream_state_stall_on_input;
@@ -246,7 +212,7 @@ namespace density {
                 return stream_state_error_invalid_internal_state;
             process = stream_process_decompression_started;
         }
-        decode_state_t decode_state = decode.finish(in, out);
+        decode_state_t decode_state = decode.finish(&in, &out);
         switch (decode_state) {
         case decode_state_ready: break;
         case decode_state_stall_on_output: return stream_state_stall_on_output;

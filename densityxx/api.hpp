@@ -68,20 +68,23 @@ namespace density {
         encode_t encode;
         decode_t decode;
     public:
-        teleport_t *in;
-        location_t *out;
+        teleport_t in;
+        location_t out;
         uint_fast64_t *total_bytes_read, *total_bytes_written;
 
-        stream_t(void);
-        ~stream_t();
+        inline stream_t(void): in(DENSITY_STREAM_MEMORY_TELEPORT_BUFFER_SIZE), out() {}
+        ~stream_t() {}
 
         stream_state_t prepare(const uint8_t *RESTRICT in, const uint_fast64_t sz,
                                uint8_t *RESTRICT out, const uint_fast64_t szout);
-        stream_state_t update_input(const uint8_t *RESTRICT in, const uint_fast64_t szin);
-        stream_state_t update_output(uint8_t *RESTRICT out, const uint_fast64_t szout);
-        uint_fast64_t output_available_for_use(void) const;
-        stream_state_t check_conformity(void) const;
-
+        inline stream_state_t update_input(const uint8_t *RESTRICT in, const uint_fast64_t szin)
+        {   this->in.change_input_buffer(in, szin); return stream_state_ready; }
+        inline stream_state_t update_output(uint8_t *RESTRICT out, const uint_fast64_t szout)
+        {   this->out.encapsulate(out, szout); return stream_state_ready; }
+        inline uint_fast64_t output_available_for_use(void) const { return out.used(); }
+        inline stream_state_t check_conformity(void) const
+        {   return out.initial_available_bytes < DENSITY_MINIMUM_OUTPUT_BUFFER_SIZE ?
+                stream_state_error_output_buffer_too_small: stream_state_ready; }
         stream_state_t compress_init(const compression_mode_t mode,
                                      const block_type_t block_type);
         stream_state_t compress_continue(void);
