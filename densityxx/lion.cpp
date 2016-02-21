@@ -190,15 +190,15 @@ namespace density {
         lion_dictionary_chunk_prediction_entry_t *const predictions =
             &dictionary->predictions[last_hash];
         __builtin_prefetch(&dictionary->predictions[hash]);
-        if (*(uint32_t *) predictions ^ chunk) {
-            if (*((uint32_t *) predictions + 1) ^ chunk) {
-                if (*((uint32_t *) predictions + 2) ^ chunk) {
+        if (*(uint32_t *) predictions != chunk) {
+            if (*((uint32_t *) predictions + 1) != chunk) {
+                if (*((uint32_t *) predictions + 2) != chunk) {
                     lion_dictionary_chunk_entry_t *const in_dictionary =
                         &dictionary->chunks[hash];
-                    if (*(uint32_t *) in_dictionary ^ chunk) {
-                        if (*((uint32_t *) in_dictionary + 1) ^ chunk) {
-                            if (*((uint32_t *) in_dictionary + 2) ^ chunk) {
-                                if (*((uint32_t *) in_dictionary + 3) ^ chunk) {
+                    if (*(uint32_t *) in_dictionary != chunk) {
+                        if (*((uint32_t *) in_dictionary + 1) != chunk) {
+                            if (*((uint32_t *) in_dictionary + 2) != chunk) {
+                                if (*((uint32_t *) in_dictionary + 3) != chunk) {
                                     DENSITY_LION_KERNEL_PUSH_SAVE(lion_form_plain, chunk);
                                 } else {
                                     DENSITY_LION_KERNEL_PUSH_SAVE(lion_form_dictionary_d, hash);
