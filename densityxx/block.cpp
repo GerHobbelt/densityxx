@@ -92,10 +92,9 @@ namespace density {
             }
         }
     write_block_footer:
-        if (block_type == block_type_with_hashsum_integrity_check)
-            if ((block_encode_state = write_block_footer(in, out)))
-                return exit_process(block_encode_process_write_block_footer,
-                                    block_encode_state);
+        if (block_type == block_type_with_hashsum_integrity_check &&
+            (block_encode_state = write_block_footer(in, out)))
+            return exit_process(block_encode_process_write_block_footer, block_encode_state);
         goto write_block_header;
     }
 
@@ -167,10 +166,9 @@ namespace density {
             }
         }
     write_block_footer:
-        if (block_type == block_type_with_hashsum_integrity_check)
-            if ((block_encode_state = write_block_footer(in, out)))
-                return exit_process(block_encode_process_write_block_footer,
-                                    block_encode_state);
+        if (block_type == block_type_with_hashsum_integrity_check &&
+            (block_encode_state = write_block_footer(in, out)))
+            return exit_process(block_encode_process_write_block_footer, block_encode_state);
         if (in->available_bytes()) goto write_block_header;
         if (kernel_encode != NULL) delete kernel_encode;
         return block_encode_state_ready;
@@ -334,9 +332,9 @@ namespace density {
             }
         }
     read_block_footer:
-        if (block_type == block_type_with_hashsum_integrity_check)
-            if ((block_decode_state = read_block_footer(in, out)))
-                return exit_process(block_decode_process_read_block_footer, block_decode_state);
+        if (block_type == block_type_with_hashsum_integrity_check &&
+            (block_decode_state = read_block_footer(in, out)))
+            return exit_process(block_decode_process_read_block_footer, block_decode_state);
         goto read_block_header;
     }
 
@@ -412,10 +410,9 @@ namespace density {
             }
         }
     read_block_footer:
-        if (block_type == block_type_with_hashsum_integrity_check)
-            if ((block_decode_state = read_block_footer(in, out)))
-                return exit_process(block_decode_process_read_block_footer,
-                                    block_decode_state);
+        if (block_type == block_type_with_hashsum_integrity_check &&
+            (block_decode_state = read_block_footer(in, out)))
+            return exit_process(block_decode_process_read_block_footer, block_decode_state);
         if (in->available_bytes_reserved(end_data_overhead)) goto read_block_header;
         if (kernel_decode != NULL) delete kernel_decode;
         return block_decode_state_ready;

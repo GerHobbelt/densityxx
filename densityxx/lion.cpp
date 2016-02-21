@@ -740,8 +740,8 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         // Check output size
     check_output_size:
         if (DENSITY_UNLIKELY(out->available_bytes < DENSITY_LION_PROCESS_UNIT_SIZE_BIG))
-        return exit_process(lion_decode_process_check_output_size,
-                            kernel_decode_state_stall_on_output);
+            return exit_process(lion_decode_process_check_output_size,
+                                kernel_decode_state_stall_on_output);
         // Try to read the next processing unit
     process_unit:
         read_memory_location =

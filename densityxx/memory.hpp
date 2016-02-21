@@ -79,9 +79,10 @@ namespace density {
                 direct_bytes = direct.initial_available_bytes - direct.available_bytes;
                 if (staging.available_bytes <= direct_bytes) {
                     // Revert to direct buffer reading
+                    const uint_fast64_t staging_available_bytes = staging.available_bytes;
                     reset_staging_buffer();
-                    direct.pointer -= staging.available_bytes;
-                    direct.available_bytes += staging.available_bytes;
+                    direct.pointer -= staging_available_bytes;
+                    direct.available_bytes += staging_available_bytes;
                     return &direct;
                 } else { // Copy missing bytes from direct input buffer
                     DENSITY_MEMCPY(write_pointer, direct.pointer, addon_bytes);
