@@ -12,6 +12,8 @@ namespace density {
         buffer_state_error_during_processing,               // Error during processing
         buffer_state_error_integrity_check_fail             // Integrity check has failed
     } buffer_state_t;
+    DENSITY_ENUM_RENDER4(buffer_state, ok, error_output_buffer_too_small,
+                         error_during_processing, error_integrity_check_fail);
 
     struct buffer_processing_result_t {
         buffer_state_t state;
@@ -37,6 +39,10 @@ namespace density {
         stream_state_error_invalid_internal_state,          // Error during processing
         stream_state_error_integrity_check_fail             // Integrity check has failed
     } stream_state_t;
+    DENSITY_ENUM_RENDER6(stream_state, ready, stall_on_input, stall_on_output,
+                         error_output_buffer_too_small,
+                         error_invalid_internal_state,
+                         error_integrity_check_fail);
 
     struct stream_header_information_t {
         uint8_t major_version, minor_version, revision;
@@ -53,6 +59,9 @@ namespace density {
         stream_process_decompression_started,
         stream_process_decompression_finished,
     } stream_process_t;
+    DENSITY_ENUM_RENDER7(stream_process, prepared,
+                         compression_inited, compression_started, compression_finished,
+                         decompression_inited, decompression_started, decompression_finished);
 
     class stream_t {
     private:

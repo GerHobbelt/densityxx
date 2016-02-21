@@ -13,6 +13,8 @@ namespace density {
         kernel_encode_state_stall_on_output,
         kernel_encode_state_error
     } kernel_encode_state_t;
+    DENSITY_ENUM_RENDER6(kernel_encode_state, ready, info_new_block, info_efficiency_check,
+                         stall_on_input, stall_on_output, error);
 
     class kernel_encode_t {
     public:
@@ -37,6 +39,8 @@ namespace density {
         kernel_decode_state_stall_on_output,
         kernel_decode_state_error
     } kernel_decode_state_t;
+    DENSITY_ENUM_RENDER6(kernel_decode_state, ready, info_new_block, info_efficiency_check,
+                         stall_on_input, stall_on_output, error);
 
     class kernel_decode_t {
     public:

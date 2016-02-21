@@ -1,7 +1,6 @@
 // see LICENSE.md for license.
 #pragma once
 
-#include <string>
 #include "densityxx/api.hpp"
 #include "sharcxx/header.hpp"
 

@@ -16,6 +16,8 @@ namespace density {
         block_encode_state_stall_on_output,
         block_encode_state_error
     } block_encode_state_t;
+    DENSITY_ENUM_RENDER4(block_encode_state,
+                         ready, stall_on_input, stall_on_output, error);
 
     typedef enum {
         block_encode_process_write_block_header,
@@ -23,6 +25,8 @@ namespace density {
         block_encode_process_write_block_footer,
         block_encode_process_write_data,
     } block_encode_process_t;
+    DENSITY_ENUM_RENDER4(block_encode_process, write_block_header,
+                         write_block_mode_marker, write_block_footer, write_data);
 
 #pragma pack(push)
 #pragma pack(4)
@@ -85,6 +89,9 @@ namespace density {
         block_decode_state_integrity_check_fail,
         block_decode_state_error
     } block_decode_state_t;
+    DENSITY_ENUM_RENDER5(block_decode_state,
+                         ready, stall_on_input, stall_on_output,
+                         integrity_check_fail, error);
 
     typedef enum {
         block_decode_process_read_block_header,
@@ -92,6 +99,8 @@ namespace density {
         block_decode_process_read_block_footer,
         block_decode_process_read_data,
     } block_decode_process_t;
+    DENSITY_ENUM_RENDER4(block_decode_process, read_block_header,
+                         read_block_mode_marker, read_block_footer, read_data);
 
 #pragma pack(push)
 #pragma pack(4)
