@@ -3,9 +3,9 @@
 from glob import glob
 from os.path import join as pathjoin
 
-ccflags0 = ['-g', '-Wall', '-std=c++11']
-ccflags1 = ['-O3', '-Wall', '-flto', '-Ofast', '-fomit-frame-pointer', '-std=c++11']
-env = Environment(CCFLAGS = ccflags0,
+if ARGUMENTS.get('debug', 0): ccflags = ['-g', '-Wall', '-std=c++11']
+else: ccflags = ['-O3', '-Wall', '-flto', '-Ofast', '-fomit-frame-pointer', '-std=c++11']
+env = Environment(CCFLAGS = ccflags,
                   CPPDEFINES = [('_FILE_OFFSET_BITS', 64)],
                   CPPPATH = ['.'],
                   PROGSUFFIX = '.exe')
