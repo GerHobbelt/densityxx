@@ -28,7 +28,7 @@ namespace density {
 #define DENSITY_CHAMELEON_ENCODE_PROCESS_UNIT_SIZE                      \
     (DENSITY_BITSIZEOF(chameleon_signature_t) * sizeof(uint32_t))
 
-    void
+    inline void
     chameleon_encode_t::prepare_new_signature(location_t *RESTRICT out)
     {
         signatures_count++;
@@ -40,7 +40,7 @@ namespace density {
         out->available_bytes -= sizeof(chameleon_signature_t);
     }
 
-    kernel_encode_state_t
+    inline kernel_encode_state_t
     chameleon_encode_t::prepare_new_block(location_t *RESTRICT out)
     {
         if (DENSITY_CHAMELEON_MAXIMUM_COMPRESSED_UNIT_SIZE > out->available_bytes)
@@ -69,7 +69,7 @@ namespace density {
         return kernel_encode_state_ready;
     }
 
-    kernel_encode_state_t
+    inline kernel_encode_state_t
     chameleon_encode_t::check_state(location_t *RESTRICT out)
     {
         kernel_encode_state_t kernel_encode_state;
@@ -87,7 +87,7 @@ namespace density {
         return kernel_encode_state_ready;
     }
 
-    void
+    inline void
     chameleon_encode_t::kernel(location_t *RESTRICT out, const uint16_t hash,
                                const uint32_t chunk, const uint_fast8_t shift)
     {
@@ -103,7 +103,7 @@ namespace density {
         }
     }
 
-    void
+    inline void
     chameleon_encode_t::process_unit(location_t *RESTRICT in, location_t *RESTRICT out)
     {
         uint32_t chunk;
@@ -225,7 +225,7 @@ namespace density {
     }
 
     //--- decode ---
-    kernel_decode_state_t
+    inline kernel_decode_state_t
     chameleon_decode_t::check_state(location_t *RESTRICT out)
     {
         if (out->available_bytes < DENSITY_CHAMELEON_DECOMPRESSED_UNIT_SIZE)
@@ -263,7 +263,7 @@ namespace density {
         signatures_count++;
     }
 
-    void
+    inline void
     chameleon_decode_t::kernel(location_t *RESTRICT in, location_t *RESTRICT out,
                                const bool compressed)
     {
@@ -281,7 +281,7 @@ namespace density {
         out->pointer += sizeof(uint32_t);
     }
 
-    void
+    inline void
     chameleon_decode_t::process_data(location_t *RESTRICT in, location_t *RESTRICT out)
     {
         uint_fast8_t count = 0;
