@@ -40,7 +40,7 @@ namespace density {
             forms_index[cur->form] = cur;
             prev = cur;
         }
-        *(uint64_t *)usages = 0;
+        usages = 0;
     }
 
     void
@@ -61,18 +61,18 @@ namespace density {
     void
     lion_form_data_t::flatten(const uint8_t usage)
     {
-        if (DENSITY_UNLIKELY(usage & 0x80))
-            *(uint64_t *)usages =
-                (*(uint64_t *)usages >> 1) & 0x7f7f7f7f7f7f7f7fllu; // Flatten usage values
+        if (DENSITY_UNLIKELY(usage & 0x80)) // Flatten usage values
+            usages = (usages >> 1) & 0x7f7f7f7f7f7f7f7fllu;
     }
 
     const lion_form_t
     lion_form_data_t::increment_usage(lion_form_node_t *RESTRICT const form)
     {
         const lion_form_t form_value = form->form;
-        const uint8_t usage = ++usages[form_value];
+        uint8_t *u8usages = (uint8_t *)&usages;
+        const uint8_t usage = ++u8usages[form_value];
         lion_form_node_t *const previous_form = form->previous_form;
-        if (previous_form) update(form, usage, previous_form, usages[previous_form->form]);
+        if (previous_form) update(form, usage, previous_form, u8usages[previous_form->form]);
         else flatten(usage);
         return form_value;
     }
@@ -80,11 +80,12 @@ namespace density {
     lion_entropy_code_t
     lion_form_data_t::get_encoding(const lion_form_t form)
     {
-        const uint8_t usage = ++usages[form];
+        uint8_t *u8usages = (uint8_t *)&usages;
+        const uint8_t usage = ++u8usages[form];
         lion_form_node_t *const form_found = forms_index[form];
         lion_form_node_t *const previous_form = form_found->previous_form;
         if (previous_form) {
-            update(form_found, usage, previous_form, usages[previous_form->form]);
+            update(form_found, usage, previous_form, u8usages[previous_form->form]);
             return lion_form_entropy_codes[form_found->rank];
         } else {
             flatten(usage);

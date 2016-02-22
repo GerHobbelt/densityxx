@@ -58,7 +58,7 @@ namespace density {
         lion_entropy_code_t get_encoding(const lion_form_t);
 
         // data members.
-        uint8_t usages[DENSITY_LION_NUMBER_OF_FORMS];
+        uint64_t usages;
         lion_form_node_t forms_pool[DENSITY_LION_NUMBER_OF_FORMS];
         lion_form_node_t *forms_index[DENSITY_LION_NUMBER_OF_FORMS];
         uint8_t next_available_form;
