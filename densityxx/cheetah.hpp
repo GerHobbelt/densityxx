@@ -17,6 +17,7 @@ namespace density {
         cheetah_signature_flag_map_b = 0x2,
         cheetah_signature_flag_chunk = 0x3,
     } cheetah_signature_flag_t;
+    DENSITY_ENUM_RENDER4(cheetah_signature_flag, predicted, map_a, map_b, chunk);
 
 #pragma pack(push)
 #pragma pack(4)
@@ -41,6 +42,8 @@ namespace density {
         cheetah_encode_process_check_signature_state,
         cheetah_encode_process_read_chunk,
     } cheetah_encode_process_t;
+    DENSITY_ENUM_RENDER3(cheetah_encode_process,
+                         prepare_new_block, check_signature_state, read_chunk);
 
     class cheetah_encode_t: public kernel_encode_t {
     public:
@@ -83,6 +86,7 @@ namespace density {
         cheetah_decode_process_check_signature_state,
         cheetah_decode_process_read_processing_unit,
     } cheetah_decode_process_t;
+    DENSITY_ENUM_RENDER2(cheetah_decode_process, check_signature_state, read_processing_unit);
 
     class cheetah_decode_t: public kernel_decode_t {
     public:

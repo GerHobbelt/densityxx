@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <typeinfo>
 #include <string>
 
 #define DENSITYXX_MAJOR_VERSION 0
@@ -55,6 +56,18 @@
 #define DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE_SHIFT    6
 #define DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE          \
     (1 << DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE_SHIFT)
+
+#ifdef DENSITY_SHOW
+#define DENSITY_SHOW_IN(IN, SZ)                                         \
+    fprintf(stderr, "%s::%s(%u): in(%p, %u)\n", typeid(*this).name(),   \
+            __FUNCTION__, __LINE__, (IN)->pointer, (unsigned)(SZ))
+#define DENSITY_SHOW_OUT(OUT, SZ)                                       \
+    fprintf(stderr, "%s::%s(%u): out(%p, %u)\n", typeid(*this).name(),  \
+            __FUNCTION__, __LINE__, (OUT)->pointer, (unsigned)(SZ))
+#else
+#define DENSITY_SHOW_IN(IN, SZ)
+#define DENSITY_SHOW_OUT(OUT, SZ)
+#endif
 
 #define DENSITY_ENUM_RENDER_PROTOTYPE(ENUM_TYPE)                        \
     inline std::string ENUM_TYPE##_render(const ENUM_TYPE##_t ENUM_TYPE)

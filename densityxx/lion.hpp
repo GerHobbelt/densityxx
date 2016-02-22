@@ -68,10 +68,12 @@ namespace density {
         lion_bigram_signature_flag_dictionary = 0x0,
         lion_bigram_signature_flag_plain = 0x1,
     } lion_bigram_signature_flag_t;
+    DENSITY_ENUM_RENDER2(lion_bigram_signature_flag, dictionary, plain);
     typedef enum {
         lion_predictions_signature_flag_a = 0x0,
         lion_predictions_signature_flag_b = 0x1,
     } lion_predictions_signature_flag_t;
+    DENSITY_ENUM_RENDER2(lion_predictions_signature_flag, a, b)
 
     //-- dictionary ---
     typedef struct {
@@ -103,6 +105,7 @@ namespace density {
         lion_encode_process_check_output_size,
         lion_encode_process_unit,
     } lion_encode_process_t;
+    DENSITY_ENUM_RENDER3(lion_encode_process, check_block_state, check_output_size, unit);
     typedef struct {
         uint8_t content[DENSITY_LION_MAXIMUM_COMPRESSED_BODY_SIZE_PER_SIGNATURE];
         uint_fast8_t size;
@@ -177,11 +180,13 @@ namespace density {
         lion_decode_process_check_output_size,
         lion_decode_process_unit,
     } lion_decode_process_t;
+    DENSITY_ENUM_RENDER3(lion_decode_process, check_block_state, check_output_size, unit);
     typedef enum {
         lion_decode_step_by_step_status_proceed = 0,
         lion_decode_step_by_step_status_stall_on_output,
         lion_decode_step_by_step_status_end_marker
     } lion_decode_step_by_step_status_t;
+    DENSITY_ENUM_RENDER3(lion_decode_step_by_step_status, proceed, stall_on_output, end_marker);
     class lion_decode_t: public kernel_decode_t {
     public:
         virtual compression_mode_t mode(void) const

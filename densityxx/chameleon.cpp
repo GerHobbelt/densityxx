@@ -1,6 +1,21 @@
 // see LICENSE.md for license.
+#include <typeinfo>
 #include "densityxx/chameleon.hpp"
 #include "densityxx/mathmacros.hpp"
+
+#ifdef DENSITY_SHOW
+#define DENSITY_SHOW_ENCODE(LABEL)                                      \
+    fprintf(stderr, "%s::%s(%u/%s):\n",                                 \
+            typeid(*this).name(), __FUNCTION__, __LINE__, #LABEL);      \
+    fprintf(stderr, "    proximity_signature(%llx)\n", (unsigned long long)proximity_signature); \
+    fprintf(stderr, "    shift(%u)\n", (unsigned)shift);                \
+    fprintf(stderr, "    signatures_count(%u)\n", (unsigned)signatures_count); \
+    fprintf(stderr, "    efficiency_checked(%s)\n", efficiency_checked ? "true": "false"); \
+    fprintf(stderr, "    signature_copied_to_memory(%s)\n", signature_copied_to_memory ? "true": "false"); \
+    fprintf(stderr, "    process(%s)\n", chameleon_encode_process_render(process).c_str())
+#else
+#define DENSITY_SHOW_ENCODE(LABEL)
+#endif
 
 namespace density {
 #define DENSITY_CHAMELEON_PREFERRED_BLOCK_SIGNATURES_SHIFT      11
@@ -36,6 +51,7 @@ namespace density {
         signature = (chameleon_signature_t *)(out->pointer);
         proximity_signature = 0;
         signature_copied_to_memory = false;
+        DENSITY_SHOW_OUT(out, sizeof(chameleon_signature_t));
         out->pointer += sizeof(chameleon_signature_t);
         out->available_bytes -= sizeof(chameleon_signature_t);
     }
@@ -94,10 +110,12 @@ namespace density {
         chameleon_dictionary_entry_t *const found = &dictionary.entries[hash];
         if (chunk != found->as_uint32_t) {
             found->as_uint32_t = chunk;
+            DENSITY_SHOW_OUT(out, sizeof(chunk));
             DENSITY_MEMCPY(out->pointer, &chunk, sizeof(chunk));
             out->pointer += sizeof(chunk);
         } else {
             proximity_signature |= ((uint64_t)chameleon_signature_flag_map << shift);
+            DENSITY_SHOW_OUT(out, sizeof(hash));
             DENSITY_MEMCPY(out->pointer, &hash, sizeof(hash));
             out->pointer += sizeof(hash);
         }
@@ -108,6 +126,7 @@ namespace density {
     {
         uint32_t chunk;
         uint_fast8_t count = 0;
+        DENSITY_SHOW_IN(in, 64 * sizeof(uint32_t));
 #ifdef __clang__
         for (uint_fast8_t count_b = 0; count_b < 32; count_b++) {
             DENSITY_UNROLL_2(DENSITY_MEMCPY(&chunk, in->pointer, sizeof(uint32_t)); \
@@ -137,6 +156,7 @@ namespace density {
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
         reset_cycle = DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE - 1;
 #endif
+        DENSITY_SHOW_ENCODE(init);
         return exit_process(chameleon_encode_process_prepare_new_block,
                             kernel_encode_state_ready);
     }
@@ -155,14 +175,17 @@ namespace density {
         }
         // Prepare new block
     prepare_new_block:
+        DENSITY_SHOW_ENCODE(prepare_new_block);
         if ((return_state = prepare_new_block(out)))
             return exit_process(chameleon_encode_process_prepare_new_block, return_state);
         // Check signature state
     check_signature_state:
+        DENSITY_SHOW_ENCODE(check_signature_state);
         if ((return_state = check_state(out)))
             return exit_process(chameleon_encode_process_check_signature_state, return_state);
         // Try to read a complete chunk unit
     read_chunk:
+        DENSITY_SHOW_ENCODE(read_chunk);
         pointer_out_before = out->pointer;
         if (!(read_memory_location = in->read(DENSITY_CHAMELEON_ENCODE_PROCESS_UNIT_SIZE)))
             return exit_process(chameleon_encode_process_read_chunk,
@@ -189,14 +212,17 @@ namespace density {
         }
         // Prepare new block
     prepare_new_block:
+        DENSITY_SHOW_ENCODE(prepare_new_block);
         if ((return_state = prepare_new_block(out)))
             return exit_process(chameleon_encode_process_prepare_new_block, return_state);
         // Check signature state
     check_signature_state:
+        DENSITY_SHOW_ENCODE(check_signature_state);
         if ((return_state = check_state(out)))
             return exit_process(chameleon_encode_process_check_signature_state, return_state);
         // Try to read a complete chunk unit
     read_chunk:
+        DENSITY_SHOW_ENCODE(read_chunk);
         pointer_out_before = out->pointer;
         if (!(read_memory_location = in->read(DENSITY_CHAMELEON_ENCODE_PROCESS_UNIT_SIZE)))
             goto step_by_step;
@@ -206,6 +232,7 @@ namespace density {
         goto exit;
         // Read step by step
     step_by_step:
+        DENSITY_SHOW_ENCODE(step_by_step);
         while (shift != DENSITY_BITSIZEOF(chameleon_signature_t) &&
                (read_memory_location = in->read(sizeof(uint32_t)))) {
             uint32_t chunk;
@@ -216,6 +243,7 @@ namespace density {
             read_memory_location->available_bytes -= sizeof(chunk);
         }
     exit:
+        DENSITY_SHOW_ENCODE(exit);
         out->available_bytes -= (out->pointer - pointer_out_before);
         if (in->available_bytes() >= sizeof(uint32_t)) goto check_signature_state;
         // Copy the remaining bytes
@@ -257,6 +285,7 @@ namespace density {
     inline void
     chameleon_decode_t::read_signature(location_t *RESTRICT in)
     {
+        DENSITY_SHOW_IN(in, sizeof(signature));
         DENSITY_MEMCPY(&signature, in->pointer, sizeof(signature));
         in->pointer += sizeof(signature);
         shift = 0;
@@ -269,15 +298,18 @@ namespace density {
     {
         if (compressed) {
             uint16_t hash;
+            DENSITY_SHOW_IN(in, sizeof(hash));
             DENSITY_MEMCPY(&hash, in->pointer, sizeof(hash));
             process_compressed(hash, out);
             in->pointer += sizeof(hash);
         } else {
             uint32_t chunk;
+            DENSITY_SHOW_IN(in, sizeof(chunk));
             DENSITY_MEMCPY(&chunk, in->pointer, sizeof(chunk));
             process_uncompressed(chunk, out);
             in->pointer += sizeof(chunk);
         }
+        DENSITY_SHOW_OUT(out, sizeof(uint32_t));
         out->pointer += sizeof(uint32_t);
     }
 

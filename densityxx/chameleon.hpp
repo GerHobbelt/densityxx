@@ -34,6 +34,8 @@ namespace density {
         chameleon_encode_process_check_signature_state,
         chameleon_encode_process_read_chunk,
     } chameleon_encode_process_t;
+    DENSITY_ENUM_RENDER3(chameleon_encode_process,
+                         prepare_new_block, check_signature_state, read_chunk);
 
     class chameleon_encode_t: public kernel_encode_t {
     public:
@@ -77,6 +79,7 @@ namespace density {
         chameleon_decode_process_check_signature_state,
         chameleon_decode_process_read_processing_unit,
     } chameleon_decode_process_t;
+    DENSITY_ENUM_RENDER2(chameleon_decode_process, check_signature_state, read_processing_unit);
 
     class chameleon_decode_t: public kernel_decode_t {
     public:
