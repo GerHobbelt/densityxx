@@ -51,7 +51,7 @@ namespace density {
         signature = (chameleon_signature_t *)(out->pointer);
         proximity_signature = 0;
         signature_copied_to_memory = false;
-        DENSITY_SHOW_OUT(out, sizeof(chameleon_signature_t));
+        //DENSITY_SHOW_OUT(out, sizeof(chameleon_signature_t));
         out->pointer += sizeof(chameleon_signature_t);
         out->available_bytes -= sizeof(chameleon_signature_t);
     }
@@ -110,12 +110,12 @@ namespace density {
         chameleon_dictionary_entry_t *const found = &dictionary.entries[hash];
         if (chunk != found->as_uint32_t) {
             found->as_uint32_t = chunk;
-            DENSITY_SHOW_OUT(out, sizeof(chunk));
+            //DENSITY_SHOW_OUT(out, sizeof(chunk));
             DENSITY_MEMCPY(out->pointer, &chunk, sizeof(chunk));
             out->pointer += sizeof(chunk);
         } else {
             proximity_signature |= ((uint64_t)chameleon_signature_flag_map << shift);
-            DENSITY_SHOW_OUT(out, sizeof(hash));
+            //DENSITY_SHOW_OUT(out, sizeof(hash));
             DENSITY_MEMCPY(out->pointer, &hash, sizeof(hash));
             out->pointer += sizeof(hash);
         }
@@ -126,7 +126,7 @@ namespace density {
     {
         uint32_t chunk;
         uint_fast8_t count = 0;
-        DENSITY_SHOW_IN(in, 64 * sizeof(uint32_t));
+        //DENSITY_SHOW_IN(in, 64 * sizeof(uint32_t));
 #ifdef __clang__
         for (uint_fast8_t count_b = 0; count_b < 32; count_b++) {
             DENSITY_UNROLL_2(DENSITY_MEMCPY(&chunk, in->pointer, sizeof(uint32_t)); \
@@ -285,7 +285,7 @@ namespace density {
     inline void
     chameleon_decode_t::read_signature(location_t *RESTRICT in)
     {
-        DENSITY_SHOW_IN(in, sizeof(signature));
+        //DENSITY_SHOW_IN(in, sizeof(signature));
         DENSITY_MEMCPY(&signature, in->pointer, sizeof(signature));
         in->pointer += sizeof(signature);
         shift = 0;
@@ -298,18 +298,18 @@ namespace density {
     {
         if (compressed) {
             uint16_t hash;
-            DENSITY_SHOW_IN(in, sizeof(hash));
+            //DENSITY_SHOW_IN(in, sizeof(hash));
             DENSITY_MEMCPY(&hash, in->pointer, sizeof(hash));
             process_compressed(hash, out);
             in->pointer += sizeof(hash);
         } else {
             uint32_t chunk;
-            DENSITY_SHOW_IN(in, sizeof(chunk));
+            //DENSITY_SHOW_IN(in, sizeof(chunk));
             DENSITY_MEMCPY(&chunk, in->pointer, sizeof(chunk));
             process_uncompressed(chunk, out);
             in->pointer += sizeof(chunk);
         }
-        DENSITY_SHOW_OUT(out, sizeof(uint32_t));
+        //DENSITY_SHOW_OUT(out, sizeof(uint32_t));
         out->pointer += sizeof(uint32_t);
     }
 
@@ -440,7 +440,7 @@ namespace density {
             }
             out->pointer += sizeof(uint32_t);
             out->available_bytes -= sizeof(uint32_t);
-            shift++;
+            ++shift;
         }
         // New loop
         goto check_signature_state;

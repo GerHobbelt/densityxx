@@ -212,7 +212,7 @@ namespace density {
         goto exit;
         // Read step by step
     step_by_step:
-        while (this->shift != DENSITY_BITSIZEOF(cheetah_signature_t) &&
+        while (shift != DENSITY_BITSIZEOF(cheetah_signature_t) &&
                (read_memory_location = in->read(sizeof(uint32_t)))) {
             uint32_t chunk;
             DENSITY_MEMCPY(&chunk, read_memory_location->pointer, sizeof(uint32_t));
