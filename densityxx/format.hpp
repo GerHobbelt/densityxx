@@ -80,9 +80,9 @@ namespace density {
         inline uint_fast32_t
         write(location_t *out, const compression_mode_t compression_mode,
               const block_type_t block_type, const main_header_parameters_t parameters)
-        {   version[0] = DENSITYXX_MAJOR_VERSION;
-            version[1] = DENSITYXX_MINOR_VERSION;
-            version[2] = DENSITYXX_REVISION;
+        {   version[0] = major_version;
+            version[1] = minor_version;
+            version[2] = revision;
             this->compression_mode = compression_mode;
             this->block_type = block_type;
             reserved[0] = reserved[1] = reserved[2] = 0;

@@ -4,11 +4,11 @@
 #include "globals.hpp"
 
 namespace density {
-#define SPOOKYHASH_VARIABLES (12)
+    const size_t spookyhash_variables = 12;
     class spookyhash_context_t {
     private:
-        uint64_t m_data[2 * SPOOKYHASH_VARIABLES];
-        uint64_t m_state[SPOOKYHASH_VARIABLES];
+        uint64_t m_data[2 * spookyhash_variables];
+        uint64_t m_state[spookyhash_variables];
         size_t m_length;
         uint8_t m_remainder;
     public:

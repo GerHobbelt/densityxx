@@ -49,9 +49,9 @@ namespace density {
         temp32 = LITTLE_ENDIAN_32(SHARC_HEADER_MAGIC_NUMBER);
         uint_fast32_t written = (uint_fast32_t)
             fwrite(&temp32, sizeof(uint8_t), sizeof(uint32_t), wfp);
-        fputc(DENSITYXX_MAJOR_VERSION, wfp);
-        fputc(DENSITYXX_MINOR_VERSION, wfp);
-        fputc(DENSITYXX_REVISION, wfp);
+        fputc(major_version, wfp);
+        fputc(minor_version, wfp);
+        fputc(revision, wfp);
         fputc(header_origin_type, wfp);
         written += 4;
         switch (header_origin_type) {

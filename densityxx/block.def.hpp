@@ -3,10 +3,6 @@
 #include "densityxx/kernel.hpp"
 #include "densityxx/spookyhash.hpp"
 
-#define DENSITY_PREFERRED_COPY_BLOCK_SIZE  (1 << 19)
-#define DENSITY_SPOOKYHASH_SEED_1  (0xabc)
-#define DENSITY_SPOOKYHASH_SEED_2  (0xdef)
-
 namespace density {
     // encode.
     typedef enum {

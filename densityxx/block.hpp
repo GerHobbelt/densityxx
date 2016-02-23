@@ -3,6 +3,9 @@
 #include "densityxx/block.def.hpp"
 
 namespace density {
+    const uint64_t preferred_copy_block_size = 1 << 19;
+    const uint64_t spookyhash_seed_1 = 0xabc;
+    const uint64_t spookyhash_seed_2 = 0xdef;
     // encode.
     inline block_encode_state_t
     block_encode_t::init(kernel_encode_t *kernel_encode, const block_type_t block_type)
@@ -47,7 +50,7 @@ namespace density {
         available_out_before = out->available_bytes;
         if (current_mode == compression_mode_copy) {
             uint_fast64_t block_remaining = (uint_fast64_t)
-                DENSITY_PREFERRED_COPY_BLOCK_SIZE - (total_read - in_start);
+                preferred_copy_block_size - (total_read - in_start);
             uint_fast64_t in_remaining = in->available_bytes();
             uint_fast64_t out_remaining = out->available_bytes;
             if (in_remaining <= out_remaining) {
@@ -127,7 +130,7 @@ namespace density {
         available_out_before = out->available_bytes;
         if (current_mode == compression_mode_copy) {
             uint_fast64_t block_remaining = (uint_fast64_t)
-                DENSITY_PREFERRED_COPY_BLOCK_SIZE - (total_read - in_start);
+                preferred_copy_block_size - (total_read - in_start);
             uint_fast64_t in_remaining = in->available_bytes();
             uint_fast64_t out_remaining = out->available_bytes;
             if (in_remaining <= out_remaining) {
@@ -204,7 +207,7 @@ namespace density {
         out_start = total_written;
 
         if (block_type == block_type_with_hashsum_integrity_check) {
-            context.init(DENSITY_SPOOKYHASH_SEED_1, DENSITY_SPOOKYHASH_SEED_2);
+            context.init(spookyhash_seed_1, spookyhash_seed_2);
             context.update(in->staging.pointer, in->staging.available_bytes);
             update_integrity_data(in);
         }
@@ -283,7 +286,7 @@ namespace density {
         available_out_before = out->available_bytes;
         if (current_mode == compression_mode_copy) {
             uint_fast64_t block_remaining = (uint_fast64_t)
-                DENSITY_PREFERRED_COPY_BLOCK_SIZE - (total_written - out_start);
+                preferred_copy_block_size - (total_written - out_start);
             uint_fast64_t in_remaining = in->available_bytes_reserved(end_data_overhead);
             uint_fast64_t out_remaining = out->available_bytes;
             if (in_remaining <= out_remaining) {
@@ -363,7 +366,7 @@ namespace density {
         available_out_before = out->available_bytes;
         if (current_mode == compression_mode_copy) {
             uint_fast64_t block_remaining = (uint_fast64_t)
-                DENSITY_PREFERRED_COPY_BLOCK_SIZE - (total_written - out_start);
+                preferred_copy_block_size - (total_written - out_start);
             uint_fast64_t in_remaining = in->available_bytes_reserved(end_data_overhead);
             uint_fast64_t out_remaining = out->available_bytes;
             if (in_remaining <= out_remaining) {
@@ -434,7 +437,7 @@ namespace density {
         if (read_block_header_content)
             total_read += last_block_header.read(read_location);
         if (block_type == block_type_with_hashsum_integrity_check) {
-            context.init(DENSITY_SPOOKYHASH_SEED_1, DENSITY_SPOOKYHASH_SEED_2);
+            context.init(spookyhash_seed_1, spookyhash_seed_2);
             update_integrity_data(out);
         }
         return block_decode_state_ready;

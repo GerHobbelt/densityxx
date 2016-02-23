@@ -15,8 +15,10 @@
 
 static void version(void)
 {
-    printf("%sDensityXX %i.%i.%i%s\n", SHARC_ESC_BOLD_START,
-           DENSITYXX_MAJOR_VERSION, DENSITYXX_MINOR_VERSION, DENSITYXX_REVISION,
+    printf("%sDensityXX %u.%u.%u%s\n", SHARC_ESC_BOLD_START,
+           (unsigned)density::major_version,
+           (unsigned)density::minor_version,
+           (unsigned)density::revision,
            SHARC_ESC_END);
     printf("Copyright (C) 2016 Charles Wang\n");
     printf("Copyright (C) 2013 Guillaume Voirin\n");

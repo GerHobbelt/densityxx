@@ -147,9 +147,8 @@ namespace density {
             break;
         default: return decode_state_error;
         }
-        block_decode.init(kernel_decode,
-                          (block_type_t)header.block_type, header.parameters,
-                          DENSITY_DECODE_END_DATA_OVERHEAD);
+        block_decode.init(kernel_decode, (block_type_t)header.block_type, header.parameters,
+                          decode_end_data_overhead);
         return exit_process(decode_process_read_blocks, decode_state_ready);
     }
     
@@ -163,7 +162,7 @@ namespace density {
         default:  return decode_state_error;
         }
     read_blocks:
-        available_in_before = in->available_bytes_reserved(DENSITY_DECODE_END_DATA_OVERHEAD);
+        available_in_before = in->available_bytes_reserved(decode_end_data_overhead);
         available_out_before = out->available_bytes;
 
         block_decode_state = block_decode.continue_(in, out);
@@ -192,7 +191,7 @@ namespace density {
         default:  return decode_state_error;
         }
     read_blocks:
-        available_in_before = in->available_bytes_reserved(DENSITY_DECODE_END_DATA_OVERHEAD);
+        available_in_before = in->available_bytes_reserved(decode_end_data_overhead);
         available_out_before = out->available_bytes;
         block_decode_state = block_decode.finish(in, out);
         update_totals(in, out, available_in_before, available_out_before);
@@ -216,7 +215,7 @@ namespace density {
     decode_t::read_header(teleport_t *RESTRICT in)
     {
         location_t *read_location;
-        if (!(read_location = in->read_reserved(sizeof(header), DENSITY_DECODE_END_DATA_OVERHEAD)))
+        if (!(read_location = in->read_reserved(sizeof(header), decode_end_data_overhead)))
             return decode_state_stall_on_input;
         total_read += header.read(read_location);
         return decode_state_ready;

@@ -60,9 +60,9 @@ namespace density {
 
     // decode.
 #if DENSITY_WRITE_MAIN_FOOTER == DENSITY_YES && DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
-#define DENSITY_DECODE_END_DATA_OVERHEAD   (sizeof(density::main_footer_t))
+    const size_t decode_end_data_overhead = sizeof(density::main_footer_t);
 #else
-#define DENSITY_DECODE_END_DATA_OVERHEAD   0
+    const size_t decode_end_data_overhead = 0;
 #endif
 
     typedef enum {
@@ -109,7 +109,7 @@ namespace density {
                       const uint_fast64_t available_in_before,
                       const uint_fast64_t available_out_before)
         {
-            total_read += available_in_before - in->available_bytes_reserved(DENSITY_DECODE_END_DATA_OVERHEAD);
+            total_read += available_in_before - in->available_bytes_reserved(decode_end_data_overhead);
             total_written += available_out_before - out->available_bytes;
         }
     };

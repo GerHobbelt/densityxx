@@ -12,10 +12,6 @@
 #include <typeinfo>
 #include <string>
 
-#define DENSITYXX_MAJOR_VERSION 0
-#define DENSITYXX_MINOR_VERSION 12
-#define DENSITYXX_REVISION      5
-
 #define DENSITY_YES  1
 #define DENSITY_NO   0
 
@@ -132,6 +128,10 @@
     default: return #ENUM_TYPE "_???"; } }
 
 namespace density {
+    const uint8_t major_version = 0;
+    const uint8_t minor_version = 12;
+    const uint8_t revision = 5;
+
     typedef enum {
         compression_mode_copy = 0,
         compression_mode_chameleon_algorithm = 1,

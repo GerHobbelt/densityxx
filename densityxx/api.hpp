@@ -4,7 +4,7 @@
 
 namespace density {
     // buffer.
-#define DENSITY_MINIMUM_OUTPUT_BUFFER_SIZE         (1 << 10)
+    const size_t minimum_output_buffer_size = 1 << 10;
     typedef enum {
         buffer_state_ok = 0,                                // Everything went alright
         buffer_state_error_output_buffer_too_small,         // Output buffer size is too small
@@ -29,7 +29,7 @@ namespace density {
                       uint8_t *out, const uint_fast64_t szout);
 
     // stream.
-#define DENSITY_STREAM_MEMORY_TELEPORT_BUFFER_SIZE     (1 << 16)
+    const size_t stream_memory_teleport_buffer_size = 1 << 16;
     typedef enum {
         stream_state_ready = 0,                             // Awaiting further instructions (new action or adding data to the input buffer)
         stream_state_stall_on_input,                        // There is not enough space left in the input buffer to continue
@@ -72,7 +72,7 @@ namespace density {
         location_t out;
         uint_fast64_t *total_bytes_read, *total_bytes_written;
 
-        inline stream_t(void): in(DENSITY_STREAM_MEMORY_TELEPORT_BUFFER_SIZE), out() {}
+        inline stream_t(void): in(stream_memory_teleport_buffer_size), out() {}
         ~stream_t() {}
 
         stream_state_t prepare(const uint8_t *RESTRICT in, const uint_fast64_t sz,
@@ -83,7 +83,7 @@ namespace density {
         {   this->out.encapsulate(out, szout); return stream_state_ready; }
         inline uint_fast64_t output_available_for_use(void) const { return out.used(); }
         inline stream_state_t check_conformity(void) const
-        {   return out.initial_available_bytes < DENSITY_MINIMUM_OUTPUT_BUFFER_SIZE ?
+        {   return out.initial_available_bytes < minimum_output_buffer_size ?
                 stream_state_error_output_buffer_too_small: stream_state_ready; }
         stream_state_t compress_init(const compression_mode_t mode,
                                      const block_type_t block_type);
