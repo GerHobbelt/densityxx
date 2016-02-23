@@ -3,11 +3,10 @@
 #include "densityxx/kernel.hpp"
 
 namespace density {
-#define DENSITY_CHEETAH_HASH_BITS           16
-#define DENSITY_CHEETAH_HASH_MULTIPLIER     (uint32_t)0x9D6EF916lu
-#define DENSITY_CHEETAH_HASH_ALGORITHM(value32)             \
-    (uint16_t)(value32 * DENSITY_CHEETAH_HASH_MULTIPLIER >> \
-               (32 - DENSITY_CHEETAH_HASH_BITS))
+    const unsigned cheetah_hash_bits = 16;
+    const uint32_t cheetah_hash_multiplier = 0x9D6EF916U;
+    inline uint16_t cheetah_hash_algorithm(uint32_t value32)
+    {   return (uint16_t)(value32 * cheetah_hash_multiplier >> (32 - cheetah_hash_bits)); }
 
     typedef uint64_t cheetah_signature_t;
 
@@ -30,9 +29,9 @@ namespace density {
     } cheetah_dictionary_prediction_entry_t;
     class cheetah_dictionary_t {
     public:
-        cheetah_dictionary_entry_t entries[1 << DENSITY_CHEETAH_HASH_BITS];
+        cheetah_dictionary_entry_t entries[1 << cheetah_hash_bits];
         cheetah_dictionary_prediction_entry_t
-        prediction_entries[1 << DENSITY_CHEETAH_HASH_BITS];
+        prediction_entries[1 << cheetah_hash_bits];
         inline void reset(void) { memset(this, 0, sizeof(*this)); }
     };
 

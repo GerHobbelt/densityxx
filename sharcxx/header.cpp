@@ -46,7 +46,7 @@ namespace density {
         uint32_t temp32;
         uint64_t temp64;
 
-        temp32 = LITTLE_ENDIAN_32(SHARC_HEADER_MAGIC_NUMBER);
+        temp32 = LITTLE_ENDIAN_32(header_magic_number);
         uint_fast32_t written = (uint_fast32_t)
             fwrite(&temp32, sizeof(uint8_t), sizeof(uint32_t), wfp);
         fputc(major_version, wfp);

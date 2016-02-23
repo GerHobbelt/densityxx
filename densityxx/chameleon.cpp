@@ -18,30 +18,29 @@
 #endif
 
 namespace density {
-#define DENSITY_CHAMELEON_PREFERRED_BLOCK_SIGNATURES_SHIFT      11
-#define DENSITY_CHAMELEON_PREFERRED_BLOCK_SIGNATURES            \
-    (1 << DENSITY_CHAMELEON_PREFERRED_BLOCK_SIGNATURES_SHIFT)
+    const uint_fast8_t chameleon_preferred_block_signatures_shift = 11;
+    const uint_fast64_t chameleon_preferred_block_signatures =
+        1 << chameleon_preferred_block_signatures_shift;
 
-#define DENSITY_CHAMELEON_PREFERRED_EFFICIENCY_CHECK_SIGNATURES_SHIFT   7
-#define DENSITY_CHAMELEON_PREFERRED_EFFICIENCY_CHECK_SIGNATURES         \
-    (1 << DENSITY_CHAMELEON_PREFERRED_EFFICIENCY_CHECK_SIGNATURES_SHIFT)
+    const uint_fast8_t chameleon_preferred_efficiency_check_signatures_shift = 7;
+    const uint_fast64_t chameleon_preferred_efficiency_check_signatures =
+        1 << chameleon_preferred_efficiency_check_signatures_shift;
 
 
     // Uncompressed chunks
-#define DENSITY_CHAMELEON_MAXIMUM_COMPRESSED_BODY_SIZE_PER_SIGNATURE    \
-    (DENSITY_BITSIZEOF(chameleon_signature_t) * sizeof(uint32_t))
-#define DENSITY_CHAMELEON_DECOMPRESSED_BODY_SIZE_PER_SIGNATURE          \
-    (DENSITY_BITSIZEOF(chameleon_signature_t) * sizeof(uint32_t))
+    const uint_fast64_t chameleon_maximum_compressed_body_size_per_signature =
+        DENSITY_BITSIZEOF(chameleon_signature_t) * sizeof(uint32_t);
+    const uint_fast64_t chameleon_decompressed_body_size_per_signature =
+        DENSITY_BITSIZEOF(chameleon_signature_t) * sizeof(uint32_t);
 
-#define DENSITY_CHAMELEON_MAXIMUM_COMPRESSED_UNIT_SIZE                  \
-    (sizeof(chameleon_signature_t) +                                    \
-     DENSITY_CHAMELEON_MAXIMUM_COMPRESSED_BODY_SIZE_PER_SIGNATURE)
-#define DENSITY_CHAMELEON_DECOMPRESSED_UNIT_SIZE                \
-    (DENSITY_CHAMELEON_DECOMPRESSED_BODY_SIZE_PER_SIGNATURE)
+    const uint_fast64_t chameleon_maximum_compressed_unit_size =
+        sizeof(chameleon_signature_t) + chameleon_maximum_compressed_body_size_per_signature;
+    const uint_fast64_t chameleon_decompressed_unit_size =
+        chameleon_decompressed_body_size_per_signature;
 
     //--- encode ---
-#define DENSITY_CHAMELEON_ENCODE_PROCESS_UNIT_SIZE                      \
-    (DENSITY_BITSIZEOF(chameleon_signature_t) * sizeof(uint32_t))
+    const uint_fast64_t chameleon_encode_process_unit_size =
+        DENSITY_BITSIZEOF(chameleon_signature_t) * sizeof(uint32_t);
 
     inline void
     chameleon_encode_t::prepare_new_signature(location_t *RESTRICT out)
@@ -59,16 +58,16 @@ namespace density {
     inline kernel_encode_state_t
     chameleon_encode_t::prepare_new_block(location_t *RESTRICT out)
     {
-        if (DENSITY_CHAMELEON_MAXIMUM_COMPRESSED_UNIT_SIZE > out->available_bytes)
+        if (chameleon_maximum_compressed_unit_size > out->available_bytes)
             return kernel_encode_state_stall_on_output;
         switch (signatures_count) {
-        case DENSITY_CHAMELEON_PREFERRED_EFFICIENCY_CHECK_SIGNATURES:
+        case chameleon_preferred_efficiency_check_signatures:
             if (!efficiency_checked) {
                 efficiency_checked = true;
                 return kernel_encode_state_info_efficiency_check;
             }
             break;
-        case DENSITY_CHAMELEON_PREFERRED_BLOCK_SIGNATURES:
+        case chameleon_preferred_block_signatures:
             signatures_count = 0;
             efficiency_checked = false;
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
@@ -130,16 +129,14 @@ namespace density {
 #ifdef __clang__
         for (uint_fast8_t count_b = 0; count_b < 32; count_b++) {
             DENSITY_UNROLL_2(DENSITY_MEMCPY(&chunk, in->pointer, sizeof(uint32_t)); \
-                             kernel(out, DENSITY_CHAMELEON_HASH_ALGORITHM(chunk), \
-                                    chunk, count++);                    \
+                             kernel(out, chameleon_hash_algorithm(chunk), chunk, count++); \
                              in->pointer += sizeof(uint32_t);           \
                              );
         }
 #else
         for (uint_fast8_t count_b = 0; count_b < 16; count_b++) {
             DENSITY_UNROLL_4(DENSITY_MEMCPY(&chunk, in->pointer, sizeof(uint32_t)); \
-                             kernel(out, DENSITY_CHAMELEON_HASH_ALGORITHM(chunk), \
-                                    chunk, count++);                    \
+                             kernel(out, chameleon_hash_algorithm(chunk), chunk, count++); \
                              in->pointer += sizeof(uint32_t);           \
                              );
         }
@@ -154,7 +151,7 @@ namespace density {
         efficiency_checked = 0;
         dictionary.reset();
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
-        reset_cycle = DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE - 1;
+        reset_cycle = dictionary_preferred_reset_cycle - 1;
 #endif
         DENSITY_SHOW_ENCODE(init);
         return exit_process(chameleon_encode_process_prepare_new_block,
@@ -187,12 +184,12 @@ namespace density {
     read_chunk:
         DENSITY_SHOW_ENCODE(read_chunk);
         pointer_out_before = out->pointer;
-        if (!(read_memory_location = in->read(DENSITY_CHAMELEON_ENCODE_PROCESS_UNIT_SIZE)))
+        if (!(read_memory_location = in->read(chameleon_encode_process_unit_size)))
             return exit_process(chameleon_encode_process_read_chunk,
                                 kernel_encode_state_stall_on_input);
         // Chunk was read properly, process
         process_unit(read_memory_location, out);
-        read_memory_location->available_bytes -= DENSITY_CHAMELEON_ENCODE_PROCESS_UNIT_SIZE;
+        read_memory_location->available_bytes -= chameleon_encode_process_unit_size;
         out->available_bytes -= (out->pointer - pointer_out_before);
         // New loop
         goto check_signature_state;
@@ -224,11 +221,11 @@ namespace density {
     read_chunk:
         DENSITY_SHOW_ENCODE(read_chunk);
         pointer_out_before = out->pointer;
-        if (!(read_memory_location = in->read(DENSITY_CHAMELEON_ENCODE_PROCESS_UNIT_SIZE)))
+        if (!(read_memory_location = in->read(chameleon_encode_process_unit_size)))
             goto step_by_step;
         // Chunk was read properly, process
         process_unit(read_memory_location, out);
-        read_memory_location->available_bytes -= DENSITY_CHAMELEON_ENCODE_PROCESS_UNIT_SIZE;
+        read_memory_location->available_bytes -= chameleon_encode_process_unit_size;
         goto exit;
         // Read step by step
     step_by_step:
@@ -237,7 +234,7 @@ namespace density {
                (read_memory_location = in->read(sizeof(uint32_t)))) {
             uint32_t chunk;
             DENSITY_MEMCPY(&chunk, read_memory_location->pointer, sizeof(chunk));
-            kernel(out, DENSITY_CHAMELEON_HASH_ALGORITHM(chunk), chunk, shift);
+            kernel(out, chameleon_hash_algorithm(chunk), chunk, shift);
             ++shift;
             read_memory_location->pointer += sizeof(chunk);
             read_memory_location->available_bytes -= sizeof(chunk);
@@ -256,16 +253,16 @@ namespace density {
     inline kernel_decode_state_t
     chameleon_decode_t::check_state(location_t *RESTRICT out)
     {
-        if (out->available_bytes < DENSITY_CHAMELEON_DECOMPRESSED_UNIT_SIZE)
+        if (out->available_bytes < chameleon_decompressed_unit_size)
             return kernel_decode_state_stall_on_output;
         switch (signatures_count) {
-        case DENSITY_CHAMELEON_PREFERRED_EFFICIENCY_CHECK_SIGNATURES:
+        case chameleon_preferred_efficiency_check_signatures:
             if (!efficiency_checked) {
                 efficiency_checked = true;
                 return kernel_decode_state_info_efficiency_check;
             }
             break;
-        case DENSITY_CHAMELEON_PREFERRED_BLOCK_SIGNATURES:
+        case chameleon_preferred_block_signatures:
             signatures_count = 0;
             efficiency_checked = false;
             if (reset_cycle) --reset_cycle;
@@ -361,8 +358,7 @@ namespace density {
         // Try to read the next processing unit
     read_processing_unit:
         if (!(read_memory_location =
-              in->read_reserved(DENSITY_CHAMELEON_MAXIMUM_COMPRESSED_UNIT_SIZE,
-                                end_data_overhead)))
+              in->read_reserved(chameleon_maximum_compressed_unit_size, end_data_overhead)))
             return exit_process(chameleon_decode_process_read_processing_unit,
                                 kernel_decode_state_stall_on_input);
         uint8_t *read_memory_location_pointer_before = read_memory_location->pointer;
@@ -372,7 +368,7 @@ namespace density {
         process_data(read_memory_location, out);
         read_memory_location->available_bytes -=
             (read_memory_location->pointer - read_memory_location_pointer_before);
-        out->available_bytes -= DENSITY_CHAMELEON_DECOMPRESSED_UNIT_SIZE;
+        out->available_bytes -= chameleon_decompressed_unit_size;
         // New loop
         goto check_signature_state;
     }
@@ -395,8 +391,7 @@ namespace density {
         // Try to read the next processing unit
     read_processing_unit:
         if (!(read_memory_location =
-              in->read_reserved(DENSITY_CHAMELEON_MAXIMUM_COMPRESSED_UNIT_SIZE,
-                                end_data_overhead)))
+              in->read_reserved(chameleon_maximum_compressed_unit_size, end_data_overhead)))
             goto step_by_step;
         read_memory_location_pointer_before = read_memory_location->pointer;
         // Decode the signature (endian processing)
@@ -405,7 +400,7 @@ namespace density {
         process_data(read_memory_location, out);
         read_memory_location->available_bytes -=
             (read_memory_location->pointer - read_memory_location_pointer_before);
-        out->available_bytes -= DENSITY_CHAMELEON_DECOMPRESSED_UNIT_SIZE;
+        out->available_bytes -= chameleon_decompressed_unit_size;
         // New loop
         goto check_signature_state;
         // Try to read and process signature and body, step by step

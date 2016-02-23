@@ -3,65 +3,63 @@
 #include "sharcxx/chrono.hpp"
 #include <stdarg.h>
 
+namespace density {
 #ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
-#define SHARC_ESC_BOLD_START    "\33[1m"
-#define SHARC_ESC_RED_START     "\33[1;31m"
-#define SHARC_ESC_END           "\33[0m"
+    static const char *sharc_esc_bold_start = "\33[1m";
+    static const char *sharc_esc_red_start = "\33[1;31m";
+    static const char *sharc_esc_end = "\33[0m";
 #else
-#define SHARC_ESC_BOLD_START    ""
-#define SHARC_ESC_RED_START     ""
-#define SHARC_ESC_END           ""
+    static const char *sharc_esc_bold_start = "";
+    static const char *sharc_esc_red_start = "";
+    static const char *sharc_esc_end = "";
 #endif
 
-static void version(void)
-{
-    printf("%sDensityXX %u.%u.%u%s\n", SHARC_ESC_BOLD_START,
-           (unsigned)density::major_version,
-           (unsigned)density::minor_version,
-           (unsigned)density::revision,
-           SHARC_ESC_END);
-    printf("Copyright (C) 2016 Charles Wang\n");
-    printf("Copyright (C) 2013 Guillaume Voirin\n");
-    printf("Built for %s (%s endian system, %u bits) using GCC %d.%d.%d, %s %s\n",
-           SHARC_PLATFORM_STRING, SHARC_ENDIAN_STRING, (unsigned int)(8 * sizeof(void *)),
-           __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__, __DATE__, __TIME__);
-}
+    static void version(void)
+    {
+        printf("%sDensityXX %u.%u.%u%s\n", sharc_esc_bold_start,
+               (unsigned)density::major_version, (unsigned)density::minor_version,
+               (unsigned)density::revision, sharc_esc_end);
+        printf("Copyright (C) 2016 Charles Wang\n");
+        printf("Copyright (C) 2013 Guillaume Voirin\n");
+        printf("Built for %s (%s endian system, %u bits) using GCC %d.%d.%d, %s %s\n",
+               sharc_platform_string, sharc_endian_string, (unsigned int)(8 * sizeof(void *)),
+               __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__, __DATE__, __TIME__);
+    }
 
-static void usage(const char *arg0)
-{
-    version();
-    printf("\nSuperfast compression\n\n");
-    printf("%sUsage :%s\n", SHARC_ESC_BOLD_START, SHARC_ESC_END);
-    printf("  %s [OPTIONS]... [FILES]...\n\n", arg0);
-    printf("%sAvailable options :%s\n", SHARC_ESC_BOLD_START, SHARC_ESC_END);
-    printf("  -c[LEVEL]   Compress files using LEVEL if specified (default)\n");
-    printf("              LEVEL can have the following values (as values become higher,\n");
-    printf("              compression ratio increases and speed diminishes) :\n");
-    printf("              0 = No compression\n");
-    printf("              1 = Chameleon algorithm (default)\n");
-    printf("              2 = Cheetah algorithm\n");
-    printf("              3 = Lion algorithm\n");
-    printf("  -d          Decompress files\n");
-    printf("  -p[PATH]    Set output path\n");
-    printf("  -x          Add integrity check hashsum (use when compressing)\n");
-    printf("  -f          Overwrite without prompting\n");
-    printf("  -i          Read from stdin\n");
-    printf("  -o          Write to stdout\n");
-    printf("  -v          Display version information\n");
-    printf("  -h          Display this help\n");
-    exit(0);
-}
+    static void usage(const char *arg0)
+    {
+        version();
+        printf("\nSuperfast compression\n\n");
+        printf("%sUsage :%s\n", sharc_esc_bold_start, sharc_esc_end);
+        printf("  %s [OPTIONS]... [FILES]...\n\n", arg0);
+        printf("%sAvailable options :%s\n", sharc_esc_bold_start, sharc_esc_end);
+        printf("  -c[LEVEL]   Compress files using LEVEL if specified (default)\n");
+        printf("              LEVEL can have the following values (as values become higher,\n");
+        printf("              compression ratio increases and speed diminishes) :\n");
+        printf("              0 = No compression\n");
+        printf("              1 = Chameleon algorithm (default)\n");
+        printf("              2 = Cheetah algorithm\n");
+        printf("              3 = Lion algorithm\n");
+        printf("  -d          Decompress files\n");
+        printf("  -p[PATH]    Set output path\n");
+        printf("  -x          Add integrity check hashsum (use when compressing)\n");
+        printf("  -f          Overwrite without prompting\n");
+        printf("  -i          Read from stdin\n");
+        printf("  -o          Write to stdout\n");
+        printf("  -v          Display version information\n");
+        printf("  -h          Display this help\n");
+        exit(0);
+    }
 
-namespace density {
-    static uint8_t input_buffer[SHARC_PREFERRED_BUFFER_SIZE];
-    static uint8_t output_buffer[SHARC_PREFERRED_BUFFER_SIZE];
+    static uint8_t input_buffer[sharc_preferred_buffer_size];
+    static uint8_t output_buffer[sharc_preferred_buffer_size];
 
     static void
     exit_error(const char *message_format, ...)
     {
         va_list ap;
         va_start(ap, message_format);
-        fprintf(stderr, "%sSharc error:%s ", SHARC_ESC_RED_START, SHARC_ESC_END);
+        fprintf(stderr, "%sSharc error:%s ", sharc_esc_red_start, sharc_esc_end);
         vfprintf(stderr, message_format, ap);
         va_end(ap);
         exit(-1);
@@ -103,9 +101,9 @@ namespace density {
     client_io_t::reload_input_buffer(stream_t *RESTRICT stream) const
     {
         uint_fast64_t read = (uint_fast64_t)
-            fread(input_buffer, sizeof(uint8_t), SHARC_PREFERRED_BUFFER_SIZE, this->stream);
+            fread(input_buffer, sizeof(uint8_t), sizeof(input_buffer), this->stream);
         stream->update_input(input_buffer, read);
-        if (read < SHARC_PREFERRED_BUFFER_SIZE && ferror(this->stream))
+        if (read < sizeof(input_buffer) && ferror(this->stream))
             exit_error("Error reading file");
         return read;
     }
@@ -118,7 +116,7 @@ namespace density {
             fwrite(output_buffer, sizeof(uint8_t), (size_t)available, this->stream);
         if (written < available && ferror(this->stream))
             exit_error("Error writing file");
-        stream->update_output(output_buffer, SHARC_PREFERRED_BUFFER_SIZE);
+        stream->update_output(output_buffer, sizeof(output_buffer));
         return written;
     }
 
@@ -154,7 +152,7 @@ namespace density {
         std::string in_file_path, out_file_path;
         switch (origin_type) {
         case header_origin_type_stream:
-            name = SHARC_STDIO;
+            name = sharc_stdio;
             in_file_path = in_path + name;
             this->stream = stdin;
             break;
@@ -166,7 +164,7 @@ namespace density {
         }
         switch (io_out->origin_type) {
         case header_origin_type_stream:
-            io_out->name = SHARC_STDIO_COMPRESSED;
+            io_out->name = sharc_stdio_compressed;
             out_file_path = out_path + io_out->name;
             io_out->stream = stdout;
             break;
@@ -196,7 +194,7 @@ namespace density {
         while ((stream_state = stream->compress_init(attempt_mode, block_type)))
             action_required(&read, &written, io_out, stream, stream_state,
                             "Unable to initialize compression");
-        while ((read == SHARC_PREFERRED_BUFFER_SIZE) &&
+        while ((read == sharc_preferred_buffer_size) &&
                (stream_state = stream->compress_continue()))
             action_required(&read, &written, io_out, stream, stream_state,
                             "An error occured during compression");
@@ -218,16 +216,16 @@ namespace density {
                 double ratio = (100.0 * total_written) / total_read;
                 double speed = (1.0 * total_read) / (elapsed * 1000.0 * 1000.0);
                 printf("Compressed %s%s%s(%s bytes) to %s%s%s(%s bytes)",
-                       SHARC_ESC_BOLD_START, in_file_path.c_str(), SHARC_ESC_END,
+                       sharc_esc_bold_start, in_file_path.c_str(), sharc_esc_end,
                        format_decimal(total_read).c_str(),
-                       SHARC_ESC_BOLD_START, out_file_path.c_str(), SHARC_ESC_END,
+                       sharc_esc_bold_start, out_file_path.c_str(), sharc_esc_end,
                        format_decimal(total_written).c_str());
                 printf(" %s %.1lf%% (User time %.3lfs %s %.0lf MB/s)\n",
-                       SHARC_ARROW, ratio, elapsed, SHARC_ARROW, speed);
+                       sharc_arrow, ratio, elapsed, sharc_arrow, speed);
             } else {
                 printf("Compressed %s%s%s to %s%s%s, %s bytes written.\n",
-                       SHARC_ESC_BOLD_START, name.c_str(), SHARC_ESC_END,
-                       SHARC_ESC_BOLD_START, out_file_path.c_str(), SHARC_ESC_END,
+                       sharc_esc_bold_start, name.c_str(), sharc_esc_end,
+                       sharc_esc_bold_start, out_file_path.c_str(), sharc_esc_end,
                        format_decimal(total_written).c_str());
             }
         }
@@ -242,7 +240,7 @@ namespace density {
         std::string in_file_path, out_file_path;
         switch (origin_type) {
         case header_origin_type_stream:
-            name = SHARC_STDIO_COMPRESSED;
+            name = sharc_stdio_compressed;
             in_file_path = in_path + name;
             this->stream = stdin;
             break;
@@ -253,7 +251,7 @@ namespace density {
         }
         switch (io_out->origin_type) {
         case header_origin_type_stream:
-            io_out->name = SHARC_STDIO;
+            io_out->name = sharc_stdio;
             out_file_path = out_path + io_out->name;
             io_out->stream = stdout;
             break;
@@ -285,7 +283,7 @@ namespace density {
         while ((stream_state = stream->decompress_init(NULL)))
             action_required(&read, &written, io_out, stream, stream_state,
                             "Unable to initialize decompression");
-        while ((read == SHARC_PREFERRED_BUFFER_SIZE) &&
+        while ((read == sharc_preferred_buffer_size) &&
                (stream_state = stream->decompress_continue()))
             action_required(&read, &written, io_out, stream, stream_state,
                             "An error occured during decompression");
@@ -314,16 +312,16 @@ namespace density {
                 double ratio = (100.0 * total_written) / total_read;
                 double speed = (1.0 * total_written) / (elapsed * 1000.0 * 1000.0);
                 printf("Decompressed %s%s%s(%s bytes) to %s%s%s(%s bytes)",
-                       SHARC_ESC_BOLD_START, in_file_path.c_str(), SHARC_ESC_END,
+                       sharc_esc_bold_start, in_file_path.c_str(), sharc_esc_end,
                        format_decimal(total_read).c_str(),
-                       SHARC_ESC_BOLD_START, out_file_path.c_str(), SHARC_ESC_END,
+                       sharc_esc_bold_start, out_file_path.c_str(), sharc_esc_end,
                        format_decimal(total_written).c_str());
                 printf(" %s %.1lf%% (User time %.3lfs %s %.0lf MB/s)\n",
-                       SHARC_ARROW, ratio, elapsed, SHARC_ARROW, speed);
+                       sharc_arrow, ratio, elapsed, sharc_arrow, speed);
             } else {
                 printf("Decompressed %s%s%s to %s%s%s, %s bytes written.\n",
-                       SHARC_ESC_BOLD_START, name.c_str(), SHARC_ESC_END,
-                       SHARC_ESC_BOLD_START, out_file_path.c_str(), SHARC_ESC_END,
+                       sharc_esc_bold_start, name.c_str(), sharc_esc_end,
+                       sharc_esc_bold_start, out_file_path.c_str(), sharc_esc_end,
                        format_decimal(total_written).c_str());
             }
         }
@@ -339,15 +337,15 @@ main(int argc, char *argv[])
     _setmode(_fileno(stdout), _O_BINARY);
     _setmode(_fileno(stderr), _O_BINARY);
 #endif
-    if (argc <= 1) usage(argv[0]);
+    if (argc <= 1) density::usage(argv[0]);
 
-    uint8_t action = SHARC_ACTION_COMPRESS;
+    density::sharc_action_t action = density::sharc_action_compress;
     density::compression_mode_t mode = density::compression_mode_chameleon_algorithm;
-    bool prompting = SHARC_PROMPTING;
-    bool integrity_checks = SHARC_NO_INTEGRITY_CHECK;
+    bool prompting = true;
+    bool integrity_checks = true;
     density::client_io_t in;
     density::client_io_t out;
-    uint8_t path_mode = SHARC_FILE_OUTPUT_PATH;
+    bool path_mode = density::sharc_file_output_path;
     std::string in_path, out_path;
     size_t arg_length;
 
@@ -355,59 +353,59 @@ main(int argc, char *argv[])
         switch (argv[idx][0]) {
         case '-':
             arg_length = strlen(argv[idx]);
-            if (arg_length < 2) usage(argv[0]);
+            if (arg_length < 2) density::usage(argv[0]);
             switch (argv[idx][1]) {
             case 'c':
                 if (arg_length == 2) break;
-                if (arg_length != 3) usage(argv[0]);
+                if (arg_length != 3) density::usage(argv[0]);
                 switch (argv[idx][2] - '0') {
                 case 0: mode = density::compression_mode_copy; break;
                 case 1: mode = density::compression_mode_chameleon_algorithm; break;
                 case 2: mode = density::compression_mode_cheetah_algorithm; break;
                 case 3: mode = density::compression_mode_lion_algorithm; break;
-                default: usage(argv[0]);
+                default: density::usage(argv[0]);
                 }
                 break;
-            case 'd': action = SHARC_ACTION_DECOMPRESS; break;
+            case 'd': action = density::sharc_action_decompress; break;
             case 'p':
-                if (arg_length == 2) usage(argv[0]);
+                if (arg_length == 2) density::usage(argv[0]);
                 else {
-                    const char *lastsep = strrchr(argv[idx], SHARC_PATH_SEPARATOR);
+                    const char *lastsep = strrchr(argv[idx], density::sharc_path_separator);
                     if (lastsep == NULL) {
                         out_path = ""; out.name = argv[idx] + 2;
                     } else {
                         out_path = std::string(argv[idx] + 2, lastsep - argv[idx] + 1 - 2);
                         out.name = lastsep + 1;
                     }
-                    path_mode = SHARC_FIXED_OUTPUT_PATH;
+                    path_mode = density::sharc_fixed_output_path;
                 }
                 break;
-            case 'f': prompting = SHARC_NO_PROMPTING; break;
-            case 'x': integrity_checks = SHARC_INTEGRITY_CHECKS; break;
+            case 'f': prompting = false; break;
+            case 'x': integrity_checks = true; break;
             case 'i': in.origin_type = density::header_origin_type_stream; break;
             case 'o': out.origin_type = density::header_origin_type_stream; break;
-            case 'v': version(); exit(0);
-            case 'h': usage(argv[0]); break;
+            case 'v': density::version(); exit(0);
+            case 'h': density::usage(argv[0]); break;
             default: break;
             }
             break;
         default:
             if (in.origin_type == density::header_origin_type_file) {
-                char *lastsep = strrchr(argv[idx], SHARC_PATH_SEPARATOR);
+                char *lastsep = strrchr(argv[idx], density::sharc_path_separator);
                 if (lastsep == NULL) {
                     in_path = "";  in.name = argv[idx];
                 } else {
                     in_path = std::string(argv[idx] + 2, lastsep - argv[idx] + 1 - 2);
                     in.name = lastsep + 1;
-                    if (path_mode == SHARC_FILE_OUTPUT_PATH) out_path = in_path;
+                    if (path_mode == density::sharc_file_output_path) out_path = in_path;
                 }
             }
             switch (action) {
-            case SHARC_ACTION_DECOMPRESS:
-                in.decompress(&out, prompting, in_path, out_path);
-                break;
-            default:
+            case density::sharc_action_compress:
                 in.compress(&out, mode, prompting, integrity_checks, in_path, out_path);
+                break;
+            case density::sharc_action_decompress:
+                in.decompress(&out, prompting, in_path, out_path);
                 break;
             }
             break;
@@ -415,10 +413,10 @@ main(int argc, char *argv[])
     }
     if (in.origin_type == density::header_origin_type_stream) {
         switch (action) {
-        case SHARC_ACTION_COMPRESS:
+        case density::sharc_action_compress:
             in.compress(&out, mode, prompting, integrity_checks, in_path, out_path);
             break;
-        case SHARC_ACTION_DECOMPRESS:
+        case density::sharc_action_decompress:
             in.decompress(&out, prompting, in_path, out_path);
             break;
         }

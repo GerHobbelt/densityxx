@@ -20,5 +20,5 @@ namespace density {
         void stop(void);
         double elapsed(void);
     };
-#define SHARC_CHRONO_MICROSECONDS    1000000.0
+    const double sharc_chrono_microseconds = 1000000.0;
 }

@@ -3,26 +3,27 @@
 #include "densityxx/mathmacros.hpp"
 
 namespace density {
-#define DENSITY_CHEETAH_PREFERRED_BLOCK_SIGNATURES_SHIFT             12
-#define DENSITY_CHEETAH_PREFERRED_BLOCK_SIGNATURES              \
-    (1 << DENSITY_CHEETAH_PREFERRED_BLOCK_SIGNATURES_SHIFT)
+    const uint_fast8_t cheetah_preferred_block_signatures_shift = 12;
+    const uint_fast64_t cheetah_preferred_block_signatures =
+        1 << cheetah_preferred_block_signatures_shift;
 
-#define DENSITY_CHEETAH_PREFERRED_EFFICIENCY_CHECK_SIGNATURES_SHIFT  8
-#define DENSITY_CHEETAH_PREFERRED_EFFICIENCY_CHECK_SIGNATURES           \
-    (1 << DENSITY_CHEETAH_PREFERRED_EFFICIENCY_CHECK_SIGNATURES_SHIFT)
+    const uint_fast8_t cheetah_preferred_efficiency_check_signatures_shift = 8;
+    const uint_fast64_t cheetah_preferred_efficiency_check_signatures =
+        1 << cheetah_preferred_efficiency_check_signatures_shift;
 
-#define DENSITY_CHEETAH_MAXIMUM_COMPRESSED_BODY_SIZE_PER_SIGNATURE      \
-    ((DENSITY_BITSIZEOF(cheetah_signature_t) >> 1) * sizeof(uint32_t))   // Uncompressed chunks
-#define DENSITY_CHEETAH_DECOMPRESSED_BODY_SIZE_PER_SIGNATURE            \
-    ((DENSITY_BITSIZEOF(cheetah_signature_t) >> 1) * sizeof(uint32_t))
-#define DENSITY_CHEETAH_MAXIMUM_COMPRESSED_UNIT_SIZE                    \
-    (sizeof(cheetah_signature_t) + DENSITY_CHEETAH_MAXIMUM_COMPRESSED_BODY_SIZE_PER_SIGNATURE)
-#define DENSITY_CHEETAH_DECOMPRESSED_UNIT_SIZE                  \
-    (DENSITY_CHEETAH_DECOMPRESSED_BODY_SIZE_PER_SIGNATURE)
+    // Uncompressed chunks
+    const uint_fast64_t cheetah_maximum_compressed_body_size_per_signature =
+        (DENSITY_BITSIZEOF(cheetah_signature_t) >> 1) * sizeof(uint32_t);
+    const uint_fast64_t cheetah_decompressed_body_size_per_signature =
+        (DENSITY_BITSIZEOF(cheetah_signature_t) >> 1) * sizeof(uint32_t);
+    const uint_fast64_t cheetah_maximum_compressed_unit_size =
+        sizeof(cheetah_signature_t) + cheetah_maximum_compressed_body_size_per_signature;
+    const uint_fast64_t cheetah_decompressed_unit_size =
+        cheetah_decompressed_body_size_per_signature;
 
     // encode.
-#define DENSITY_CHEETAH_ENCODE_PROCESS_UNIT_SIZE                        \
-    ((DENSITY_BITSIZEOF(cheetah_signature_t) >> 1) * sizeof(uint32_t))
+    const uint_fast64_t cheetah_encode_process_unit_size =
+        (DENSITY_BITSIZEOF(cheetah_signature_t) >> 1) * sizeof(uint32_t);
 
     inline void
     cheetah_encode_t::prepare_new_signature(location_t *RESTRICT out)
@@ -38,23 +39,23 @@ namespace density {
     inline kernel_encode_state_t
     cheetah_encode_t::prepare_new_block(location_t *RESTRICT out)
     {
-        if (DENSITY_CHEETAH_MAXIMUM_COMPRESSED_UNIT_SIZE > out->available_bytes)
+        if (cheetah_maximum_compressed_unit_size > out->available_bytes)
             return kernel_encode_state_stall_on_output;
         switch (signatures_count) {
-        case DENSITY_CHEETAH_PREFERRED_EFFICIENCY_CHECK_SIGNATURES:
+        case cheetah_preferred_efficiency_check_signatures:
             if (!efficiency_checked) {
                 efficiency_checked = true;
                 return kernel_encode_state_info_efficiency_check;
             }
             break;
-        case DENSITY_CHEETAH_PREFERRED_BLOCK_SIGNATURES:
+        case cheetah_preferred_block_signatures:
             signatures_count = 0;
             efficiency_checked = 0;
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
             if (reset_cycle) --reset_cycle;
             else {
                 dictionary.reset();
-                reset_cycle = DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE - 1;
+                reset_cycle = dictionary_preferred_reset_cycle - 1;
             }
 #endif
             return kernel_encode_state_info_new_block;
@@ -118,14 +119,14 @@ namespace density {
 #ifdef __clang__
         for(; count < DENSITY_BITSIZEOF(cheetah_signature_t); count += 2) {
             DENSITY_MEMCPY(&chunk, in->pointer, sizeof(chunk));
-            kernel(out, DENSITY_CHEETAH_HASH_ALGORITHM(chunk), chunk, count);
+            kernel(out, cheetah_hash_algorithm(chunk), chunk, count);
             in->pointer += sizeof(uint32_t);
         }
 #else
         for (uint_fast8_t count_b = 0; count_b < 16; count_b++) {
             DENSITY_UNROLL_2                                            \
                 (DENSITY_MEMCPY(&chunk, in->pointer, sizeof(chunk));    \
-                 kernel(out, DENSITY_CHEETAH_HASH_ALGORITHM(chunk), chunk, count); \
+                 kernel(out, cheetah_hash_algorithm(chunk), chunk, count); \
                  in->pointer += sizeof(chunk);                          \
                  count += 2);
         }
@@ -140,7 +141,7 @@ namespace density {
         efficiency_checked = 0;
         dictionary.reset();
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
-        reset_cycle = DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE - 1;
+        reset_cycle = dictionary_preferred_reset_cycle - 1;
 #endif
         last_hash = 0;
         return exit_process(cheetah_encode_process_prepare_new_block,
@@ -170,12 +171,12 @@ namespace density {
         // Try to read a complete chunk unit
     read_chunk:
         pointer_out_before = out->pointer;
-        if (!(read_memory_location = in->read(DENSITY_CHEETAH_ENCODE_PROCESS_UNIT_SIZE)))
+        if (!(read_memory_location = in->read(cheetah_encode_process_unit_size)))
             return exit_process(cheetah_encode_process_read_chunk,
                                 kernel_encode_state_stall_on_input);
         // Chunk was read properly, process
         process_unit(read_memory_location, out);
-        read_memory_location->available_bytes -= DENSITY_CHEETAH_ENCODE_PROCESS_UNIT_SIZE;
+        read_memory_location->available_bytes -= cheetah_encode_process_unit_size;
         out->available_bytes -= (out->pointer - pointer_out_before);
         // New loop
         goto check_signature_state;
@@ -204,11 +205,11 @@ namespace density {
         // Try to read a complete chunk unit
     read_chunk:
         pointer_out_before = out->pointer;
-        if (!(read_memory_location = in->read(DENSITY_CHEETAH_ENCODE_PROCESS_UNIT_SIZE)))
+        if (!(read_memory_location = in->read(cheetah_encode_process_unit_size)))
             goto step_by_step;
         // Chunk was read properly, process
         process_unit(read_memory_location, out);
-        read_memory_location->available_bytes -= DENSITY_CHEETAH_ENCODE_PROCESS_UNIT_SIZE;
+        read_memory_location->available_bytes -= cheetah_encode_process_unit_size;
         goto exit;
         // Read step by step
     step_by_step:
@@ -216,7 +217,7 @@ namespace density {
                (read_memory_location = in->read(sizeof(uint32_t)))) {
             uint32_t chunk;
             DENSITY_MEMCPY(&chunk, read_memory_location->pointer, sizeof(uint32_t));
-            kernel(out, DENSITY_CHEETAH_HASH_ALGORITHM(LITTLE_ENDIAN_32(chunk)), chunk, shift);
+            kernel(out, cheetah_hash_algorithm(LITTLE_ENDIAN_32(chunk)), chunk, shift);
             shift += 2;
             read_memory_location->pointer += sizeof(chunk);
             read_memory_location->available_bytes -= sizeof(chunk);
@@ -238,16 +239,16 @@ namespace density {
     inline kernel_decode_state_t
     cheetah_decode_t::check_state(location_t *RESTRICT out)
     {
-        if (out->available_bytes < DENSITY_CHEETAH_DECOMPRESSED_UNIT_SIZE)
+        if (out->available_bytes < cheetah_decompressed_unit_size)
             return kernel_decode_state_stall_on_output;
         switch (signatures_count) {
-        case DENSITY_CHEETAH_PREFERRED_EFFICIENCY_CHECK_SIGNATURES:
+        case cheetah_preferred_efficiency_check_signatures:
             if (!efficiency_checked) {
                 efficiency_checked = true;
                 return kernel_decode_state_info_efficiency_check;
             }
             break;
-        case DENSITY_CHEETAH_PREFERRED_BLOCK_SIGNATURES:
+        case cheetah_preferred_block_signatures:
             signatures_count = 0;
             efficiency_checked = 0;
             if (reset_cycle) --reset_cycle;
@@ -276,7 +277,7 @@ namespace density {
     {
         const uint32_t chunk = dictionary.prediction_entries[last_hash].next_chunk_prediction;
         DENSITY_MEMCPY(out->pointer, &chunk, sizeof(chunk));
-        last_hash = DENSITY_CHEETAH_HASH_ALGORITHM(chunk);
+        last_hash = cheetah_hash_algorithm(chunk);
     }
     inline void
     cheetah_decode_t::process_compressed_a(const uint16_t hash, location_t *RESTRICT out)
@@ -302,7 +303,7 @@ namespace density {
     inline void
     cheetah_decode_t::process_uncompressed(const uint32_t chunk, location_t *RESTRICT out)
     {
-        const uint16_t hash = DENSITY_CHEETAH_HASH_ALGORITHM(chunk);
+        const uint16_t hash = cheetah_hash_algorithm(chunk);
         __builtin_prefetch(&dictionary.prediction_entries[hash]);
         cheetah_dictionary_entry_t *const entry = &dictionary.entries[hash];
         entry->chunk_b = entry->chunk_a;
@@ -389,7 +390,7 @@ namespace density {
             return exit_process(cheetah_decode_process_check_signature_state, return_state);
         // Try to read the next processing unit
     read_processing_unit:
-        read_memory_location = in->read_reserved(DENSITY_CHEETAH_MAXIMUM_COMPRESSED_UNIT_SIZE,
+        read_memory_location = in->read_reserved(cheetah_maximum_compressed_unit_size,
                                                  end_data_overhead);
         if (DENSITY_UNLIKELY(!read_memory_location))
             return exit_process(cheetah_decode_process_read_processing_unit,
@@ -401,7 +402,7 @@ namespace density {
         process_data(read_memory_location, out);
         read_memory_location->available_bytes -=
             (read_memory_location->pointer - read_memory_location_pointer_before);
-        out->available_bytes -= DENSITY_CHEETAH_DECOMPRESSED_UNIT_SIZE;
+        out->available_bytes -= cheetah_decompressed_unit_size;
         // New loop
         goto check_signature_state;
     }
@@ -423,7 +424,7 @@ namespace density {
             return exit_process(cheetah_decode_process_check_signature_state, return_state);
         // Try to read the next processing unit
     read_processing_unit:
-        read_memory_location = in->read_reserved(DENSITY_CHEETAH_MAXIMUM_COMPRESSED_UNIT_SIZE,
+        read_memory_location = in->read_reserved(cheetah_maximum_compressed_unit_size,
                                                  end_data_overhead);
         if (DENSITY_UNLIKELY(!read_memory_location))
             goto step_by_step;
@@ -434,7 +435,7 @@ namespace density {
         process_data(read_memory_location, out);
         read_memory_location->available_bytes -=
             (read_memory_location->pointer - read_memory_location_pointer_before);
-        out->available_bytes -= DENSITY_CHEETAH_DECOMPRESSED_UNIT_SIZE;
+        out->available_bytes -= cheetah_decompressed_unit_size;
         // New loop
         goto check_signature_state;
         // Try to read and process signature and body, step by step

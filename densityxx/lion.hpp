@@ -3,27 +3,27 @@
 #include "densityxx/kernel.hpp"
 
 namespace density {
-#define DENSITY_LION_CHUNK_HASH_BITS    16
-#define DENSITY_LION_HASH32_MULTIPLIER  (uint32_t)0x9D6EF916lu
-#define DENSITY_LION_HASH_ALGORITHM(value32) \
-    (uint16_t)(value32 * DENSITY_LION_HASH32_MULTIPLIER >> (32 - DENSITY_LION_CHUNK_HASH_BITS))
+    const unsigned lion_chunk_hash_bits = 16;
+    const uint32_t lion_hash32_multiplier = 0x9D6EF916U;
+    inline uint16_t lion_hash_algorithm(uint32_t value32)
+    {   return (uint16_t)(value32 * lion_hash32_multiplier >> (32 - lion_chunk_hash_bits)); }
 
-#define DENSITY_LION_NUMBER_OF_FORMS    8
+    const size_t lion_number_of_forms = 8;
 
     typedef uint64_t lion_signature_t;
-#define DENSITY_LION_MAXIMUM_COMPRESSED_BODY_SIZE_PER_SIGNATURE         \
-    (DENSITY_BITSIZEOF(lion_signature_t) * sizeof(uint32_t))   // Plain writes
-#define DENSITY_LION_MAXIMUM_COMPRESSED_UNIT_SIZE                       \
-    (sizeof(lion_signature_t) + DENSITY_LION_MAXIMUM_COMPRESSED_BODY_SIZE_PER_SIGNATURE)
+    const size_t lion_maximum_compressed_body_size_per_signature =
+        DENSITY_BITSIZEOF(lion_signature_t) * sizeof(uint32_t);   // Plain writes
+    const size_t lion_maximum_compressed_unit_size =
+        sizeof(lion_signature_t) + lion_maximum_compressed_body_size_per_signature;
 
     // Cannot be higher than DENSITY_BITSIZEOF(lion_signature_t) / (max form length) or
     // signature interception won't work and has to be > 4 for unrolling
-#define DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_SMALL                      8
-#define DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_BIG                        64
-#define DENSITY_LION_PROCESS_UNIT_SIZE_SMALL                            \
-    (DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_SMALL * sizeof(uint32_t))
-#define DENSITY_LION_PROCESS_UNIT_SIZE_BIG                              \
-    (DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_BIG * sizeof(uint32_t))
+    const uint_fast8_t lion_chunks_per_process_unit_small = 8;
+    const uint_fast8_t lion_chunks_per_process_unit_big = 64;
+    const uint_fast64_t lion_process_unit_size_small =
+        lion_chunks_per_process_unit_small * sizeof(uint32_t);
+    const uint_fast64_t lion_process_unit_size_big =
+        lion_chunks_per_process_unit_big * sizeof(uint32_t);
 
 #pragma pack(push)
 #pragma pack(4)
@@ -59,8 +59,8 @@ namespace density {
 
         // data members.
         uint64_t usages;
-        lion_form_node_t forms_pool[DENSITY_LION_NUMBER_OF_FORMS];
-        lion_form_node_t *forms_index[DENSITY_LION_NUMBER_OF_FORMS];
+        lion_form_node_t forms_pool[lion_number_of_forms];
+        lion_form_node_t *forms_index[lion_number_of_forms];
         uint8_t next_available_form;
     };
 
@@ -94,8 +94,8 @@ namespace density {
     class lion_dictionary_t {
     public:
         lion_dictionary_bigram_entry_t bigrams[1 << DENSITY_BITSIZEOF(uint8_t)];
-        lion_dictionary_chunk_entry_t chunks[1 << DENSITY_LION_CHUNK_HASH_BITS];
-        lion_dictionary_chunk_prediction_entry_t predictions[1 << DENSITY_LION_CHUNK_HASH_BITS];
+        lion_dictionary_chunk_entry_t chunks[1 << lion_chunk_hash_bits];
+        lion_dictionary_chunk_prediction_entry_t predictions[1 << lion_chunk_hash_bits];
         inline void reset(void) { memset(this, 0, sizeof(*this)); }
     };
 
@@ -107,16 +107,14 @@ namespace density {
     } lion_encode_process_t;
     DENSITY_ENUM_RENDER3(lion_encode_process, check_block_state, check_output_size, unit);
     typedef struct {
-        uint8_t content[DENSITY_LION_MAXIMUM_COMPRESSED_BODY_SIZE_PER_SIGNATURE];
+        uint8_t content[lion_maximum_compressed_body_size_per_signature];
         uint_fast8_t size;
     } lion_encode_content_t;
 
-#define DENSITY_LION_ENCODE_MINIMUM_LOOKAHEAD           \
-        (sizeof(block_footer_t) +                       \
-         sizeof(block_header_t) +                       \
-         sizeof(block_mode_marker_t) +                  \
-     (DENSITY_LION_MAXIMUM_COMPRESSED_UNIT_SIZE << 1))
-    // On a normal cycle, DENSITY_LION_CHUNKS_PER_PROCESS_UNIT = 64 chunks = 256 bytes can be
+    const size_t lion_encode_minimum_lookahead =
+        sizeof(block_footer_t) + sizeof(block_header_t) + sizeof(block_mode_marker_t) +
+        (lion_maximum_compressed_unit_size << 1);
+    // On a normal cycle, lion_chunks_per_process_unit = 64 chunks = 256 bytes can be
     // compressed at once, before being in intercept mode where another 256 input bytes could be
     // processed before ending the signature
 
@@ -165,12 +163,12 @@ namespace density {
                                   const uint_fast16_t process_unit_size,
                                   location_t *RESTRICT in, location_t *RESTRICT out);
         inline void process_unit_small(location_t *RESTRICT in, location_t *RESTRICT out)
-        {   process_unit_generic(DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_SMALL,
-                                 DENSITY_LION_PROCESS_UNIT_SIZE_SMALL, in, out); }
+        {   process_unit_generic(lion_chunks_per_process_unit_small,
+                                 lion_process_unit_size_small, in, out); }
         inline void
         process_unit_big(location_t *RESTRICT in, location_t *RESTRICT out)
-        {   process_unit_generic(DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_BIG,
-                                 DENSITY_LION_PROCESS_UNIT_SIZE_BIG, in, out); }
+        {   process_unit_generic(lion_chunks_per_process_unit_big,
+                                 lion_process_unit_size_big, in, out); }
         void process_step_unit(location_t *RESTRICT in, location_t *RESTRICT out);
     };
 
@@ -237,7 +235,7 @@ namespace density {
         inline void
         prediction_generic(location_t *RESTRICT out, uint16_t *RESTRICT const hash,
                            uint32_t *RESTRICT const chunk)
-        {   *hash = DENSITY_LION_HASH_ALGORITHM(*chunk);
+        {   *hash = lion_hash_algorithm(*chunk);
             DENSITY_MEMCPY(out->pointer, chunk, sizeof(*chunk));
             out->pointer += sizeof(*chunk); }
         inline void

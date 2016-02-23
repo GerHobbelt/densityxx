@@ -49,9 +49,6 @@
 
 #define DENSITY_BITSIZEOF(x) (8 * sizeof(x))
 
-#define DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE_SHIFT    6
-#define DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE          \
-    (1 << DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE_SHIFT)
 
 #ifdef DENSITY_SHOW
 #define DENSITY_SHOW_IN(IN, SZ)                                         \
@@ -131,6 +128,10 @@ namespace density {
     const uint8_t major_version = 0;
     const uint8_t minor_version = 12;
     const uint8_t revision = 5;
+
+    const uint_fast8_t dictionary_preferred_reset_cycle_shift = 6;
+    const uint_fast64_t dictionary_preferred_reset_cycle =
+        1 << dictionary_preferred_reset_cycle_shift;
 
     typedef enum {
         compression_mode_copy = 0,

@@ -2,17 +2,18 @@
 #include "densityxx/lion.hpp"
 #include "densityxx/mathmacros.hpp"
 
-#define DENSITY_LION_PREFERRED_BLOCK_CHUNKS_SHIFT                       17
-#define DENSITY_LION_PREFERRED_BLOCK_CHUNKS                             \
-    (1 << DENSITY_LION_PREFERRED_BLOCK_CHUNKS_SHIFT)
-
-#define DENSITY_LION_PREFERRED_EFFICIENCY_CHECK_CHUNKS_SHIFT            13
-#define DENSITY_LION_PREFERRED_EFFICIENCY_CHECK_CHUNKS                  \
-    (1 << DENSITY_LION_PREFERRED_EFFICIENCY_CHECK_CHUNKS_SHIFT)
 namespace density {
+    const unsigned lion_preferred_block_chunks_shift = 17;
+    const uint_fast64_t lion_preferred_block_chunks =
+        1 << lion_preferred_block_chunks_shift;
+
+    const unsigned lion_preferred_efficiency_check_chunks_shift = 13;
+    const uint_fast64_t lion_preferred_efficiency_check_chunks =
+             1 << lion_preferred_efficiency_check_chunks_shift;
+
     //--- form ---
     // Unary codes (reversed) except the last one
-    static const lion_entropy_code_t lion_form_entropy_codes[DENSITY_LION_NUMBER_OF_FORMS] = {
+    static const lion_entropy_code_t lion_form_entropy_codes[lion_number_of_forms] = {
         {DENSITY_BINARY_TO_UINT(1), 1},
         {DENSITY_BINARY_TO_UINT(10), 2},
         {DENSITY_BINARY_TO_UINT(100), 3},
@@ -105,21 +106,21 @@ namespace density {
     inline kernel_encode_state_t
     lion_encode_t::check_block_state(void)
     {
-        if (DENSITY_LIKELY((chunks_count & (DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_BIG - 1))))
+        if (DENSITY_LIKELY((chunks_count & (lion_chunks_per_process_unit_big - 1))))
             return kernel_encode_state_ready;
-        if (DENSITY_UNLIKELY((chunks_count >= DENSITY_LION_PREFERRED_EFFICIENCY_CHECK_CHUNKS)
+        if (DENSITY_UNLIKELY((chunks_count >= lion_preferred_efficiency_check_chunks)
                              && !efficiency_checked)) {
             efficiency_checked = true;
             return kernel_encode_state_info_efficiency_check;
         }
-        if (DENSITY_UNLIKELY(chunks_count >= DENSITY_LION_PREFERRED_BLOCK_CHUNKS)) {
+        if (DENSITY_UNLIKELY(chunks_count >= lion_preferred_block_chunks)) {
             chunks_count = 0;
             efficiency_checked = false;
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
             if (reset_cycle) --reset_cycle;
             else {
                 dictionary.reset();
-                reset_cycle = DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE - 1;
+                reset_cycle = dictionary_preferred_reset_cycle - 1;
             }
 #endif
             return kernel_encode_state_info_new_block;
@@ -239,13 +240,13 @@ namespace density {
 #ifdef __clang__
         for (uint_fast8_t count = 0; count < (chunks_per_process_unit >> 2); count++) {
             DENSITY_UNROLL_4(DENSITY_MEMCPY(&chunk, in->pointer, sizeof(uint32_t)); \
-                             kernel(out, DENSITY_LION_HASH_ALGORITHM(chunk), chunk); \
+                             kernel(out, lion_hash_algorithm(chunk), chunk); \
                              in->pointer += sizeof(uint32_t));
         }
 #else
         for (uint_fast8_t count = 0; count < (chunks_per_process_unit >> 1); count++) {
             DENSITY_UNROLL_2(DENSITY_MEMCPY(&chunk, in->pointer, sizeof(uint32_t)); \
-                             kernel(out, DENSITY_LION_HASH_ALGORITHM(chunk), chunk); \
+                             kernel(out, lion_hash_algorithm(chunk), chunk); \
                              in->pointer += sizeof(uint32_t));
         }
 #endif
@@ -258,7 +259,7 @@ namespace density {
     {
         uint32_t chunk;
         DENSITY_MEMCPY(&chunk, in->pointer, sizeof(chunk));
-        kernel(out, DENSITY_LION_HASH_ALGORITHM(LITTLE_ENDIAN_32(chunk)), chunk);
+        kernel(out, lion_hash_algorithm(LITTLE_ENDIAN_32(chunk)), chunk);
         chunks_count++;
         in->pointer += sizeof(chunk);
         in->available_bytes -= sizeof(chunk);
@@ -273,7 +274,7 @@ namespace density {
         shift = 0;
         dictionary.reset();
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
-        reset_cycle = DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE - 1;
+        reset_cycle = dictionary_preferred_reset_cycle - 1;
 #endif
         form_data.init();
         last_hash = 0;
@@ -318,7 +319,7 @@ namespace density {
         // Check block metadata
     check_block_state:
         if (DENSITY_UNLIKELY(!shift)) {
-            if(DENSITY_UNLIKELY(out->available_bytes < DENSITY_LION_ENCODE_MINIMUM_LOOKAHEAD))
+            if(DENSITY_UNLIKELY(out->available_bytes < lion_encode_minimum_lookahead))
                 // Direct exit possible, if coming from copy mode
                 return exit_process(lion_encode_process_check_block_state,
                                     kernel_encode_state_stall_on_output);
@@ -328,7 +329,7 @@ namespace density {
         // Check output size
     check_output_size:
         if (DENSITY_UNLIKELY(signature_intercept_mode)) {
-            if (out->available_bytes >= DENSITY_LION_ENCODE_MINIMUM_LOOKAHEAD) {
+            if (out->available_bytes >= lion_encode_minimum_lookahead) {
                 // New buffer
                 if(DENSITY_LIKELY(shift)) {
                     signature = (lion_signature_t *) (out->pointer);
@@ -341,13 +342,13 @@ namespace density {
                 signature_intercept_mode = false;
             }
         } else {
-            if (DENSITY_UNLIKELY(out->available_bytes < DENSITY_LION_ENCODE_MINIMUM_LOOKAHEAD))
+            if (DENSITY_UNLIKELY(out->available_bytes < lion_encode_minimum_lookahead))
                 signature_intercept_mode = true;
         }
         // Try to read a complete process unit
     process_unit:
         pointer_out_before = out->pointer;
-        if (!(read_memory_location = in->read(DENSITY_LION_PROCESS_UNIT_SIZE_BIG)))
+        if (!(read_memory_location = in->read(lion_process_unit_size_big)))
             return exit_process(lion_encode_process_unit, kernel_encode_state_stall_on_input);
         // Chunk was read properly, process
         if(DENSITY_UNLIKELY(signature_intercept_mode)) {
@@ -355,9 +356,9 @@ namespace density {
             process_unit_small(read_memory_location, out);
             DENSITY_LION_ENCODE_MANAGE_INTERCEPT;
         } else {
-            if(DENSITY_UNLIKELY(chunks_count & (DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_BIG - 1)))
+            if(DENSITY_UNLIKELY(chunks_count & (lion_chunks_per_process_unit_big - 1)))
                 // Attempt to resync the chunks count with a multiple of
-                // DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_BIG
+                // lion_chunks_per_process_unit_big
                 process_unit_small(read_memory_location, out);
             else
                 process_unit_big(read_memory_location, out);
@@ -382,7 +383,7 @@ namespace density {
         // Check block metadata
     check_block_state:
         if (DENSITY_UNLIKELY(!shift)) {
-            if(DENSITY_UNLIKELY(out->available_bytes < DENSITY_LION_ENCODE_MINIMUM_LOOKAHEAD))
+            if(DENSITY_UNLIKELY(out->available_bytes < lion_encode_minimum_lookahead))
                 // Direct exit possible, if coming from copy mode
                 return exit_process(lion_encode_process_check_block_state,
                                     kernel_encode_state_stall_on_output);
@@ -392,7 +393,7 @@ namespace density {
         // Check output size
     check_output_size:
         if(DENSITY_UNLIKELY(signature_intercept_mode)) {
-            if (out->available_bytes >= DENSITY_LION_ENCODE_MINIMUM_LOOKAHEAD) {
+            if (out->available_bytes >= lion_encode_minimum_lookahead) {
                 // New buffer
                 if(DENSITY_LIKELY(shift)) {
                     signature = (lion_signature_t *) (out->pointer);
@@ -405,13 +406,13 @@ namespace density {
                 signature_intercept_mode = false;
             }
         } else {
-            if (DENSITY_UNLIKELY(out->available_bytes < DENSITY_LION_ENCODE_MINIMUM_LOOKAHEAD))
+            if (DENSITY_UNLIKELY(out->available_bytes < lion_encode_minimum_lookahead))
                 signature_intercept_mode = true;
         }
         // Try to read a complete process unit
     process_unit:
         pointer_out_before = out->pointer;
-        if (!(read_memory_location = in->read(DENSITY_LION_PROCESS_UNIT_SIZE_BIG)))
+        if (!(read_memory_location = in->read(lion_process_unit_size_big)))
             goto step_by_step;
         // Chunk was read properly, process
         if(DENSITY_UNLIKELY(signature_intercept_mode)) {
@@ -419,9 +420,9 @@ namespace density {
             process_unit_small(read_memory_location, out);
             DENSITY_LION_ENCODE_MANAGE_INTERCEPT;
         } else {
-            if(DENSITY_UNLIKELY(chunks_count & (DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_BIG - 1)))
+            if(DENSITY_UNLIKELY(chunks_count & (lion_chunks_per_process_unit_big - 1)))
                 // Attempt to resync the chunks count with a multiple of
-                // DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_BIG
+                // lion_chunks_per_process_unit_big
                 process_unit_small(read_memory_location, out);
             else
                 process_unit_big(read_memory_location, out);
@@ -478,18 +479,18 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
     inline kernel_decode_state_t
     lion_decode_t::check_block_state(void)
     {
-        if (DENSITY_UNLIKELY((chunks_count >= DENSITY_LION_PREFERRED_EFFICIENCY_CHECK_CHUNKS)
+        if (DENSITY_UNLIKELY((chunks_count >= lion_preferred_efficiency_check_chunks)
                              && (!efficiency_checked))) {
             efficiency_checked = true;
             return kernel_decode_state_info_efficiency_check;
-        } else if (DENSITY_UNLIKELY(chunks_count >= DENSITY_LION_PREFERRED_BLOCK_CHUNKS)) {
+        } else if (DENSITY_UNLIKELY(chunks_count >= lion_preferred_block_chunks)) {
             chunks_count = 0;
             efficiency_checked = false;
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
             if (reset_cycle) --reset_cycle;
             else {
                 dictionary.reset();
-                reset_cycle = DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE - 1;
+                reset_cycle = dictionary_preferred_reset_cycle - 1;
             }
 #endif
             return kernel_decode_state_info_new_block;
@@ -583,7 +584,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
     {
         DENSITY_MEMCPY(chunk, in->pointer, sizeof(*chunk));
         in->pointer += sizeof(*chunk);
-        *hash = DENSITY_LION_HASH_ALGORITHM(*chunk);
+        *hash = lion_hash_algorithm(*chunk);
         lion_dictionary_chunk_entry_t *entry = &dictionary.chunks[*hash];
         update_dictionary_model(entry, *chunk);
         DENSITY_MEMCPY(out->pointer, chunk, sizeof(*chunk));
@@ -657,17 +658,15 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
     lion_decode_t::process_unit(location_t *RESTRICT in, location_t *RESTRICT out)
     {
 #ifdef __clang__
-        for (uint_fast8_t count = 0;
-             count < (DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_BIG >> 2); count++) {
+        for (uint_fast8_t count = 0; count < (lion_chunks_per_process_unit_big >> 2); count++) {
             DENSITY_UNROLL_4(process_form(in, out));
         }
 #else
-        for (uint_fast8_t count = 0;
-             count < (DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_BIG >> 2); count++) {
+        for (uint_fast8_t count = 0; count < (lion_chunks_per_process_unit_big >> 2); count++) {
             DENSITY_UNROLL_4(process_form(in, out));
         }
 #endif
-        chunks_count += DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_BIG;
+        chunks_count += lion_chunks_per_process_unit_big;
     }
     inline lion_decode_step_by_step_status_t
     lion_decode_t::chunk_step_by_step(location_t *RESTRICT read_memory_location,
@@ -719,7 +718,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
      2 * (3 + DENSITY_BITSIZEOF(uint16_t)))
 // 8 bytes (new signature) + 3 bits (lowest rank form) + 2 * (3 bit flags (DENSITY_LION_FORM_SECONDARY_ACCESS + DENSITY_LION_BIGRAM_PRIMARY_SIGNATURE_FLAG_SECONDARY_ACCESS + DENSITY_LION_BIGRAM_SECONDARY_SIGNATURE_FLAG_PLAIN) + 2 bytes)
 #define DENSITY_LION_DECODE_MAX_BYTES_TO_READ_FOR_PROCESS_UNIT \
-    (1 + ((DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_BIG * DENSITY_LION_DECODE_MAX_BITS_TO_READ_FOR_CHUNK) >> 3))
+    (1 + ((lion_chunks_per_process_unit_big * DENSITY_LION_DECODE_MAX_BITS_TO_READ_FOR_CHUNK) >> 3))
     kernel_decode_state_t
     lion_decode_t::continue_(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
@@ -741,7 +740,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         }
         // Check output size
     check_output_size:
-        if (DENSITY_UNLIKELY(out->available_bytes < DENSITY_LION_PROCESS_UNIT_SIZE_BIG))
+        if (DENSITY_UNLIKELY(out->available_bytes < lion_process_unit_size_big))
             return exit_process(lion_decode_process_check_output_size,
                                 kernel_decode_state_stall_on_output);
         // Try to read the next processing unit
@@ -755,7 +754,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         process_unit(read_memory_location, out);
         read_memory_location->available_bytes -=
             (read_memory_location->pointer - read_memory_location_pointer_before);
-        out->available_bytes -= DENSITY_LION_PROCESS_UNIT_SIZE_BIG;
+        out->available_bytes -= lion_process_unit_size_big;
         // New loop
         goto check_block_state;
     }
@@ -781,7 +780,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         }
         // Check output size
     check_output_size:
-        if (DENSITY_UNLIKELY(out->available_bytes < DENSITY_LION_PROCESS_UNIT_SIZE_BIG))
+        if (DENSITY_UNLIKELY(out->available_bytes < lion_process_unit_size_big))
             return exit_process(lion_decode_process_check_output_size,
                                 kernel_decode_state_stall_on_output);
         // Try to read the next processing unit
@@ -795,13 +794,13 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         process_unit(read_memory_location, out);
         read_memory_location->available_bytes -=
             (read_memory_location->pointer - read_memory_location_pointer_before);
-        out->available_bytes -= DENSITY_LION_PROCESS_UNIT_SIZE_BIG;
+        out->available_bytes -= lion_process_unit_size_big;
         // New loop
         goto check_block_state;
         // Try to read and process units step by step
     step_by_step:
         read_memory_location = in->read_remaining_reserved(end_data_overhead);
-        uint_fast8_t iterations = DENSITY_LION_CHUNKS_PER_PROCESS_UNIT_BIG;
+        uint_fast8_t iterations = lion_chunks_per_process_unit_big;
         while (iterations --) {
             switch (chunk_step_by_step(read_memory_location, in, out)) {
             case lion_decode_step_by_step_status_proceed: break;

@@ -4,69 +4,61 @@
 #include "densityxx/api.hpp"
 #include "sharcxx/header.hpp"
 
-#define SHARC_ACTION_COMPRESS         0
-#define SHARC_ACTION_DECOMPRESS       1
+namespace density {
+    typedef enum { sharc_action_compress, sharc_action_decompress } sharc_action_t;
+    const size_t sharc_preferred_buffer_size = 1 << 19;
 
-#define SHARC_NO_PROMPTING            false
-#define SHARC_PROMPTING               true
+    const char *sharc_stdio = "stdio";
+    const char *sharc_stdio_compressed ="stdio.sharc";
 
-#define SHARC_INTEGRITY_CHECKS        true
-#define SHARC_NO_INTEGRITY_CHECK      false
-
-#define SHARC_STDIO                   "stdio"
-#define SHARC_STDIO_COMPRESSED        "stdio.sharc"
-
-#define SHARC_FILE_OUTPUT_PATH        false
-#define SHARC_FIXED_OUTPUT_PATH       true
-
-#define SHARC_PREFERRED_BUFFER_SIZE   (1 << 19)
+    const bool sharc_file_output_path = false;
+    const bool sharc_fixed_output_path = true;
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define SHARC_ENDIAN_STRING           "Little"
+    const char *sharc_endian_string = "Little";
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define SHARC_ENDIAN_STRING           "Big"
+    const char *sharc_endian_string = "Big";
 #endif
 
 #if defined(_WIN64) || defined(_WIN32)
-#define SHARC_PATH_SEPARATOR          '\\'
+    const char sharc_path_separator = '\\';
 #else
-#define SHARC_PATH_SEPARATOR          '/'
+    const char sharc_path_separator = '/';
 #define SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
 #endif
 
 #if defined(_WIN64) || defined(_WIN32)
-#define SHARC_ARROW          "->"
+    const char *sharc_arrow = "->";
 #else
-#define SHARC_ARROW          "➔"
+    const char *sharc_arrow = "➔";
 #endif
 
 #if defined(_WIN64) || defined(_WIN32)
-#define SHARC_PLATFORM_STRING         "Microsoft Windows"
+    const char *sharc_platform_string = "Microsoft Windows";
 #elif defined(__APPLE__)
 #include "TargetConditionals.h"
 #include "globals.h"
 #if TARGET_IPHONE_SIMULATOR
-#define SHARC_PLATFORM_STRING         "iOS Simulator"
+    const char *sharc_platform_string = "iOS Simulator";
 #elif TARGET_OS_IPHONE
-#define SHARC_PLATFORM_STRING         "iOS"
+    const char *sharc_platform_string = "iOS";
 #elif TARGET_OS_MAC
-#define SHARC_PLATFORM_STRING         "Mac OS/X"
+    const char *sharc_platform_string = "Mac OS/X";
 #else
-#define SHARC_PLATFORM_STRING         "an unknown Apple platform"
+    const char *sharc_platform_string = "an unknown Apple platform";
 #endif
 #elif defined(__FreeBSD__)
-#define SHARC_PLATFORM_STRING         "FreeBSD"
+    const char *sharc_platform_string = "FreeBSD";
 #elif defined(__linux__)
-#define SHARC_PLATFORM_STRING         "GNU/Linux"
+    const char *sharc_platform_string = "GNU/Linux";
 #elif defined(__unix__)
-#define SHARC_PLATFORM_STRING         "Unix"
+    const char *sharc_platform_string = "Unix";
 #elif defined(__posix__)
-#define SHARC_PLATFORM_STRING         "Posix"
+    const char *sharc_platform_string = "Posix";
 #else
-#define SHARC_PLATFORM_STRING         "an unknown platform"
+    const char *sharc_platform_string = "an unknown platform";
 #endif
 
-namespace density {
     class client_io_t {
     public:
         std::string name;

@@ -3,9 +3,9 @@
 
 #include "densityxx/globals.hpp"
 
-#define SHARC_HEADER_MAGIC_NUMBER      1908011803
-
 namespace density {
+    const uint32_t header_magic_number = 1908011803U;
+
     typedef enum {
         header_origin_type_stream,
         header_origin_type_file
@@ -36,7 +36,7 @@ namespace density {
               const struct stat *RESTRICT stat);
 
         inline bool check_validity(void) const
-        {   return header_generic.magic_number == SHARC_HEADER_MAGIC_NUMBER; }
+        {   return header_generic.magic_number == header_magic_number; }
         inline header_origin_type_t origin_type(void) const
         {   return (header_origin_type_t)header_generic.origin_type; }
         inline uint64_t original_file_size(void) const

@@ -104,7 +104,7 @@ namespace density {
         main_header_parameters_t parameters;
         memset(&parameters, 0, sizeof(parameters));
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
-        parameters.as_bytes[0] = DENSITY_DICTIONARY_PREFERRED_RESET_CYCLE_SHIFT;
+        parameters.as_bytes[0] = dictionary_preferred_reset_cycle_shift;
 #endif
         total_written += main_header.write(out, compression_mode, block_type, parameters);
         return encode_state_ready;

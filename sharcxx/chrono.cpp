@@ -73,8 +73,8 @@ namespace density {
     }
     double chrono_t::elapsed(void)
     {
-        return ((stop_.tv_sec * SHARC_CHRONO_MICROSECONDS + stop_.tv_usec) -
-                (start_.tv_sec * SHARC_CHRONO_MICROSECONDS + start_.tv_usec)) /
-            SHARC_CHRONO_MICROSECONDS;
+        return ((stop_.tv_sec * sharc_chrono_microseconds + stop_.tv_usec) -
+                (start_.tv_sec * sharc_chrono_microseconds + start_.tv_usec)) /
+            sharc_chrono_microseconds;
     }
 }
