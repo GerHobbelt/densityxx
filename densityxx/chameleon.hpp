@@ -3,12 +3,6 @@
 #include "densityxx/kernel.hpp"
 
 namespace density {
-    const unsigned chameleon_hash_bits = 16;
-    const uint32_t chameleon_hash_multiplier = 0x9D6EF916U;
-    inline uint16_t chameleon_hash_algorithm(const uint32_t value32)
-    {   return (uint16_t)((value32 * chameleon_hash_multiplier) >>
-                          (32 - chameleon_hash_bits)); }
-
     typedef enum {
         chameleon_signature_flag_chunk = 0x0,
         chameleon_signature_flag_map = 0x1,
@@ -24,7 +18,7 @@ namespace density {
 
     class chameleon_dictionary_t {
     public:
-        chameleon_dictionary_entry_t entries[1 << chameleon_hash_bits];
+        chameleon_dictionary_entry_t entries[1 << hash_bits];
         inline void reset(void) { memset(entries, 0, sizeof(entries)); }
     };
 
@@ -116,7 +110,7 @@ namespace density {
         {   DENSITY_MEMCPY(out->pointer, &dictionary.entries[hash].as_uint32_t,
                            sizeof(uint32_t)); }
         inline void process_uncompressed(const uint32_t chunk, location_t *RESTRICT out)
-        {   const uint16_t hash = chameleon_hash_algorithm(chunk);
+        {   const uint16_t hash = hash_algorithm(chunk);
             dictionary.entries[hash].as_uint32_t = chunk;
             DENSITY_MEMCPY(out->pointer, &chunk, sizeof(uint32_t)); }
         void kernel(location_t *RESTRICT in, location_t *RESTRICT out, const bool compressed);

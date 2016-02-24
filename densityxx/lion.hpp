@@ -3,11 +3,6 @@
 #include "densityxx/kernel.hpp"
 
 namespace density {
-    const unsigned lion_chunk_hash_bits = 16;
-    const uint32_t lion_hash32_multiplier = 0x9D6EF916U;
-    inline uint16_t lion_hash_algorithm(uint32_t value32)
-    {   return (uint16_t)(value32 * lion_hash32_multiplier >> (32 - lion_chunk_hash_bits)); }
-
     const size_t lion_number_of_forms = 8;
 
     typedef uint64_t lion_signature_t;
@@ -94,8 +89,8 @@ namespace density {
     class lion_dictionary_t {
     public:
         lion_dictionary_bigram_entry_t bigrams[1 << DENSITY_BITSIZEOF(uint8_t)];
-        lion_dictionary_chunk_entry_t chunks[1 << lion_chunk_hash_bits];
-        lion_dictionary_chunk_prediction_entry_t predictions[1 << lion_chunk_hash_bits];
+        lion_dictionary_chunk_entry_t chunks[1 << hash_bits];
+        lion_dictionary_chunk_prediction_entry_t predictions[1 << hash_bits];
         inline void reset(void) { memset(this, 0, sizeof(*this)); }
     };
 
@@ -237,7 +232,7 @@ namespace density {
         inline void
         prediction_generic(location_t *RESTRICT out, uint16_t *RESTRICT const hash,
                            uint32_t *RESTRICT const chunk)
-        {   *hash = lion_hash_algorithm(*chunk);
+        {   *hash = hash_algorithm(*chunk);
             DENSITY_MEMCPY(out->pointer, chunk, sizeof(*chunk));
             out->pointer += sizeof(*chunk); }
         inline void

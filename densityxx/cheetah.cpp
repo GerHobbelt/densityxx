@@ -119,14 +119,14 @@ namespace density {
 #ifdef __clang__
         for(; count < DENSITY_BITSIZEOF(cheetah_signature_t); count += 2) {
             DENSITY_MEMCPY(&chunk, in->pointer, sizeof(chunk));
-            kernel(out, cheetah_hash_algorithm(chunk), chunk, count);
+            kernel(out, hash_algorithm(chunk), chunk, count);
             in->pointer += sizeof(uint32_t);
         }
 #else
         for (uint_fast8_t count_b = 0; count_b < 16; count_b++) {
             DENSITY_UNROLL_2                                            \
                 (DENSITY_MEMCPY(&chunk, in->pointer, sizeof(chunk));    \
-                 kernel(out, cheetah_hash_algorithm(chunk), chunk, count); \
+                 kernel(out, hash_algorithm(chunk), chunk, count);      \
                  in->pointer += sizeof(chunk);                          \
                  count += 2);
         }
@@ -217,7 +217,7 @@ namespace density {
                (read_memory_location = in->read(sizeof(uint32_t)))) {
             uint32_t chunk;
             DENSITY_MEMCPY(&chunk, read_memory_location->pointer, sizeof(uint32_t));
-            kernel(out, cheetah_hash_algorithm(LITTLE_ENDIAN_32(chunk)), chunk, shift);
+            kernel(out, hash_algorithm(LITTLE_ENDIAN_32(chunk)), chunk, shift);
             shift += 2;
             read_memory_location->pointer += sizeof(chunk);
             read_memory_location->available_bytes -= sizeof(chunk);
@@ -277,7 +277,7 @@ namespace density {
     {
         const uint32_t chunk = dictionary.prediction_entries[last_hash].next_chunk_prediction;
         DENSITY_MEMCPY(out->pointer, &chunk, sizeof(chunk));
-        last_hash = cheetah_hash_algorithm(chunk);
+        last_hash = hash_algorithm(chunk);
     }
     inline void
     cheetah_decode_t::process_compressed_a(const uint16_t hash, location_t *RESTRICT out)
@@ -303,7 +303,7 @@ namespace density {
     inline void
     cheetah_decode_t::process_uncompressed(const uint32_t chunk, location_t *RESTRICT out)
     {
-        const uint16_t hash = cheetah_hash_algorithm(chunk);
+        const uint16_t hash = hash_algorithm(chunk);
         __builtin_prefetch(&dictionary.prediction_entries[hash]);
         cheetah_dictionary_entry_t *const entry = &dictionary.entries[hash];
         entry->chunk_b = entry->chunk_a;
@@ -450,8 +450,7 @@ namespace density {
         while (shift != DENSITY_BITSIZEOF(cheetah_signature_t)) {
             switch ((uint8_t const) ((signature >> shift) & 0x3)) {
             case cheetah_signature_flag_predicted:
-                if (out->available_bytes < sizeof(uint32_t))
-                    return kernel_decode_state_error;
+                if (out->available_bytes < sizeof(uint32_t)) return kernel_decode_state_error;
                 process_predicted(out);
                 break;
             case cheetah_signature_flag_map_a:

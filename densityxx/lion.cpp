@@ -145,7 +145,7 @@ namespace density {
     lion_encode_t::push_to_signature(location_t *RESTRICT out, const uint64_t content,
                                      const uint_fast8_t bits)
     {
-        if (DENSITY_LIKELY(this->shift)) {
+        if (DENSITY_LIKELY(shift)) {
             push_to_proximity_signature(content, bits);
             if (DENSITY_UNLIKELY(shift >= DENSITY_BITSIZEOF(lion_signature_t))) {
                 DENSITY_MEMCPY(signature, &proximity_signature, sizeof(proximity_signature));
@@ -240,13 +240,13 @@ namespace density {
 #ifdef __clang__
         for (uint_fast8_t count = 0; count < (chunks_per_process_unit >> 2); count++) {
             DENSITY_UNROLL_4(DENSITY_MEMCPY(&chunk, in->pointer, sizeof(uint32_t)); \
-                             kernel(out, lion_hash_algorithm(chunk), chunk); \
+                             kernel(out, hash_algorithm(chunk), chunk); \
                              in->pointer += sizeof(uint32_t));
         }
 #else
         for (uint_fast8_t count = 0; count < (chunks_per_process_unit >> 1); count++) {
             DENSITY_UNROLL_2(DENSITY_MEMCPY(&chunk, in->pointer, sizeof(uint32_t)); \
-                             kernel(out, lion_hash_algorithm(chunk), chunk); \
+                             kernel(out, hash_algorithm(chunk), chunk); \
                              in->pointer += sizeof(uint32_t));
         }
 #endif
@@ -259,7 +259,7 @@ namespace density {
     {
         uint32_t chunk;
         DENSITY_MEMCPY(&chunk, in->pointer, sizeof(chunk));
-        kernel(out, lion_hash_algorithm(LITTLE_ENDIAN_32(chunk)), chunk);
+        kernel(out, hash_algorithm(LITTLE_ENDIAN_32(chunk)), chunk);
         chunks_count++;
         in->pointer += sizeof(chunk);
         in->available_bytes -= sizeof(chunk);
@@ -584,7 +584,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
     {
         DENSITY_MEMCPY(chunk, in->pointer, sizeof(*chunk));
         in->pointer += sizeof(*chunk);
-        *hash = lion_hash_algorithm(*chunk);
+        *hash = hash_algorithm(*chunk);
         lion_dictionary_chunk_entry_t *entry = &dictionary.chunks[*hash];
         update_dictionary_model(entry, *chunk);
         DENSITY_MEMCPY(out->pointer, chunk, sizeof(*chunk));

@@ -129,14 +129,14 @@ namespace density {
 #ifdef __clang__
         for (uint_fast8_t count_b = 0; count_b < 32; count_b++) {
             DENSITY_UNROLL_2(DENSITY_MEMCPY(&chunk, in->pointer, sizeof(uint32_t)); \
-                             kernel(out, chameleon_hash_algorithm(chunk), chunk, count++); \
+                             kernel(out, hash_algorithm(chunk), chunk, count++); \
                              in->pointer += sizeof(uint32_t);           \
                              );
         }
 #else
         for (uint_fast8_t count_b = 0; count_b < 16; count_b++) {
             DENSITY_UNROLL_4(DENSITY_MEMCPY(&chunk, in->pointer, sizeof(uint32_t)); \
-                             kernel(out, chameleon_hash_algorithm(chunk), chunk, count++); \
+                             kernel(out, hash_algorithm(chunk), chunk, count++); \
                              in->pointer += sizeof(uint32_t);           \
                              );
         }
@@ -234,7 +234,7 @@ namespace density {
                (read_memory_location = in->read(sizeof(uint32_t)))) {
             uint32_t chunk;
             DENSITY_MEMCPY(&chunk, read_memory_location->pointer, sizeof(chunk));
-            kernel(out, chameleon_hash_algorithm(chunk), chunk, shift);
+            kernel(out, hash_algorithm(chunk), chunk, shift);
             ++shift;
             read_memory_location->pointer += sizeof(chunk);
             read_memory_location->available_bytes -= sizeof(chunk);
@@ -380,7 +380,7 @@ namespace density {
         uint_fast64_t available_bytes_reserved;
         uint8_t *read_memory_location_pointer_before;
         // Dispatch
-        switch (this->process) {
+        switch (process) {
         case chameleon_decode_process_check_signature_state: goto check_signature_state;
         case chameleon_decode_process_read_processing_unit: goto read_processing_unit;
         default: return kernel_decode_state_error;
