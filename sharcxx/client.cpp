@@ -1,6 +1,6 @@
 // see LICENSE.md for license.
 #include "sharcxx/client.hpp"
-#include "sharcxx/chrono.hpp"
+#include <chrono>
 #include <stdarg.h>
 
 namespace density {
@@ -175,8 +175,7 @@ namespace density {
             break;
         }
 
-        chrono_t chrono;
-        chrono.start();
+        std::chrono::system_clock::time_point tpstart = std::chrono::system_clock::now();
         /*
          * The following code is an example of
          * how to use the Density stream API to compress a file.
@@ -205,9 +204,10 @@ namespace density {
         /*
          * That's it !
          */
-        chrono.stop();
+        std::chrono::system_clock::time_point tpend = std::chrono::system_clock::now();
         if (io_out->origin_type == header_origin_type_file) {
-            const double elapsed = chrono.elapsed();
+            std::chrono::duration<double> duration = tpend - tpstart;
+            const double elapsed = duration.count();
             total_written += *stream->total_bytes_written;
             fclose(io_out->stream);
             if (origin_type == header_origin_type_file) {
@@ -264,8 +264,7 @@ namespace density {
             break;
         }
 
-        chrono_t chrono;
-        chrono.start();
+        std::chrono::system_clock::time_point tpstart = std::chrono::system_clock::now();
         /*
          * The following code is an example of
          * how to use the Density stream API to decompress a file.
@@ -294,9 +293,10 @@ namespace density {
         /*
          * That's it !
          */
-        chrono.stop();
+        std::chrono::system_clock::time_point tpend = std::chrono::system_clock::now();
         if (io_out->origin_type == header_origin_type_file) {
-            const double elapsed = chrono.elapsed();
+            std::chrono::duration<double> duration = tpend - tpstart;
+            const double elapsed = duration.count();
             uint64_t total_written = *stream->total_bytes_written;
             fclose(io_out->stream);
             if (header.origin_type() == header_origin_type_file)
