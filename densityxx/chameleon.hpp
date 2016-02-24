@@ -48,6 +48,7 @@ namespace density {
         virtual kernel_encode_state_t
         finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
 
+    private:
         // members.
         chameleon_signature_t proximity_signature;
         uint_fast8_t shift;
@@ -61,7 +62,7 @@ namespace density {
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
         uint_fast64_t reset_cycle;
 #endif
-    private:
+
         inline kernel_encode_state_t
         exit_process(chameleon_encode_process_t process,
                      kernel_encode_state_t kernel_encode_state)
@@ -93,18 +94,18 @@ namespace density {
         virtual kernel_decode_state_t
         finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
 
+    private:
         chameleon_signature_t signature;
         uint_fast8_t shift;
         uint_fast32_t body_length;
         uint_fast32_t signatures_count;
         uint_fast8_t efficiency_checked;
-
         chameleon_decode_process_t process;
         uint_fast8_t end_data_overhead;
         main_header_parameters_t parameters;
         chameleon_dictionary_t dictionary;
         uint_fast64_t reset_cycle;
-    private:
+
         inline kernel_decode_state_t
         exit_process(chameleon_decode_process_t process,
                      kernel_decode_state_t kernel_decode_state)

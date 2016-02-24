@@ -55,6 +55,7 @@ namespace density {
         virtual kernel_encode_state_t
         finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
 
+    private:
         cheetah_signature_t proximity_signature;
         uint_fast16_t last_hash;
         uint_fast8_t shift;
@@ -67,7 +68,6 @@ namespace density {
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
         uint_fast64_t reset_cycle;
 #endif
-    private:
         inline kernel_encode_state_t
         exit_process(cheetah_encode_process_t process,
                      kernel_encode_state_t kernel_encode_state)
@@ -99,6 +99,7 @@ namespace density {
         virtual kernel_decode_state_t
         finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
 
+    private:
         cheetah_signature_t signature;
         uint_fast16_t last_hash;
         uint_fast8_t shift;
@@ -109,7 +110,7 @@ namespace density {
         main_header_parameters_t parameters;
         cheetah_dictionary_t dictionary;
         uint_fast64_t reset_cycle;
-    private:
+
         inline kernel_decode_state_t
         exit_process(cheetah_decode_process_t process,
                      kernel_decode_state_t kernel_decode_state)

@@ -129,6 +129,7 @@ namespace density {
         virtual kernel_encode_state_t
         finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
 
+    private:
         lion_signature_t proximity_signature;
         lion_form_data_t form_data;
         uint_fast16_t last_hash;
@@ -145,7 +146,7 @@ namespace density {
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
         uint_fast64_t reset_cycle;
 #endif
-    private:
+
         inline kernel_encode_state_t
         exit_process(lion_encode_process_t process, kernel_encode_state_t kernel_encode_state)
         {   this->process = process; return kernel_encode_state; }
@@ -197,6 +198,7 @@ namespace density {
         virtual kernel_decode_state_t
         finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
 
+    private:
         lion_signature_t signature;
         lion_form_data_t form_data;
         uint_fast16_t last_hash;
@@ -209,7 +211,7 @@ namespace density {
         main_header_parameters_t parameters;
         lion_dictionary_t dictionary;
         uint_fast64_t reset_cycle;
-    private:
+
         inline kernel_decode_state_t
         exit_process(lion_decode_process_t process, kernel_decode_state_t kernel_decode_state)
         {   this->process = process; return kernel_decode_state; }
