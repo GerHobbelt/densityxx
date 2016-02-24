@@ -97,7 +97,7 @@ namespace density {
         return file;
     }
 
-    uint_fast64_t
+    inline uint_fast64_t
     client_io_t::reload_input_buffer(stream_t *RESTRICT stream) const
     {
         uint_fast64_t read = (uint_fast64_t)
@@ -108,7 +108,7 @@ namespace density {
         return read;
     }
 
-    uint_fast64_t
+    inline uint_fast64_t
     client_io_t::empty_output_buffer(stream_t *RESTRICT stream) const
     {
         uint_fast64_t available = stream->output_available_for_use();
@@ -120,7 +120,7 @@ namespace density {
         return written;
     }
 
-    void
+    inline void
     client_io_t::action_required(uint_fast64_t *read, uint_fast64_t *written,
                                  const client_io_t *RESTRICT io_out,
                                  stream_t *RESTRICT stream,
