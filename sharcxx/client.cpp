@@ -181,7 +181,7 @@ namespace density {
          * how to use the Density stream API to compress a file.
          */
         uint64_t total_written = header_t::write(io_out->stream, origin_type, &attributes);
-        stream_t *stream = new stream_t();
+        stream_encode_t *stream = new stream_encode_t();
         stream_t::state_t stream_state;
         uint_fast64_t read = 0, written = 0;
         if (stream->prepare(input_buffer, sizeof(input_buffer),
@@ -190,14 +190,14 @@ namespace density {
         read = reload_input_buffer(stream);
         block_type_t block_type =
             integrity_checks ? block_type_with_hashsum_integrity_check: block_type_default;
-        while ((stream_state = stream->compress_init(attempt_mode, block_type)))
+        while ((stream_state = stream->init(attempt_mode, block_type)))
             action_required(&read, &written, io_out, stream, stream_state,
                             "Unable to initialize compression");
         while ((read == sharc_preferred_buffer_size) &&
-               (stream_state = stream->compress_continue()))
+               (stream_state = stream->continue_()))
             action_required(&read, &written, io_out, stream, stream_state,
                             "An error occured during compression");
-        while ((stream_state = stream->compress_finish()))
+        while ((stream_state = stream->finish()))
             action_required(&read, &written, io_out, stream, stream_state,
                             "An error occured while finishing compression");
         io_out->empty_output_buffer(stream);
@@ -208,10 +208,10 @@ namespace density {
         if (io_out->origin_type == header_origin_type_file) {
             std::chrono::duration<double> duration = tpend - tpstart;
             const double elapsed = duration.count();
-            total_written += *stream->total_bytes_written;
+            total_written += stream->get_total_written();
             fclose(io_out->stream);
             if (origin_type == header_origin_type_file) {
-                uint64_t total_read = *stream->total_bytes_read;
+                uint64_t total_read = stream->get_total_read();
                 fclose(this->stream);
                 double ratio = (100.0 * total_written) / total_read;
                 double speed = (1.0 * total_read) / (elapsed * 1000.0 * 1000.0);
@@ -272,21 +272,21 @@ namespace density {
         header_t header;
         uint64_t total_read = header.read(this->stream);
         if (!header.check_validity()) exit_error("Invalid file");
-        stream_t *stream = new stream_t();
+        stream_decode_t *stream = new stream_decode_t();
         stream_t::state_t stream_state;
         uint_fast64_t read = 0, written = 0;
         if (stream->prepare(input_buffer, sizeof(input_buffer),
                             output_buffer, sizeof(output_buffer)))
             exit_error("Unable to prepare decompression");
         read = reload_input_buffer(stream);
-        while ((stream_state = stream->decompress_init(NULL)))
+        while ((stream_state = stream->init(NULL)))
             action_required(&read, &written, io_out, stream, stream_state,
                             "Unable to initialize decompression");
         while ((read == sharc_preferred_buffer_size) &&
-               (stream_state = stream->decompress_continue()))
+               (stream_state = stream->continue_()))
             action_required(&read, &written, io_out, stream, stream_state,
                             "An error occured during decompression");
-        while ((stream_state = stream->decompress_finish()))
+        while ((stream_state = stream->finish()))
             action_required(&read, &written, io_out, stream, stream_state,
                             "An error occured while finishing decompression");
         io_out->empty_output_buffer(stream);
@@ -297,12 +297,12 @@ namespace density {
         if (io_out->origin_type == header_origin_type_file) {
             std::chrono::duration<double> duration = tpend - tpstart;
             const double elapsed = duration.count();
-            uint64_t total_written = *stream->total_bytes_written;
+            uint64_t total_written = stream->get_total_written();
             fclose(io_out->stream);
             if (header.origin_type() == header_origin_type_file)
                 header.restore_file_attributes(out_file_path.c_str());
             if (origin_type == header_origin_type_file) {
-                total_read += *stream->total_bytes_read;
+                total_read += stream->get_total_read();
                 fclose(this->stream);
                 if (header.origin_type() == header_origin_type_file &&
                     total_written != header.original_file_size())

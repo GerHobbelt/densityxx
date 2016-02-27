@@ -5,12 +5,22 @@
 namespace density {
     // buffer.
     inline buffer_processing_result_t
-    buffer_return_processing_result(stream_t *stream, buffer_state_t state)
+    buffer_return_processing_result(stream_encode_t *stream, buffer_state_t state)
     {
         buffer_processing_result_t result;
         result.state = state;
-        DENSITY_MEMCPY(&result.bytes_read, stream->total_bytes_read, sizeof(uint64_t));
-        DENSITY_MEMCPY(&result.bytes_written, stream->total_bytes_written, sizeof(uint64_t));
+        result.bytes_read = stream->get_total_read();
+        result.bytes_written = stream->get_total_written();
+        delete stream;
+        return result;
+    }
+    inline buffer_processing_result_t
+    buffer_return_processing_result(stream_decode_t *stream, buffer_state_t state)
+    {
+        buffer_processing_result_t result;
+        result.state = state;
+        result.bytes_read = stream->get_total_read();
+        result.bytes_written = stream->get_total_written();
         delete stream;
         return result;
     }
@@ -24,17 +34,17 @@ namespace density {
                     const block_type_t block_type)
     {
         stream_t::state_t stream_state;
-        stream_t *stream = new stream_t();
+        stream_encode_t *stream = new stream_encode_t();
         if ((stream_state = stream->prepare(in, szin, out, szout)))
             BUFFER_RETURN(error_during_processing);
-        switch (stream_state = stream->compress_init(compression_mode, block_type)) {
+        switch (stream_state = stream->init(compression_mode, block_type)) {
         case stream_t::state_ready: break;
         case stream_t::state_error_output_buffer_too_small:
             BUFFER_RETURN(error_output_buffer_too_small);
         default:
             BUFFER_RETURN(error_during_processing);
         }
-        switch (stream_state = stream->compress_continue()) {
+        switch (stream_state = stream->continue_()) {
         case stream_t::state_ready:
         case stream_t::state_stall_on_input: break;
         case stream_t::state_error_output_buffer_too_small:
@@ -42,7 +52,7 @@ namespace density {
         default:
             BUFFER_RETURN(error_during_processing);
         }
-        switch (stream_state = stream->compress_finish()) {
+        switch (stream_state = stream->finish()) {
         case stream_t::state_ready: BUFFER_RETURN(ok);
         case stream_t::state_error_output_buffer_too_small:
             BUFFER_RETURN(error_output_buffer_too_small);
@@ -56,17 +66,17 @@ namespace density {
                       uint8_t *out, const uint_fast64_t szout)
     {
         stream_t::state_t stream_state;
-        stream_t *stream = new stream_t();
+        stream_decode_t *stream = new stream_decode_t();
         if ((stream_state = stream->prepare(in, szin, out, szout)))
             BUFFER_RETURN(error_during_processing);
-        switch (stream_state = stream->decompress_init(NULL)) {
+        switch (stream_state = stream->init(NULL)) {
         case stream_t::state_ready: break;
         case stream_t::state_error_output_buffer_too_small:
             BUFFER_RETURN(error_output_buffer_too_small);
         default:
             BUFFER_RETURN(error_during_processing);
         }
-        switch (stream_state = stream->decompress_continue()) {
+        switch (stream_state = stream->continue_()) {
         case stream_t::state_ready:
         case stream_t::state_stall_on_input:
         case stream_t::state_stall_on_output: break;
@@ -77,7 +87,7 @@ namespace density {
         default:
             BUFFER_RETURN(error_during_processing);
         }
-        switch (stream_state = stream->decompress_finish()) {
+        switch (stream_state = stream->finish()) {
         case stream_t::state_ready: BUFFER_RETURN(ok);
         case stream_t::state_error_output_buffer_too_small:
             BUFFER_RETURN(error_output_buffer_too_small);
@@ -100,8 +110,8 @@ namespace density {
         return state_ready;
     }
     stream_t::state_t
-    stream_t::compress_init(const compression_mode_t compression_mode,
-                            const block_type_t block_type)
+    stream_encode_t::init(const compression_mode_t compression_mode,
+                           const block_type_t block_type)
     {
         if (process != process_prepared) return state_error_invalid_internal_state;
         state_t state = check_conformity();
@@ -113,18 +123,15 @@ namespace density {
         case encode_t::state_stall_on_output: return state_stall_on_output;
         default: return state_error_invalid_internal_state;
         }
-        total_bytes_read = encode.get_total_read_ptr();
-        total_bytes_written = encode.get_total_written_ptr();
-        process = process_compression_inited;
+        process = process_inited;
         return state_ready;
     }
     stream_t::state_t
-    stream_t::compress_continue(void)
+    stream_encode_t::continue_(void)
     {
-        if (process != process_compression_started) {
-            if (process != process_compression_inited)
-                return state_error_invalid_internal_state;
-            process = process_compression_started;
+        if (process != process_started) {
+            if (process != process_inited) return state_error_invalid_internal_state;
+            process = process_started;
         }
         state_t state = check_conformity();
         if (state) return state;
@@ -137,12 +144,11 @@ namespace density {
         }
     }
     stream_t::state_t
-    stream_t::compress_finish(void)
+    stream_encode_t::finish(void)
     {
-        if (process != process_compression_started) {
-            if (process != process_compression_inited)
-                return state_error_invalid_internal_state;
-            process = process_compression_started;
+        if (process != process_started) {
+            if (process != process_inited) return state_error_invalid_internal_state;
+            process = process_started;
         }
         state_t state = check_conformity();
         if (state) return state;
@@ -152,12 +158,12 @@ namespace density {
         case encode_t::state_stall_on_output: return state_stall_on_output;
         default: return state_error_invalid_internal_state;
         }
-        process = process_compression_finished;
+        process = process_finished;
         return state_ready;
     }
 
     stream_t::state_t
-    stream_t::decompress_init(stream_t::header_information_t *RESTRICT header_information)
+    stream_decode_t::init(stream_decode_t::header_information_t *RESTRICT header_information)
     {
         if (process != process_prepared)
             return state_error_invalid_internal_state;
@@ -169,11 +175,9 @@ namespace density {
         case decode_t::state_stall_on_input: return state_stall_on_input;
         default: return state_error_invalid_internal_state;
         }
-        total_bytes_read = decode.get_total_read_ptr();
-        total_bytes_written = decode.get_total_written_ptr();
-        process = process_decompression_inited;
+        process = process_inited;
         if (header_information != NULL) {
-            main_header_t header(*decode.get_header());
+            main_header_t header(decode.get_header());
             header_information->major_version = header.version[0];
             header_information->minor_version = header.version[1];
             header_information->revision = header.version[2];
@@ -184,12 +188,11 @@ namespace density {
     }
 
     stream_t::state_t
-    stream_t::decompress_continue(void)
+    stream_decode_t::continue_(void)
     {
-        if (process != process_decompression_started) {
-            if (process != process_decompression_inited)
-                return state_error_invalid_internal_state;
-            process = process_decompression_started;
+        if (process != process_started) {
+            if (process != process_inited) return state_error_invalid_internal_state;
+            process = process_started;
         }
         state_t state = check_conformity();
         if (state) return state;
@@ -204,12 +207,11 @@ namespace density {
     }
 
     stream_t::state_t
-    stream_t::decompress_finish(void)
+    stream_decode_t::finish(void)
     {
-        if (process != process_decompression_started) {
-            if (process != process_decompression_inited)
-                return state_error_invalid_internal_state;
-            process = process_decompression_started;
+        if (process != process_started) {
+            if (process != process_inited) return state_error_invalid_internal_state;
+            process = process_started;
         }
         decode_t::state_t decode_state = decode.finish(&in, &out);
         switch (decode_state) {
@@ -218,7 +220,7 @@ namespace density {
         case decode_t::state_integrity_check_fail: return state_error_integrity_check_fail;
         default: return state_error_invalid_internal_state;
         }
-        process = process_decompression_finished;
+        process = process_finished;
         return state_ready;
     }
 }

@@ -22,8 +22,8 @@ namespace density {
         state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
         state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
 
-        inline uint_fast64_t *get_total_read_ptr(void) { return &total_read; }
-        inline uint_fast64_t *get_total_written_ptr(void) { return &total_written; }
+        inline const uint_fast64_t get_total_read(void) const { return total_read; }
+        inline const uint_fast64_t get_total_written(void) const { return total_written; }
     private:
         typedef enum {
             process_write_header,
@@ -78,9 +78,9 @@ namespace density {
         state_t continue_(teleport_t *in, location_t *out);
         state_t finish(teleport_t *in, location_t *out);
 
-        inline uint_fast64_t *get_total_read_ptr(void) { return &total_read; }
-        inline uint_fast64_t *get_total_written_ptr(void) { return &total_written; }
-        inline const main_header_t *get_header(void) const { return &header; }
+        inline const uint_fast64_t get_total_read(void) const { return total_read; }
+        inline const uint_fast64_t get_total_written(void) const { return total_written; }
+        inline const main_header_t &get_header(void) const { return header; }
     private:
         typedef enum {
             process_read_header,

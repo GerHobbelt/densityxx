@@ -43,17 +43,6 @@ namespace density {
                              error_output_buffer_too_small,
                              error_invalid_internal_state,
                              error_integrity_check_fail);
-
-        struct header_information_t {
-            uint8_t major_version, minor_version, revision;
-            compression_mode_t compression_mode;
-            block_type_t block_type;
-        };
-
-        teleport_t in;
-        location_t out;
-        uint_fast64_t *total_bytes_read, *total_bytes_written;
-
         inline stream_t(void): in(memory_teleport_buffer_size), out() {}
         ~stream_t() {}
 
@@ -65,32 +54,52 @@ namespace density {
         {   this->out.encapsulate(out, szout); return state_ready; }
         inline uint_fast64_t output_available_for_use(void) const { return out.used(); }
         inline state_t check_conformity(void) const
-        {   return out.initial_available_bytes < minimum_output_buffer_size ?
-                state_error_output_buffer_too_small: state_ready; }
-        state_t compress_init(const compression_mode_t mode, const block_type_t block_type);
-        state_t compress_continue(void);
-        state_t compress_finish(void);
-
-        state_t decompress_init(header_information_t *RESTRICT header_information);
-        state_t decompress_continue(void);
-        state_t decompress_finish(void);
-    private:
-        static const size_t memory_teleport_buffer_size = 1 << 16;
+        {   if (out.initial_available_bytes < minimum_output_buffer_size)
+                return state_error_output_buffer_too_small;
+            return state_ready; }
+    protected:
         typedef enum {
             process_prepared = 0,
-            process_compression_inited,
-            process_compression_started,
-            process_compression_finished,
-            process_decompression_inited,
-            process_decompression_started,
-            process_decompression_finished,
+            process_inited,
+            process_started,
+            process_finished,
         } process_t;
-        DENSITY_ENUM_RENDER7(process, prepared,
-                             compression_inited, compression_started, compression_finished,
-                             decompression_inited, decompression_started,
-                             decompression_finished);
+        DENSITY_ENUM_RENDER4(process, prepared, inited, started, finished);
         process_t process;
+        teleport_t in;
+        location_t out;
+    private:
+        static const size_t memory_teleport_buffer_size = 1 << 16;
+    };
+
+    class stream_encode_t: public stream_t {
+    public:
+        state_t init(const compression_mode_t mode, const block_type_t block_type);
+        state_t continue_(void);
+        state_t finish(void);
+        inline const uint_fast64_t get_total_read(void) const
+        {   return encode.get_total_read(); }
+        inline const uint_fast64_t get_total_written(void) const
+        {   return encode.get_total_written(); }
+    private:
         encode_t encode;
+    };
+
+    class stream_decode_t: public stream_t {
+    public:
+        struct header_information_t {
+            uint8_t major_version, minor_version, revision;
+            compression_mode_t compression_mode;
+            block_type_t block_type;
+        };
+        state_t init(header_information_t *RESTRICT header_information);
+        state_t continue_(void);
+        state_t finish(void);
+        inline const uint_fast64_t get_total_read(void) const
+        {   return decode.get_total_read(); }
+        inline const uint_fast64_t get_total_written(void) const
+        {   return decode.get_total_written(); }
+    private:
         decode_t decode;
     };
 }

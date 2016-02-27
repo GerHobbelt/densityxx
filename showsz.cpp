@@ -8,7 +8,9 @@ int
 main(void)
 {
     SHOWSZ(density::stream_t);
-    SHOWSZ(density::stream_t::header_information_t);
+    SHOWSZ(density::stream_encode_t);
+    SHOWSZ(density::stream_decode_t);
+    SHOWSZ(density::stream_decode_t::header_information_t);
     SHOWSZ(density::encode_t);
     SHOWSZ(density::decode_t);
     SHOWSZ(density::main_header_t);
