@@ -69,60 +69,60 @@
 
 #define DENSITY_ENUM_RENDER2(ENUM_TYPE, ENUM_VALUE1, ENUM_VALUE2)       \
     DENSITY_ENUM_RENDER_PROTOTYPE(ENUM_TYPE) {                          \
-    switch (ENUM_TYPE) {                                                \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE1);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE2);                  \
-    default: return #ENUM_TYPE "_???"; } }
+        switch (ENUM_TYPE) {                                            \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE1);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE2);          \
+        default: return #ENUM_TYPE "_???"; } }
 
 #define DENSITY_ENUM_RENDER3(ENUM_TYPE, ENUM_VALUE1, ENUM_VALUE2, ENUM_VALUE3) \
     DENSITY_ENUM_RENDER_PROTOTYPE(ENUM_TYPE) {                          \
-    switch (ENUM_TYPE) {                                                \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE1);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE2);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE3);                  \
-    default: return #ENUM_TYPE "_???"; } }
+        switch (ENUM_TYPE) {                                            \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE1);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE2);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE3);          \
+        default: return #ENUM_TYPE "_???"; } }
 
 #define DENSITY_ENUM_RENDER4(ENUM_TYPE, ENUM_VALUE1, ENUM_VALUE2, ENUM_VALUE3, ENUM_VALUE4) \
     DENSITY_ENUM_RENDER_PROTOTYPE(ENUM_TYPE) {                          \
-    switch (ENUM_TYPE) {                                                \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE1);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE2);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE3);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE4);                  \
+        switch (ENUM_TYPE) {                                            \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE1);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE2);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE3);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE4);          \
     default: return #ENUM_TYPE "_???"; } }
 
 #define DENSITY_ENUM_RENDER5(ENUM_TYPE, ENUM_VALUE1, ENUM_VALUE2, ENUM_VALUE3, ENUM_VALUE4, ENUM_VALUE5) \
     DENSITY_ENUM_RENDER_PROTOTYPE(ENUM_TYPE) {                          \
-    switch (ENUM_TYPE) {                                                \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE1);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE2);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE3);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE4);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE5);                  \
-    default: return #ENUM_TYPE "_???"; } }
+        switch (ENUM_TYPE) {                                            \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE1);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE2);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE3);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE4);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE5);          \
+        default: return #ENUM_TYPE "_???"; } }
 
 #define DENSITY_ENUM_RENDER6(ENUM_TYPE, ENUM_VALUE1, ENUM_VALUE2, ENUM_VALUE3, ENUM_VALUE4, ENUM_VALUE5, ENUM_VALUE6) \
     DENSITY_ENUM_RENDER_PROTOTYPE(ENUM_TYPE) {                          \
-    switch (ENUM_TYPE) {                                                \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE1);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE2);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE3);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE4);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE5);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE6);                  \
-    default: return #ENUM_TYPE "_???"; } }
+        switch (ENUM_TYPE) {                                            \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE1);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE2);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE3);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE4);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE5);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE6);          \
+        default: return #ENUM_TYPE "_???"; } }
 
 #define DENSITY_ENUM_RENDER7(ENUM_TYPE, ENUM_VALUE1, ENUM_VALUE2, ENUM_VALUE3, ENUM_VALUE4, ENUM_VALUE5, ENUM_VALUE6, ENUM_VALUE7) \
     DENSITY_ENUM_RENDER_PROTOTYPE(ENUM_TYPE) {                          \
-    switch (ENUM_TYPE) {                                                \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE1);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE2);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE3);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE4);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE5);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE6);                  \
-    DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE7);                  \
-    default: return #ENUM_TYPE "_???"; } }
+        switch (ENUM_TYPE) {                                            \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE1);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE2);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE3);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE4);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE5);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE6);          \
+            DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE7);          \
+        default: return #ENUM_TYPE "_???"; } }
 
 namespace density {
     const uint8_t major_version = 0;
@@ -141,10 +141,10 @@ namespace density {
     } compression_mode_t;
     DENSITY_ENUM_RENDER4(compression_mode, copy, chameleon_algorithm,
                          cheetah_algorithm, lion_algorithm);
-
     typedef enum {
         block_type_default = 0,                      // Standard, no integrity check
         block_type_with_hashsum_integrity_check = 1  // Add data integrity check to the stream
     } block_type_t;
     DENSITY_ENUM_RENDER2(block_type, default, with_hashsum_integrity_check);
 }
+

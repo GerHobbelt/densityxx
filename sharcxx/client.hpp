@@ -77,6 +77,6 @@ namespace density {
         uint_fast64_t empty_output_buffer(stream_t *RESTRICT stream) const;
         void action_required(uint_fast64_t *read, uint_fast64_t *written,
                              const client_io_t *RESTRICT io_out, stream_t *RESTRICT stream,
-                             const stream_state_t stream_state, const char *error_message);
+                             const stream_t::state_t stream_state, const char *error_message);
     };
 }

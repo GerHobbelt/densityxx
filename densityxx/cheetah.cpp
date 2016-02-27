@@ -36,16 +36,16 @@ namespace density {
         out->pointer += sizeof(cheetah_signature_t);
         out->available_bytes -= sizeof(cheetah_signature_t);
     }
-    inline kernel_encode_state_t
+    inline kernel_encode_t::state_t
     cheetah_encode_t::prepare_new_block(location_t *RESTRICT out)
     {
         if (cheetah_maximum_compressed_unit_size > out->available_bytes)
-            return kernel_encode_state_stall_on_output;
+            return kernel_encode_t::state_stall_on_output;
         switch (signatures_count) {
         case cheetah_preferred_efficiency_check_signatures:
             if (!efficiency_checked) {
                 efficiency_checked = true;
-                return kernel_encode_state_info_efficiency_check;
+                return kernel_encode_t::state_info_efficiency_check;
             }
             break;
         case cheetah_preferred_block_signatures:
@@ -58,16 +58,16 @@ namespace density {
                 reset_cycle = dictionary_preferred_reset_cycle - 1;
             }
 #endif
-            return kernel_encode_state_info_new_block;
+            return kernel_encode_t::state_info_new_block;
         default: break;
         }
         prepare_new_signature(out);
-        return kernel_encode_state_ready;
+        return kernel_encode_t::state_ready;
     }
-    inline kernel_encode_state_t
+    inline kernel_encode_t::state_t
     cheetah_encode_t::check_state(location_t *RESTRICT out)
     {
-        kernel_encode_state_t return_state;
+        kernel_encode_t::state_t return_state;
         switch (shift) {
         case DENSITY_BITSIZEOF(cheetah_signature_t):
             if(DENSITY_LIKELY(!signature_copied_to_memory)) {
@@ -79,7 +79,7 @@ namespace density {
             break;
         default: break;
         }
-        return kernel_encode_state_ready;
+        return kernel_encode_t::state_ready;
     }
     inline void
     cheetah_encode_t::kernel(location_t *RESTRICT out, const uint16_t hash,
@@ -87,7 +87,7 @@ namespace density {
     {
         uint32_t *predicted_chunk = (uint32_t *)&dictionary.prediction_entries[last_hash];
         if (*predicted_chunk != chunk) {
-            cheetah_dictionary_entry_t *found = &dictionary.entries[hash];
+            cheetah_dictionary_t::entry_t *found = &dictionary.entries[hash];
             uint32_t *found_a = &found->chunk_a;
             if (*found_a != chunk) {
                 uint32_t *found_b = &found->chunk_b;
@@ -134,7 +134,7 @@ namespace density {
         shift = DENSITY_BITSIZEOF(cheetah_signature_t);
     }
 
-    kernel_encode_state_t
+    kernel_encode_t::state_t
     cheetah_encode_t::init(void)
     {
         signatures_count = 0;
@@ -144,36 +144,34 @@ namespace density {
         reset_cycle = dictionary_preferred_reset_cycle - 1;
 #endif
         last_hash = 0;
-        return exit_process(cheetah_encode_process_prepare_new_block,
-                            kernel_encode_state_ready);
+        return exit_process(process_prepare_new_block, kernel_encode_t::state_ready);
     }
-    kernel_encode_state_t
+    kernel_encode_t::state_t
     cheetah_encode_t::continue_(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
-        kernel_encode_state_t return_state;
+        kernel_encode_t::state_t return_state;
         uint8_t *pointer_out_before;
         location_t *read_memory_location;
         // Dispatch
         switch (process) {
-        case cheetah_encode_process_prepare_new_block: goto prepare_new_block;
-        case cheetah_encode_process_check_signature_state: goto check_signature_state;
-        case cheetah_encode_process_read_chunk: goto read_chunk;
-        default: return kernel_encode_state_error;
+        case process_prepare_new_block: goto prepare_new_block;
+        case process_check_signature_state: goto check_signature_state;
+        case process_read_chunk: goto read_chunk;
+        default: return kernel_encode_t::state_error;
         }
         // Prepare new block
     prepare_new_block:
         if ((return_state = prepare_new_block(out)))
-            return exit_process(cheetah_encode_process_prepare_new_block, return_state);
+            return exit_process(process_prepare_new_block, return_state);
         // Check signature state
     check_signature_state:
         if ((return_state = check_state(out)))
-            return exit_process(cheetah_encode_process_check_signature_state, return_state);
+            return exit_process(process_check_signature_state, return_state);
         // Try to read a complete chunk unit
     read_chunk:
         pointer_out_before = out->pointer;
         if (!(read_memory_location = in->read(cheetah_encode_process_unit_size)))
-            return exit_process(cheetah_encode_process_read_chunk,
-                                kernel_encode_state_stall_on_input);
+            return exit_process(process_read_chunk, kernel_encode_t::state_stall_on_input);
         // Chunk was read properly, process
         process_unit(read_memory_location, out);
         read_memory_location->available_bytes -= cheetah_encode_process_unit_size;
@@ -181,27 +179,27 @@ namespace density {
         // New loop
         goto check_signature_state;
     }
-    kernel_encode_state_t
+    kernel_encode_t::state_t
     cheetah_encode_t::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
-        kernel_encode_state_t return_state;
+        kernel_encode_t::state_t return_state;
         uint8_t *pointer_out_before;
         location_t *read_memory_location;
         // Dispatch
         switch (process) {
-        case cheetah_encode_process_prepare_new_block: goto prepare_new_block;
-        case cheetah_encode_process_check_signature_state: goto check_signature_state;
-        case cheetah_encode_process_read_chunk: goto read_chunk;
-        default: return kernel_encode_state_error;
+        case process_prepare_new_block: goto prepare_new_block;
+        case process_check_signature_state: goto check_signature_state;
+        case process_read_chunk: goto read_chunk;
+        default: return kernel_encode_t::state_error;
         }
         // Prepare new block
     prepare_new_block:
         if ((return_state = prepare_new_block(out)))
-            return exit_process(cheetah_encode_process_prepare_new_block, return_state);
+            return exit_process(process_prepare_new_block, return_state);
         // Check signature state
     check_signature_state:
         if ((return_state = check_state(out)))
-            return exit_process(cheetah_encode_process_check_signature_state, return_state);
+            return exit_process(process_check_signature_state, return_state);
         // Try to read a complete chunk unit
     read_chunk:
         pointer_out_before = out->pointer;
@@ -227,25 +225,25 @@ namespace density {
         if (in->available_bytes() >= sizeof(uint32_t)) goto check_signature_state;
         // Marker for decode loop exit
         if ((return_state = check_state(out)))
-            return exit_process(cheetah_encode_process_check_signature_state, return_state);
+            return exit_process(process_check_signature_state, return_state);
         proximity_signature |= ((uint64_t)cheetah_signature_flag_chunk << shift);
         // Copy the remaining bytes
         DENSITY_MEMCPY(signature, &proximity_signature, sizeof(proximity_signature));
         in->copy_remaining(out);
-        return kernel_encode_state_ready;
+        return kernel_encode_t::state_ready;
     }
 
     // decode.
-    inline kernel_decode_state_t
+    inline kernel_decode_t::state_t
     cheetah_decode_t::check_state(location_t *RESTRICT out)
     {
         if (out->available_bytes < cheetah_decompressed_unit_size)
-            return kernel_decode_state_stall_on_output;
+            return kernel_decode_t::state_stall_on_output;
         switch (signatures_count) {
         case cheetah_preferred_efficiency_check_signatures:
             if (!efficiency_checked) {
                 efficiency_checked = true;
-                return kernel_decode_state_info_efficiency_check;
+                return kernel_decode_t::state_info_efficiency_check;
             }
             break;
         case cheetah_preferred_block_signatures:
@@ -259,10 +257,10 @@ namespace density {
                     reset_cycle = ((uint_fast64_t) 1 << reset_dictionary_cycle_shift) - 1;
                 }
             }
-            return kernel_decode_state_info_new_block;
+            return kernel_decode_t::state_info_new_block;
         default: break;
         }
-        return kernel_decode_state_ready;
+        return kernel_decode_t::state_ready;
     }
     inline void
     cheetah_decode_t::read_signature(location_t *RESTRICT in)
@@ -292,7 +290,7 @@ namespace density {
     cheetah_decode_t::process_compressed_b(const uint16_t hash, location_t *RESTRICT out)
     {
         __builtin_prefetch(&dictionary.prediction_entries[hash]);
-        cheetah_dictionary_entry_t *const entry = &dictionary.entries[hash];
+        cheetah_dictionary_t::entry_t *const entry = &dictionary.entries[hash];
         const uint32_t chunk = entry->chunk_b;
         entry->chunk_b = entry->chunk_a;
         entry->chunk_a = chunk;
@@ -305,7 +303,7 @@ namespace density {
     {
         const uint16_t hash = hash_algorithm(chunk);
         __builtin_prefetch(&dictionary.prediction_entries[hash]);
-        cheetah_dictionary_entry_t *const entry = &dictionary.entries[hash];
+        cheetah_dictionary_t::entry_t *const entry = &dictionary.entries[hash];
         entry->chunk_b = entry->chunk_a;
         entry->chunk_a = chunk;
         DENSITY_MEMCPY(out->pointer, &chunk, sizeof(chunk));
@@ -358,7 +356,7 @@ namespace density {
         shift = DENSITY_BITSIZEOF(cheetah_signature_t);
     }
 
-    kernel_decode_state_t
+    kernel_decode_t::state_t
     cheetah_decode_t::init(const main_header_parameters_t parameters,
                            const uint_fast8_t end_data_overhead)
     {
@@ -371,30 +369,29 @@ namespace density {
             reset_cycle = ((uint_fast64_t) 1 << reset_dictionary_cycle_shift) - 1;
         this->end_data_overhead = end_data_overhead;
         last_hash = 0;
-        return exit_process(cheetah_decode_process_check_signature_state,
-                            kernel_decode_state_ready);
+        return exit_process(process_check_signature_state, kernel_decode_t::state_ready);
     }
-    kernel_decode_state_t
+    kernel_decode_t::state_t
     cheetah_decode_t::continue_(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
-        kernel_decode_state_t return_state;
+        kernel_decode_t::state_t return_state;
         location_t *read_memory_location;
         // Dispatch
         switch (process) {
-        case cheetah_decode_process_check_signature_state: goto check_signature_state;
-        case cheetah_decode_process_read_processing_unit: goto read_processing_unit;
-        default: return kernel_decode_state_error;
+        case process_check_signature_state: goto check_signature_state;
+        case process_read_processing_unit: goto read_processing_unit;
+        default: return kernel_decode_t::state_error;
         }
     check_signature_state:
         if (DENSITY_UNLIKELY((return_state = check_state(out))))
-            return exit_process(cheetah_decode_process_check_signature_state, return_state);
+            return exit_process(process_check_signature_state, return_state);
         // Try to read the next processing unit
     read_processing_unit:
         read_memory_location = in->read_reserved(cheetah_maximum_compressed_unit_size,
                                                  end_data_overhead);
         if (DENSITY_UNLIKELY(!read_memory_location))
-            return exit_process(cheetah_decode_process_read_processing_unit,
-                                kernel_decode_state_stall_on_input);
+            return exit_process(process_read_processing_unit,
+                                kernel_decode_t::state_stall_on_input);
         uint8_t *read_memory_location_pointer_before = read_memory_location->pointer;
         // Decode the signature (endian processing)
         read_signature(read_memory_location);
@@ -406,22 +403,22 @@ namespace density {
         // New loop
         goto check_signature_state;
     }
-    kernel_decode_state_t
+    kernel_decode_t::state_t
     cheetah_decode_t::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
-        kernel_decode_state_t return_state;
+        kernel_decode_t::state_t return_state;
         location_t *read_memory_location;
         uint_fast64_t available_bytes_reserved;
         uint8_t *read_memory_location_pointer_before;
         // Dispatch
         switch (process) {
-        case cheetah_decode_process_check_signature_state: goto check_signature_state;
-        case cheetah_decode_process_read_processing_unit: goto read_processing_unit;
-        default: return kernel_decode_state_error;
+        case process_check_signature_state: goto check_signature_state;
+        case process_read_processing_unit: goto read_processing_unit;
+        default: return kernel_decode_t::state_error;
         }
     check_signature_state:
         if (DENSITY_UNLIKELY((return_state = check_state(out))))
-            return exit_process(cheetah_decode_process_check_signature_state, return_state);
+            return exit_process(process_check_signature_state, return_state);
         // Try to read the next processing unit
     read_processing_unit:
         read_memory_location = in->read_reserved(cheetah_maximum_compressed_unit_size,
@@ -450,13 +447,13 @@ namespace density {
         while (shift != DENSITY_BITSIZEOF(cheetah_signature_t)) {
             switch ((uint8_t const) ((signature >> shift) & 0x3)) {
             case cheetah_signature_flag_predicted:
-                if (out->available_bytes < sizeof(uint32_t)) return kernel_decode_state_error;
+                if (out->available_bytes < sizeof(uint32_t)) return kernel_decode_t::state_error;
                 process_predicted(out);
                 break;
             case cheetah_signature_flag_map_a:
                 read_memory_location = in->read_reserved(sizeof(uint16_t), end_data_overhead);
-                if (!read_memory_location) return kernel_decode_state_error;
-                if (out->available_bytes < sizeof(uint32_t)) return kernel_decode_state_error;
+                if (!read_memory_location) return kernel_decode_t::state_error;
+                if (out->available_bytes < sizeof(uint32_t)) return kernel_decode_t::state_error;
                 DENSITY_MEMCPY(&hash, read_memory_location->pointer, sizeof(hash));
                 process_compressed_a(hash, out);
                 read_memory_location->pointer += sizeof(hash);
@@ -464,8 +461,8 @@ namespace density {
                 break;
             case cheetah_signature_flag_map_b:
                 read_memory_location = in->read_reserved(sizeof(uint16_t), end_data_overhead);
-                if (!read_memory_location) return kernel_decode_state_error;
-                if (out->available_bytes < sizeof(uint32_t)) return kernel_decode_state_error;
+                if (!read_memory_location) return kernel_decode_t::state_error;
+                if (out->available_bytes < sizeof(uint32_t)) return kernel_decode_t::state_error;
                 DENSITY_MEMCPY(&hash, read_memory_location->pointer, sizeof(hash));
                 process_compressed_b(hash, out);
                 read_memory_location->pointer += sizeof(hash);
@@ -474,7 +471,7 @@ namespace density {
             case cheetah_signature_flag_chunk:
                 read_memory_location = in->read_reserved(sizeof(uint32_t), end_data_overhead);
                 if (!read_memory_location) goto finish;
-                if (out->available_bytes < sizeof(chunk)) return kernel_decode_state_error;
+                if (out->available_bytes < sizeof(chunk)) return kernel_decode_t::state_error;
                 DENSITY_MEMCPY(&chunk, read_memory_location->pointer, sizeof(chunk));
                 process_uncompressed(chunk, out);
                 read_memory_location->pointer += sizeof(chunk);
@@ -490,8 +487,8 @@ namespace density {
     finish:
         available_bytes_reserved = in->available_bytes_reserved(end_data_overhead);
         if (out->available_bytes < available_bytes_reserved)
-            return kernel_decode_state_error;
+            return kernel_decode_t::state_error;
         in->copy(out, available_bytes_reserved);
-        return kernel_decode_state_ready;
+        return kernel_decode_t::state_ready;
     }
 }

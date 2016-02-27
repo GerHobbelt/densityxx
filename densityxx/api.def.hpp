@@ -29,70 +29,68 @@ namespace density {
                       uint8_t *out, const uint_fast64_t szout);
 
     // stream.
-    const size_t stream_memory_teleport_buffer_size = 1 << 16;
-    typedef enum {
-        stream_state_ready = 0,                             // Awaiting further instructions (new action or adding data to the input buffer)
-        stream_state_stall_on_input,                        // There is not enough space left in the input buffer to continue
-        stream_state_stall_on_output,                       // There is not enough space left in the output buffer to continue
-        stream_state_error_output_buffer_too_small,         // Output buffer size is too small
-        stream_state_error_invalid_internal_state,          // Error during processing
-        stream_state_error_integrity_check_fail             // Integrity check has failed
-    } stream_state_t;
-    DENSITY_ENUM_RENDER6(stream_state, ready, stall_on_input, stall_on_output,
-                         error_output_buffer_too_small,
-                         error_invalid_internal_state,
-                         error_integrity_check_fail);
-
-    struct stream_header_information_t {
-        uint8_t major_version, minor_version, revision;
-        compression_mode_t compression_mode;
-        block_type_t block_type;
-    };
-
-    typedef enum {
-        stream_process_prepared = 0,
-        stream_process_compression_inited,
-        stream_process_compression_started,
-        stream_process_compression_finished,
-        stream_process_decompression_inited,
-        stream_process_decompression_started,
-        stream_process_decompression_finished,
-    } stream_process_t;
-    DENSITY_ENUM_RENDER7(stream_process, prepared,
-                         compression_inited, compression_started, compression_finished,
-                         decompression_inited, decompression_started, decompression_finished);
-
     class stream_t {
-    private:
-        stream_process_t process;
-        encode_t encode;
-        decode_t decode;
     public:
+        typedef enum {
+            state_ready = 0,                      // Awaiting further instructions (new action or adding data to the input buffer)
+            state_stall_on_input,                 // There is not enough space left in the input buffer to continue
+            state_stall_on_output,                // There is not enough space left in the output buffer to continue
+            state_error_output_buffer_too_small,  // Output buffer size is too small
+            state_error_invalid_internal_state,   // Error during processing
+            state_error_integrity_check_fail      // Integrity check has failed
+        } state_t;
+        DENSITY_ENUM_RENDER6(state, ready, stall_on_input, stall_on_output,
+                             error_output_buffer_too_small,
+                             error_invalid_internal_state,
+                             error_integrity_check_fail);
+
+        struct header_information_t {
+            uint8_t major_version, minor_version, revision;
+            compression_mode_t compression_mode;
+            block_type_t block_type;
+        };
+
         teleport_t in;
         location_t out;
         uint_fast64_t *total_bytes_read, *total_bytes_written;
 
-        inline stream_t(void): in(stream_memory_teleport_buffer_size), out() {}
+        inline stream_t(void): in(memory_teleport_buffer_size), out() {}
         ~stream_t() {}
 
-        stream_state_t prepare(const uint8_t *RESTRICT in, const uint_fast64_t sz,
-                               uint8_t *RESTRICT out, const uint_fast64_t szout);
-        inline stream_state_t update_input(const uint8_t *RESTRICT in, const uint_fast64_t szin)
-        {   this->in.change_input_buffer(in, szin); return stream_state_ready; }
-        inline stream_state_t update_output(uint8_t *RESTRICT out, const uint_fast64_t szout)
-        {   this->out.encapsulate(out, szout); return stream_state_ready; }
+        state_t prepare(const uint8_t *RESTRICT in, const uint_fast64_t sz,
+                        uint8_t *RESTRICT out, const uint_fast64_t szout);
+        inline state_t update_input(const uint8_t *RESTRICT in, const uint_fast64_t szin)
+        {   this->in.change_input_buffer(in, szin); return state_ready; }
+        inline state_t update_output(uint8_t *RESTRICT out, const uint_fast64_t szout)
+        {   this->out.encapsulate(out, szout); return state_ready; }
         inline uint_fast64_t output_available_for_use(void) const { return out.used(); }
-        inline stream_state_t check_conformity(void) const
+        inline state_t check_conformity(void) const
         {   return out.initial_available_bytes < minimum_output_buffer_size ?
-                stream_state_error_output_buffer_too_small: stream_state_ready; }
-        stream_state_t compress_init(const compression_mode_t mode,
-                                     const block_type_t block_type);
-        stream_state_t compress_continue(void);
-        stream_state_t compress_finish(void);
+                state_error_output_buffer_too_small: state_ready; }
+        state_t compress_init(const compression_mode_t mode, const block_type_t block_type);
+        state_t compress_continue(void);
+        state_t compress_finish(void);
 
-        stream_state_t
-        decompress_init(stream_header_information_t *RESTRICT header_information);
-        stream_state_t decompress_continue(void);
-        stream_state_t decompress_finish(void);
+        state_t decompress_init(header_information_t *RESTRICT header_information);
+        state_t decompress_continue(void);
+        state_t decompress_finish(void);
+    private:
+        static const size_t memory_teleport_buffer_size = 1 << 16;
+        typedef enum {
+            process_prepared = 0,
+            process_compression_inited,
+            process_compression_started,
+            process_compression_finished,
+            process_decompression_inited,
+            process_decompression_started,
+            process_decompression_finished,
+        } process_t;
+        DENSITY_ENUM_RENDER7(process, prepared,
+                             compression_inited, compression_started, compression_finished,
+                             decompression_inited, decompression_started,
+                             decompression_finished);
+        process_t process;
+        encode_t encode;
+        decode_t decode;
     };
 }

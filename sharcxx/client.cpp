@@ -124,17 +124,17 @@ namespace density {
     client_io_t::action_required(uint_fast64_t *read, uint_fast64_t *written,
                                  const client_io_t *RESTRICT io_out,
                                  stream_t *RESTRICT stream,
-                                 const stream_state_t stream_state,
+                                 const stream_t::state_t stream_state,
                                  const char *error_message)
     {
         switch (stream_state) {
-        case stream_state_stall_on_output:
+        case stream_t::state_stall_on_output:
             *written = io_out->empty_output_buffer(stream);
             break;
-        case stream_state_stall_on_input:
+        case stream_t::state_stall_on_input:
             *read = reload_input_buffer(stream);
             break;
-        case stream_state_error_integrity_check_fail:
+        case stream_t::state_error_integrity_check_fail:
             exit_error("Integrity check failed");
         default:
             exit_error(error_message);
@@ -182,7 +182,7 @@ namespace density {
          */
         uint64_t total_written = header_t::write(io_out->stream, origin_type, &attributes);
         stream_t *stream = new stream_t();
-        stream_state_t stream_state;
+        stream_t::state_t stream_state;
         uint_fast64_t read = 0, written = 0;
         if (stream->prepare(input_buffer, sizeof(input_buffer),
                             output_buffer, sizeof(output_buffer)))
@@ -273,7 +273,7 @@ namespace density {
         uint64_t total_read = header.read(this->stream);
         if (!header.check_validity()) exit_error("Invalid file");
         stream_t *stream = new stream_t();
-        stream_state_t stream_state;
+        stream_t::state_t stream_state;
         uint_fast64_t read = 0, written = 0;
         if (stream->prepare(input_buffer, sizeof(input_buffer),
                             output_buffer, sizeof(output_buffer)))

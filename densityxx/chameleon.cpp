@@ -12,7 +12,7 @@
     fprintf(stderr, "    signatures_count(%u)\n", (unsigned)signatures_count); \
     fprintf(stderr, "    efficiency_checked(%s)\n", efficiency_checked ? "true": "false"); \
     fprintf(stderr, "    signature_copied_to_memory(%s)\n", signature_copied_to_memory ? "true": "false"); \
-    fprintf(stderr, "    process(%s)\n", chameleon_encode_process_render(process).c_str())
+    fprintf(stderr, "    process(%s)\n", process_render(process).c_str())
 #else
 #define DENSITY_SHOW_ENCODE(LABEL)
 #endif
@@ -55,16 +55,16 @@ namespace density {
         out->available_bytes -= sizeof(chameleon_signature_t);
     }
 
-    inline kernel_encode_state_t
+    inline kernel_encode_t::state_t
     chameleon_encode_t::prepare_new_block(location_t *RESTRICT out)
     {
         if (chameleon_maximum_compressed_unit_size > out->available_bytes)
-            return kernel_encode_state_stall_on_output;
+            return kernel_encode_t::state_stall_on_output;
         switch (signatures_count) {
         case chameleon_preferred_efficiency_check_signatures:
             if (!efficiency_checked) {
                 efficiency_checked = true;
-                return kernel_encode_state_info_efficiency_check;
+                return kernel_encode_t::state_info_efficiency_check;
             }
             break;
         case chameleon_preferred_block_signatures:
@@ -77,17 +77,17 @@ namespace density {
                 reset_cycle = dictionary_preferred_reset_cycle - 1;
             }
 #endif
-            return kernel_encode_state_info_new_block;
+            return kernel_encode_t::state_info_new_block;
         default: break;
         }
         chameleon_encode_t::prepare_new_signature(out);
-        return kernel_encode_state_ready;
+        return kernel_encode_t::state_ready;
     }
 
-    inline kernel_encode_state_t
+    inline kernel_encode_t::state_t
     chameleon_encode_t::check_state(location_t *RESTRICT out)
     {
-        kernel_encode_state_t kernel_encode_state;
+        kernel_encode_t::state_t kernel_encode_state;
         switch (shift) {
         case DENSITY_BITSIZEOF(chameleon_signature_t):
             if (DENSITY_LIKELY(!signature_copied_to_memory)) {
@@ -99,14 +99,14 @@ namespace density {
             break;
         default: break;
         }
-        return kernel_encode_state_ready;
+        return kernel_encode_t::state_ready;
     }
 
     inline void
     chameleon_encode_t::kernel(location_t *RESTRICT out, const uint16_t hash,
                                const uint32_t chunk, const uint_fast8_t shift)
     {
-        chameleon_dictionary_entry_t *const found = &dictionary.entries[hash];
+        chameleon_dictionary_t::entry_t *const found = &dictionary.entries[hash];
         if (chunk != found->as_uint32_t) {
             found->as_uint32_t = chunk;
             //DENSITY_SHOW_OUT(out, sizeof(chunk));
@@ -144,7 +144,7 @@ namespace density {
         shift = DENSITY_BITSIZEOF(chameleon_signature_t);
     }
 
-    kernel_encode_state_t
+    kernel_encode_t::state_t
     chameleon_encode_t::init(void)
     {
         signatures_count = 0;
@@ -154,39 +154,37 @@ namespace density {
         reset_cycle = dictionary_preferred_reset_cycle - 1;
 #endif
         DENSITY_SHOW_ENCODE(init);
-        return exit_process(chameleon_encode_process_prepare_new_block,
-                            kernel_encode_state_ready);
+        return exit_process(process_prepare_new_block, kernel_encode_t::state_ready);
     }
-    kernel_encode_state_t
+    kernel_encode_t::state_t
     chameleon_encode_t::continue_(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
-        kernel_encode_state_t return_state;
+        kernel_encode_t::state_t return_state;
         uint8_t *pointer_out_before;
         location_t *read_memory_location;
         // Dispatch
         switch (process) {
-        case chameleon_encode_process_prepare_new_block: goto prepare_new_block;
-        case chameleon_encode_process_check_signature_state: goto check_signature_state;
-        case chameleon_encode_process_read_chunk: goto read_chunk;
-        default: return kernel_encode_state_error;
+        case process_prepare_new_block: goto prepare_new_block;
+        case process_check_signature_state: goto check_signature_state;
+        case process_read_chunk: goto read_chunk;
+        default: return kernel_encode_t::state_error;
         }
         // Prepare new block
     prepare_new_block:
         DENSITY_SHOW_ENCODE(prepare_new_block);
         if ((return_state = prepare_new_block(out)))
-            return exit_process(chameleon_encode_process_prepare_new_block, return_state);
+            return exit_process(process_prepare_new_block, return_state);
         // Check signature state
     check_signature_state:
         DENSITY_SHOW_ENCODE(check_signature_state);
         if ((return_state = check_state(out)))
-            return exit_process(chameleon_encode_process_check_signature_state, return_state);
+            return exit_process(process_check_signature_state, return_state);
         // Try to read a complete chunk unit
     read_chunk:
         DENSITY_SHOW_ENCODE(read_chunk);
         pointer_out_before = out->pointer;
         if (!(read_memory_location = in->read(chameleon_encode_process_unit_size)))
-            return exit_process(chameleon_encode_process_read_chunk,
-                                kernel_encode_state_stall_on_input);
+            return exit_process(process_read_chunk, kernel_encode_t::state_stall_on_input);
         // Chunk was read properly, process
         process_unit(read_memory_location, out);
         read_memory_location->available_bytes -= chameleon_encode_process_unit_size;
@@ -194,29 +192,29 @@ namespace density {
         // New loop
         goto check_signature_state;
     }
-    kernel_encode_state_t
+    kernel_encode_t::state_t
     chameleon_encode_t::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
-        kernel_encode_state_t return_state;
+        kernel_encode_t::state_t return_state;
         uint8_t *pointer_out_before;
         location_t *read_memory_location;
         // Dispatch
         switch (process) {
-        case chameleon_encode_process_prepare_new_block: goto prepare_new_block;
-        case chameleon_encode_process_check_signature_state: goto check_signature_state;
-        case chameleon_encode_process_read_chunk: goto read_chunk;
-        default: return kernel_encode_state_error;
+        case process_prepare_new_block: goto prepare_new_block;
+        case process_check_signature_state: goto check_signature_state;
+        case process_read_chunk: goto read_chunk;
+        default: return kernel_encode_t::state_error;
         }
         // Prepare new block
     prepare_new_block:
         DENSITY_SHOW_ENCODE(prepare_new_block);
         if ((return_state = prepare_new_block(out)))
-            return exit_process(chameleon_encode_process_prepare_new_block, return_state);
+            return exit_process(process_prepare_new_block, return_state);
         // Check signature state
     check_signature_state:
         DENSITY_SHOW_ENCODE(check_signature_state);
         if ((return_state = check_state(out)))
-            return exit_process(chameleon_encode_process_check_signature_state, return_state);
+            return exit_process(process_check_signature_state, return_state);
         // Try to read a complete chunk unit
     read_chunk:
         DENSITY_SHOW_ENCODE(read_chunk);
@@ -246,20 +244,20 @@ namespace density {
         // Copy the remaining bytes
         DENSITY_MEMCPY(signature, &proximity_signature, sizeof(proximity_signature));
         in->copy_remaining(out);
-        return kernel_encode_state_ready;
+        return kernel_encode_t::state_ready;
     }
 
     //--- decode ---
-    inline kernel_decode_state_t
+    inline kernel_decode_t::state_t
     chameleon_decode_t::check_state(location_t *RESTRICT out)
     {
         if (out->available_bytes < chameleon_decompressed_unit_size)
-            return kernel_decode_state_stall_on_output;
+            return kernel_decode_t::state_stall_on_output;
         switch (signatures_count) {
         case chameleon_preferred_efficiency_check_signatures:
             if (!efficiency_checked) {
                 efficiency_checked = true;
-                return kernel_decode_state_info_efficiency_check;
+                return kernel_decode_t::state_info_efficiency_check;
             }
             break;
         case chameleon_preferred_block_signatures:
@@ -273,10 +271,10 @@ namespace density {
                     reset_cycle = ((uint_fast64_t) 1 << reset_dictionary_cycle_shift) - 1;
                 }
             }
-            return kernel_decode_state_info_new_block;
+            return kernel_decode_t::state_info_new_block;
         default: break;
         }
-        return kernel_decode_state_ready;
+        return kernel_decode_t::state_ready;
     }
 
     inline void
@@ -326,7 +324,7 @@ namespace density {
         shift = DENSITY_BITSIZEOF(chameleon_signature_t);
     }
 
-    kernel_decode_state_t
+    kernel_decode_t::state_t
     chameleon_decode_t::init(const main_header_parameters_t parameters,
                              const uint_fast8_t end_data_overhead)
     {
@@ -338,29 +336,28 @@ namespace density {
         if (reset_dictionary_cycle_shift)
             reset_cycle = ((uint_fast64_t) 1 << reset_dictionary_cycle_shift) - 1;
         this->end_data_overhead = end_data_overhead;
-        return exit_process(chameleon_decode_process_check_signature_state,
-                            kernel_decode_state_ready);
+        return exit_process(process_check_signature_state, kernel_decode_t::state_ready);
     }
-    kernel_decode_state_t
+    kernel_decode_t::state_t
     chameleon_decode_t::continue_(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
-        kernel_decode_state_t return_state;
+        kernel_decode_t::state_t return_state;
         location_t *read_memory_location;
         // Dispatch
         switch (process) {
-        case chameleon_decode_process_check_signature_state: goto check_signature_state;
-        case chameleon_decode_process_read_processing_unit: goto read_processing_unit;
-        default: return kernel_decode_state_error;
+        case process_check_signature_state: goto check_signature_state;
+        case process_read_processing_unit: goto read_processing_unit;
+        default: return kernel_decode_t::state_error;
         }
     check_signature_state:
         if ((return_state = check_state(out)))
-            return exit_process(chameleon_decode_process_check_signature_state, return_state);
+            return exit_process(process_check_signature_state, return_state);
         // Try to read the next processing unit
     read_processing_unit:
         if (!(read_memory_location =
               in->read_reserved(chameleon_maximum_compressed_unit_size, end_data_overhead)))
-            return exit_process(chameleon_decode_process_read_processing_unit,
-                                kernel_decode_state_stall_on_input);
+            return exit_process(process_read_processing_unit,
+                                kernel_decode_t::state_stall_on_input);
         uint8_t *read_memory_location_pointer_before = read_memory_location->pointer;
         // Decode the signature (endian processing)
         read_signature(read_memory_location);
@@ -372,22 +369,22 @@ namespace density {
         // New loop
         goto check_signature_state;
     }
-    kernel_decode_state_t
+    kernel_decode_t::state_t
     chameleon_decode_t::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
-        kernel_decode_state_t return_state;
+        kernel_decode_t::state_t return_state;
         location_t *read_memory_location;
         uint_fast64_t available_bytes_reserved;
         uint8_t *read_memory_location_pointer_before;
         // Dispatch
         switch (process) {
-        case chameleon_decode_process_check_signature_state: goto check_signature_state;
-        case chameleon_decode_process_read_processing_unit: goto read_processing_unit;
-        default: return kernel_decode_state_error;
+        case process_check_signature_state: goto check_signature_state;
+        case process_read_processing_unit: goto read_processing_unit;
+        default: return kernel_decode_t::state_error;
         }
     check_signature_state:
         if ((return_state = check_state(out)))
-            return exit_process(chameleon_decode_process_check_signature_state, return_state);
+            return exit_process(process_check_signature_state, return_state);
         // Try to read the next processing unit
     read_processing_unit:
         if (!(read_memory_location =
@@ -414,9 +411,9 @@ namespace density {
             if (test_compressed(shift)) {
                 if (!(read_memory_location =
                       in->read_reserved(sizeof(uint16_t), end_data_overhead)))
-                    return kernel_decode_state_error;
+                    return kernel_decode_t::state_error;
                 if(out->available_bytes < sizeof(uint32_t))
-                    return kernel_decode_state_error;
+                    return kernel_decode_t::state_error;
                 uint16_t hash;
                 DENSITY_MEMCPY(&hash, read_memory_location->pointer, sizeof(hash));
                 process_compressed(hash, out);
@@ -426,7 +423,7 @@ namespace density {
                 if (!(read_memory_location =
                       in->read_reserved(sizeof(uint32_t), end_data_overhead)))
                     goto finish;
-                if(out->available_bytes < sizeof(uint32_t)) return kernel_decode_state_error;
+                if(out->available_bytes < sizeof(uint32_t)) return kernel_decode_t::state_error;
                 uint32_t chunk;
                 DENSITY_MEMCPY(&chunk, read_memory_location->pointer, sizeof(chunk));
                 process_uncompressed(chunk, out);
@@ -441,8 +438,8 @@ namespace density {
         goto check_signature_state;
     finish:
         available_bytes_reserved = in->available_bytes_reserved(end_data_overhead);
-        if(out->available_bytes < available_bytes_reserved) return kernel_decode_state_error;
+        if(out->available_bytes < available_bytes_reserved) return kernel_decode_t::state_error;
         in->copy(out, available_bytes_reserved);
-        return kernel_decode_state_ready;
+        return kernel_decode_t::state_ready;
     }
 }
