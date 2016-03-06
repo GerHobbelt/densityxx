@@ -16,3 +16,4 @@ env = Environment(CCFLAGS = ccflags,
 objs = map(lambda src: env.Object(src)[0], glob(pathjoin('densityxx', '*.cpp')))
 env.Program('sharcxx', glob(pathjoin('sharcxx', '*.cpp')) + objs)
 env.Program('showsz', 'showsz.cpp')
+env.Object('compile', 'compile.cxx')
