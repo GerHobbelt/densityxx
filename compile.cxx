@@ -1,2 +1,5 @@
 #include "densityxx/block.t.hpp"
 #include "densityxx/copy.t.hpp"
+#include "densityxx/chameleon.t.hpp"
+#include "densityxx/cheetah.t.hpp"
+#include "densityxx/lion.t.hpp"
