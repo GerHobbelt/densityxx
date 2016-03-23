@@ -16,6 +16,7 @@ namespace density {
             state_error
         } state_t;
         DENSITY_ENUM_RENDER4(state, ready, stall_on_input, stall_on_output, error);
+        inline const compression_mode_t mode(void) const { return target_mode; }
         inline const block_type_t get_block_type(void) const { return block_type; }
     protected:
         typedef enum {
@@ -89,6 +90,7 @@ namespace density {
         } state_t;
         DENSITY_ENUM_RENDER5(state, ready, stall_on_input, stall_on_output,
                              integrity_check_fail, error);
+        inline const compression_mode_t mode(void) const { return target_mode; }
         inline const block_type_t get_block_type(void) const { return block_type; }
     protected:
         typedef enum {
