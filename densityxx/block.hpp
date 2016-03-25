@@ -8,19 +8,20 @@ namespace density {
     const uint64_t spookyhash_seed_2 = 0xdef;
     // encode.
     template<class KERNEL_ENCODE_T> inline encode_state_t
-    block_encode_t<KERNEL_ENCODE_T>::init(const block_type_t block_type)
+    block_encode_t<KERNEL_ENCODE_T>::init(context_t *context)
     {
         current_mode = target_mode = kernel_encode.mode();
-        this->block_type = block_type;
+        block_type = context->header.block_type();
         total_read = total_written = 0;
         if (block_type == block_type_with_hashsum_integrity_check) update = true;
         kernel_encode.init();
         return exit_process(process_write_block_header, encode_state_ready);
     }
     template<class KERNEL_ENCODE_T> inline encode_state_t
-    block_encode_t<KERNEL_ENCODE_T>::continue_(teleport_t *RESTRICT in,
-                                               location_t *RESTRICT out)
+    block_encode_t<KERNEL_ENCODE_T>::continue_(context_t *context)
     {
+        teleport_t *in = &context->in;
+        location_t *out = &context->out;
         encode_state_t state;
         kernel_encode_t::state_t kernel_encode_state;
         uint_fast64_t available_in_before, available_out_before;
@@ -94,8 +95,10 @@ namespace density {
         goto write_block_header;
     }
     template<class KERNEL_ENCODE_T> inline encode_state_t
-    block_encode_t<KERNEL_ENCODE_T>::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
+    block_encode_t<KERNEL_ENCODE_T>::finish(context_t *context)
     {
+        teleport_t *in = &context->in;
+        location_t *out = &context->out;
         encode_state_t state;
         kernel_encode_t::state_t kernel_encode_state;
         uint_fast64_t available_in_before, available_out_before;
@@ -226,26 +229,25 @@ namespace density {
 
     // decode.
     template<class KERNEL_DECODE_T>inline decode_state_t
-    block_decode_t<KERNEL_DECODE_T>::init(const block_type_t block_type,
-                                          const main_header_parameters_t parameters,
-                                          const uint_fast8_t end_data_overhead)
+    block_decode_t<KERNEL_DECODE_T>::init(context_t *context)
     {
         current_mode = target_mode = kernel_decode.mode();
-        this->block_type = block_type;
-        read_block_header_content = parameters.as_bytes[0] ? true: false;
+        block_type = context->header.block_type();
+        read_block_header_content = context->header.parameters().as_bytes[0] ? true: false;
         total_read = total_written = 0;
-        this->end_data_overhead = end_data_overhead;
+        end_data_overhead = context->end_data_overhead;
         if (block_type == block_type_with_hashsum_integrity_check) {
             update = true;
-            this->end_data_overhead += sizeof(block_footer_t);
+            end_data_overhead += sizeof(block_footer_t);
         }
-        kernel_decode.init(parameters, this->end_data_overhead);
+        kernel_decode.init(context->header.parameters(), end_data_overhead);
         return exit_process(process_read_block_header, decode_state_ready);
     }
     template<class KERNEL_DECODE_T>inline decode_state_t
-    block_decode_t<KERNEL_DECODE_T>::continue_(teleport_t *RESTRICT in,
-                                               location_t *RESTRICT out)
+    block_decode_t<KERNEL_DECODE_T>::continue_(context_t *context)
     {
+        teleport_t *in = &context->in;
+        location_t *out = &context->out;
         decode_state_t state;
         kernel_decode_t::state_t kernel_decode_state;
         uint_fast64_t available_in_before, available_out_before;
@@ -319,8 +321,10 @@ namespace density {
         goto read_block_header;
     }
     template<class KERNEL_DECODE_T>inline decode_state_t
-    block_decode_t<KERNEL_DECODE_T>::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
+    block_decode_t<KERNEL_DECODE_T>::finish(context_t *context)
     {
+        teleport_t *in = &context->in;
+        location_t *out = &context->out;
         decode_state_t state;
         kernel_decode_t::state_t kernel_decode_state;
         uint_fast64_t available_in_before, available_out_before;

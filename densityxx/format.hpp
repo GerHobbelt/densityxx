@@ -67,29 +67,31 @@ namespace density {
     };
     class main_header_t {
     private:
-        uint8_t version[3];
-        uint8_t compression_mode;
-        uint8_t block_type;
-        uint8_t reserved[3];
-        main_header_parameters_t parameters;
+        uint8_t _version[3];
+        uint8_t _compression_mode;
+        uint8_t _block_type;
+        uint8_t _reserved[3];
+        main_header_parameters_t _parameters;
     public:
-        inline const compression_mode_t get_compression_mode(void) const
-        {   return (const compression_mode_t)compression_mode; }
-        inline const block_type_t get_block_type(void) const
-        {   return (const block_type_t) block_type; }
+        inline const compression_mode_t compression_mode(void) const
+        {   return (const compression_mode_t)_compression_mode; }
+        inline const block_type_t block_type(void) const
+        {   return (const block_type_t)_block_type; }
+        inline const main_header_parameters_t &parameters(void) const
+        {   return _parameters; }
 
         inline void
         setup(const compression_mode_t compression_mode, const block_type_t block_type)
         {
-            version[0] = major_version;
-            version[1] = minor_version;
-            version[2] = revision;
-            this->compression_mode = compression_mode;
-            this->block_type = block_type;
-            memset(reserved, 0, sizeof(reserved));
-            memset(&parameters, 0, sizeof(parameters));
+            _version[0] = major_version;
+            _version[1] = minor_version;
+            _version[2] = revision;
+            _compression_mode = compression_mode;
+            _block_type = block_type;
+            memset(_reserved, 0, sizeof(_reserved));
+            memset(&_parameters, 0, sizeof(_parameters));
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
-            parameters.as_bytes[0] = dictionary_preferred_reset_cycle_shift;
+            _parameters.as_bytes[0] = dictionary_preferred_reset_cycle_shift;
 #endif
         }
     };

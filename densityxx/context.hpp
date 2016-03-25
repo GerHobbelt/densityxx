@@ -7,6 +7,9 @@
 namespace density {
     class context_t {
         static const size_t memory_teleport_buffer_size = 1 << 16;
+        uint_fast64_t total_read, total_written;
+        uint_fast64_t available_in_before, available_out_before;
+    public:
 #if DENSITY_WRITE_MAIN_FOOTER == DENSITY_YES && DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
         static const size_t end_data_overhead = sizeof(density::main_footer_t);
 #else
@@ -14,9 +17,6 @@ namespace density {
 #endif
         teleport_t in;
         location_t out;
-        uint_fast64_t total_read, total_written;
-        uint_fast64_t available_in_before, available_out_before;
-    public:
         main_header_t header;
         main_footer_t footer;
 

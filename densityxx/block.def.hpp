@@ -2,6 +2,7 @@
 #pragma once
 #include "densityxx/kernel.hpp"
 #include "densityxx/spookyhash.hpp"
+#include "densityxx/context.hpp"
 
 namespace density {
     // encode.
@@ -61,9 +62,9 @@ namespace density {
     };
     template<class KERNEL_ENCODE_T>class block_encode_t: public block_encode_base_t {
     public:
-        encode_state_t init(const block_type_t block_type);
-        encode_state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        encode_state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        encode_state_t init(context_t *context);
+        encode_state_t continue_(context_t *context);
+        encode_state_t finish(context_t *context);
     private:
         KERNEL_ENCODE_T kernel_encode;
     };
@@ -130,11 +131,9 @@ namespace density {
     };
     template<class KERNEL_DECODE_T>class block_decode_t: public block_decode_base_t {
     public:
-        decode_state_t
-        init(const block_type_t block_type, const main_header_parameters_t parameters,
-             const uint_fast8_t end_data_overhead);
-        decode_state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        decode_state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        decode_state_t init(context_t *context);
+        decode_state_t continue_(context_t *context);
+        decode_state_t finish(context_t *context);
     private:
         KERNEL_DECODE_T kernel_decode;
     };
