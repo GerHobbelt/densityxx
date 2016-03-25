@@ -68,8 +68,7 @@ namespace density {
         inline client_io_t(void)
         {   name = ""; stream = NULL; origin_type = header_origin_type_file; }
         void compress(client_io_t * const, const compression_mode_t,
-                      const bool, const bool,
-                      const std::string &, const std::string &);
+                      const bool, const bool, const std::string &, const std::string &);
         void decompress(client_io_t * const, const bool,
                         const std::string &, const std::string &);
     private:
