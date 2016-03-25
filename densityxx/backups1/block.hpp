@@ -7,7 +7,7 @@ namespace density {
     const uint64_t spookyhash_seed_1 = 0xabc;
     const uint64_t spookyhash_seed_2 = 0xdef;
     // encode.
-    template<class KERNEL_ENCODE_T> inline encode_state_t
+    template<class KERNEL_ENCODE_T> inline block_encode_base_t::state_t
     block_encode_t<KERNEL_ENCODE_T>::init(const block_type_t block_type)
     {
         current_mode = target_mode = kernel_encode.mode();
@@ -15,13 +15,13 @@ namespace density {
         total_read = total_written = 0;
         if (block_type == block_type_with_hashsum_integrity_check) update = true;
         kernel_encode.init();
-        return exit_process(process_write_block_header, encode_state_ready);
+        return exit_process(process_write_block_header, state_ready);
     }
-    template<class KERNEL_ENCODE_T> inline encode_state_t
+    template<class KERNEL_ENCODE_T> inline block_encode_base_t::state_t
     block_encode_t<KERNEL_ENCODE_T>::continue_(teleport_t *RESTRICT in,
                                                location_t *RESTRICT out)
     {
-        encode_state_t state;
+        state_t state;
         kernel_encode_t::state_t kernel_encode_state;
         uint_fast64_t available_in_before, available_out_before;
         // Add to the integrity check hashsum
@@ -33,7 +33,7 @@ namespace density {
         case process_write_block_mode_marker: goto write_mode_marker;
         case process_write_data: goto write_data;
         case process_write_block_footer: goto write_block_footer;
-        default: return encode_state_error;
+        default: return state_error;
         }
     write_mode_marker:
         if ((state = write_mode_marker(out)))
@@ -58,14 +58,14 @@ namespace density {
                     if (block_type == block_type_with_hashsum_integrity_check)
                         update_integrity_hash(in, true);
                     in->copy_from_direct_buffer_to_staging_buffer();
-                    return exit_process(process_write_data, encode_state_stall_on_input);
+                    return exit_process(process_write_data, state_stall_on_input);
                 }
             } else {
                 if (block_remaining <= out_remaining) goto copy_until_end_of_block;
                 else {
                     in->copy(out, out_remaining);
                     update_totals(in, out, available_in_before, available_out_before);
-                    return exit_process(process_write_data, encode_state_stall_on_output);
+                    return exit_process(process_write_data, state_stall_on_output);
                 }
             }
         copy_until_end_of_block:
@@ -79,12 +79,12 @@ namespace density {
             case kernel_encode_t::state_stall_on_input:
                 if (block_type == block_type_with_hashsum_integrity_check)
                     update_integrity_hash(in, true);
-                return exit_process(process_write_data, encode_state_stall_on_input);
+                return exit_process(process_write_data, state_stall_on_input);
             case kernel_encode_t::state_stall_on_output:
-                return exit_process(process_write_data, encode_state_stall_on_output);
+                return exit_process(process_write_data, state_stall_on_output);
             case kernel_encode_t::state_info_new_block: goto write_block_footer;
             case kernel_encode_t::state_info_efficiency_check: goto write_mode_marker;
-            default: return encode_state_error;
+            default: return state_error;
             }
         }
     write_block_footer:
@@ -93,10 +93,10 @@ namespace density {
             return exit_process(process_write_block_footer, state);
         goto write_block_header;
     }
-    template<class KERNEL_ENCODE_T> inline encode_state_t
+    template<class KERNEL_ENCODE_T> inline block_encode_base_t::state_t
     block_encode_t<KERNEL_ENCODE_T>::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
-        encode_state_t state;
+        state_t state;
         kernel_encode_t::state_t kernel_encode_state;
         uint_fast64_t available_in_before, available_out_before;
         // Add to the integrity check hashsum
@@ -108,7 +108,7 @@ namespace density {
         case process_write_block_mode_marker: goto write_mode_marker;
         case process_write_data: goto write_data;
         case process_write_block_footer: goto write_block_footer;
-        default: return encode_state_error;
+        default: return state_error;
         }
     write_mode_marker:
         if ((state = write_mode_marker(out)))
@@ -137,7 +137,7 @@ namespace density {
                 else {
                     in->copy(out, out_remaining);
                     update_totals(in, out, available_in_before, available_out_before);
-                    return exit_process(process_write_data, encode_state_stall_on_output);
+                    return exit_process(process_write_data, state_stall_on_output);
                 }
             }
         copy_until_end_of_block:
@@ -148,13 +148,13 @@ namespace density {
             kernel_encode_state = kernel_encode.finish(in, out);
             update_totals(in, out, in->available_bytes(), out->available_bytes);
             switch (kernel_encode_state) {
-            case kernel_encode_t::state_stall_on_input: return encode_state_error;
+            case kernel_encode_t::state_stall_on_input: return state_error;
             case kernel_encode_t::state_stall_on_output:
-                return exit_process(process_write_data, encode_state_stall_on_output);
+                return exit_process(process_write_data, state_stall_on_output);
             case kernel_encode_t::state_ready:
             case kernel_encode_t::state_info_new_block: goto write_block_footer;
             case kernel_encode_t::state_info_efficiency_check: goto write_mode_marker;
-            default: return encode_state_error;
+            default: return state_error;
             }
         }
     write_block_footer:
@@ -163,7 +163,7 @@ namespace density {
             return exit_process(process_write_block_footer, state);
         if (in->available_bytes()) goto write_block_header;
         if (kernel_encode != NULL) delete kernel_encode;
-        return encode_state_ready;
+        return state_ready;
     }
 
     inline void
@@ -180,10 +180,10 @@ namespace density {
             update_integrity_data(in);
         }
     }
-    inline encode_state_t
+    inline block_encode_base_t::state_t
     block_encode_base_t::write_block_header(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
-        if (sizeof(block_header_t) > out->available_bytes) return encode_state_stall_on_output;
+        if (sizeof(block_header_t) > out->available_bytes) return state_stall_on_output;
         current_mode = target_mode;
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
         block_header_t block_header;
@@ -200,32 +200,31 @@ namespace density {
             context.update(in->staging.pointer, in->staging.available_bytes);
             update_integrity_data(in);
         }
-        return encode_state_ready;
+        return state_ready;
     }
-    inline encode_state_t
+    inline block_encode_base_t::state_t
     block_encode_base_t::write_block_footer(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
         block_footer_t block_footer;
-        if (sizeof(block_footer) > out->available_bytes) return encode_state_stall_on_output;
+        if (sizeof(block_footer) > out->available_bytes) return state_stall_on_output;
         update_integrity_hash(in, false);
         context.final(&block_footer.hashsum1, &block_footer.hashsum2);
         total_written += block_footer.write(out);
-        return encode_state_ready;
+        return state_ready;
     }
-    inline encode_state_t
+    inline block_encode_base_t::state_t
     block_encode_base_t::write_mode_marker(location_t *RESTRICT out)
     {
         block_mode_marker_t block_mode_marker;
-        if (sizeof(block_mode_marker) > out->available_bytes)
-            return encode_state_stall_on_output;
+        if (sizeof(block_mode_marker) > out->available_bytes) return state_stall_on_output;
         if (current_mode == target_mode && total_written > total_read)
             current_mode = compression_mode_copy;
         total_written += block_mode_marker.write(out, current_mode);
-        return encode_state_ready;
+        return state_ready;
     }
 
     // decode.
-    template<class KERNEL_DECODE_T>inline decode_state_t
+    template<class KERNEL_DECODE_T>inline block_decode_base_t::state_t
     block_decode_t<KERNEL_DECODE_T>::init(const block_type_t block_type,
                                           const main_header_parameters_t parameters,
                                           const uint_fast8_t end_data_overhead)
@@ -240,13 +239,13 @@ namespace density {
             this->end_data_overhead += sizeof(block_footer_t);
         }
         kernel_decode.init(parameters, this->end_data_overhead);
-        return exit_process(process_read_block_header, decode_state_ready);
+        return exit_process(process_read_block_header, state_ready);
     }
-    template<class KERNEL_DECODE_T>inline decode_state_t
+    template<class KERNEL_DECODE_T>inline block_decode_base_t::state_t
     block_decode_t<KERNEL_DECODE_T>::continue_(teleport_t *RESTRICT in,
                                                location_t *RESTRICT out)
     {
-        decode_state_t state;
+        state_t state;
         kernel_decode_t::state_t kernel_decode_state;
         uint_fast64_t available_in_before, available_out_before;
         // Update integrity pointers
@@ -258,7 +257,7 @@ namespace density {
         case process_read_block_mode_marker: goto read_mode_marker;
         case process_read_data: goto read_data;
         case process_read_block_footer: goto read_block_footer;
-        default: return decode_state_error;
+        default: return state_error;
         }
     read_mode_marker:
         if ((state = read_block_mode_marker(in)))
@@ -281,7 +280,7 @@ namespace density {
                     in->copy(out, in_remaining);
                     update_totals(in, out, available_in_before, available_out_before);
                     in->copy_from_direct_buffer_to_staging_buffer();
-                    return exit_process(process_read_data, decode_state_stall_on_input);
+                    return exit_process(process_read_data, state_stall_on_input);
                 }
             } else {
                 if (block_remaining <= out_remaining) goto copy_until_end_of_block;
@@ -290,7 +289,7 @@ namespace density {
                     update_totals(in, out, available_in_before, available_out_before);
                     if (block_type == block_type_with_hashsum_integrity_check)
                         update_integrity_hash(out, true);
-                    return exit_process(process_read_data, decode_state_stall_on_output);
+                    return exit_process(process_read_data, state_stall_on_output);
                 }
             }
         copy_until_end_of_block:
@@ -302,14 +301,14 @@ namespace density {
             update_totals(in, out, available_in_before, available_out_before);
             switch (kernel_decode_state) {
             case kernel_decode_t::state_stall_on_input:
-                return exit_process(process_read_data, decode_state_stall_on_input);
+                return exit_process(process_read_data, state_stall_on_input);
             case kernel_decode_t::state_stall_on_output:
                 if (block_type == block_type_with_hashsum_integrity_check)
                     update_integrity_hash(out, true);
-                return exit_process(process_read_data, decode_state_stall_on_output);
+                return exit_process(process_read_data, state_stall_on_output);
             case kernel_decode_t::state_info_new_block: goto read_block_footer;
             case kernel_decode_t::state_info_efficiency_check: goto read_mode_marker;
-            default: return decode_state_error;
+            default: return state_error;
             }
         }
     read_block_footer:
@@ -318,10 +317,10 @@ namespace density {
             return exit_process(process_read_block_footer, state);
         goto read_block_header;
     }
-    template<class KERNEL_DECODE_T>inline decode_state_t
+    template<class KERNEL_DECODE_T>inline block_decode_base_t::state_t
     block_decode_t<KERNEL_DECODE_T>::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
-        decode_state_t state;
+        state_t state;
         kernel_decode_t::state_t kernel_decode_state;
         uint_fast64_t available_in_before, available_out_before;
         // Update integrity pointers
@@ -333,7 +332,7 @@ namespace density {
         case process_read_block_mode_marker: goto read_mode_marker;
         case process_read_data: goto read_data;
         case process_read_block_footer: goto read_block_footer;
-        default: return decode_state_error;
+        default: return state_error;
         }
     read_mode_marker:
         if ((state = read_block_mode_marker(in)))
@@ -364,7 +363,7 @@ namespace density {
                     update_totals(in, out, available_in_before, available_out_before);
                     if (block_type == block_type_with_hashsum_integrity_check)
                         update_integrity_hash(out, true);
-                    return exit_process(process_read_data, decode_state_stall_on_output);
+                    return exit_process(process_read_data, state_stall_on_output);
                 }
             }
         copy_until_end_of_block:
@@ -375,15 +374,15 @@ namespace density {
             kernel_decode_state = kernel_decode.finish(in, out);
             update_totals(in, out, available_in_before, available_out_before);
             switch (kernel_decode_state) {
-            case kernel_decode_t::state_stall_on_input: return decode_state_error;
+            case kernel_decode_t::state_stall_on_input: return state_error;
             case kernel_decode_t::state_stall_on_output:
                 if (block_type == block_type_with_hashsum_integrity_check)
                     update_integrity_hash(out, true);
-                return exit_process(process_read_data, decode_state_stall_on_output);
+                return exit_process(process_read_data, state_stall_on_output);
             case kernel_decode_t::state_ready:
             case kernel_decode_t::state_info_new_block: goto read_block_footer;
             case kernel_decode_t::state_info_efficiency_check: goto read_mode_marker;
-            default: return decode_state_error;
+            default: return state_error;
             }
         }
     read_block_footer:
@@ -392,7 +391,7 @@ namespace density {
             return exit_process(process_read_block_footer, state);
         if (in->available_bytes_reserved(end_data_overhead)) goto read_block_header;
         if (kernel_decode != NULL) delete kernel_decode;
-        return decode_state_ready;
+        return state_ready;
     }
 
     inline void
@@ -405,12 +404,12 @@ namespace density {
         if (pending_exit) update = true;
         else update_integrity_data(out);
     }
-    inline decode_state_t
+    inline block_decode_base_t::state_t
     block_decode_base_t::read_block_header(teleport_t *RESTRICT in, location_t *out)
     {
         location_t *read_location;
         if (!(read_location = in->read_reserved(sizeof(last_block_header), end_data_overhead)))
-            return decode_state_stall_on_input;
+            return state_stall_on_input;
         in_start = total_read;
         out_start = total_written;
         if (read_block_header_content)
@@ -419,29 +418,29 @@ namespace density {
             context.init(spookyhash_seed_1, spookyhash_seed_2);
             update_integrity_data(out);
         }
-        return decode_state_ready;
+        return state_ready;
     }
-    inline decode_state_t
+    inline block_decode_base_t::state_t
     block_decode_base_t::read_block_mode_marker(teleport_t *RESTRICT in)
     {
         location_t *read_location;
         if (!(read_location = in->read_reserved(sizeof(last_mode_marker), end_data_overhead)))
-            return decode_state_stall_on_input;
+            return state_stall_on_input;
         total_read += last_mode_marker.read(read_location);
         current_mode = (compression_mode_t)last_mode_marker.mode;
-        return decode_state_ready;
+        return state_ready;
     }
-    inline decode_state_t
+    inline block_decode_base_t::state_t
     block_decode_base_t::read_block_footer(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
         location_t *read_location;
         if (!(read_location = in->read(sizeof(last_block_footer))))
-            return decode_state_stall_on_input;
+            return state_stall_on_input;
         update_integrity_hash(out, false);
         uint64_t hashsum1, hashsum2;
         context.final(&hashsum1, &hashsum2);
         total_read += last_block_footer.read(read_location);
-        return last_block_footer.check(hashsum1, hashsum2) ? decode_state_ready:
-            decode_state_integrity_check_fail;
+        return last_block_footer.check(hashsum1, hashsum2) ? state_ready:
+            state_integrity_check_fail;
     }
 }

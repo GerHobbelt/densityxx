@@ -1,6 +1,5 @@
+#include "densityxx/context.hpp"
 #include "densityxx/block.hpp"
-#include "densityxx/main.hpp"
-#include "densityxx/stream.hpp"
 #include "densityxx/copy.hpp"
 #include "densityxx/chameleon.hpp"
 #include "densityxx/cheetah.hpp"

@@ -146,5 +146,22 @@ namespace density {
         block_type_with_hashsum_integrity_check = 1  // Add data integrity check to the stream
     } block_type_t;
     DENSITY_ENUM_RENDER2(block_type, default, with_hashsum_integrity_check);
-}
 
+    typedef enum {
+        encode_state_ready = 0,
+        encode_state_error,
+        encode_state_stall_on_input,
+        encode_state_stall_on_output
+    } encode_state_t;
+    DENSITY_ENUM_RENDER4(encode_state, ready, error, stall_on_input, stall_on_output);
+
+    typedef enum {
+        decode_state_ready = 0,
+        decode_state_error,
+        decode_state_stall_on_input,
+        decode_state_stall_on_output,
+        decode_state_integrity_check_fail
+    } decode_state_t;
+    DENSITY_ENUM_RENDER5(decode_state, ready, error, stall_on_input, stall_on_output,
+                         integrity_check_fail);
+}

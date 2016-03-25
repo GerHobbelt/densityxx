@@ -66,28 +66,32 @@ namespace density {
         };
     };
     class main_header_t {
-    public:
+    private:
         uint8_t version[3];
         uint8_t compression_mode;
         uint8_t block_type;
         uint8_t reserved[3];
         main_header_parameters_t parameters;
+    public:
+        inline const compression_mode_t get_compression_mode(void) const
+        {   return (const compression_mode_t)compression_mode; }
+        inline const block_type_t get_block_type(void) const
+        {   return (const block_type_t) block_type; }
 
-        inline uint_fast32_t read(location_t *in)
-        {   in->read(this, sizeof(*this)); return sizeof(*this); }
-        inline uint_fast32_t write(location_t *out)
-        {   out->write(this, sizeof(*this)); return sizeof(*this); }
-        inline uint_fast32_t
-        write(location_t *out, const compression_mode_t compression_mode,
-              const block_type_t block_type, const main_header_parameters_t parameters)
-        {   version[0] = major_version;
+        inline void
+        setup(const compression_mode_t compression_mode, const block_type_t block_type)
+        {
+            version[0] = major_version;
             version[1] = minor_version;
             version[2] = revision;
             this->compression_mode = compression_mode;
             this->block_type = block_type;
-            reserved[0] = reserved[1] = reserved[2] = 0;
-            this->parameters = parameters;
-            return write(out); }
+            memset(reserved, 0, sizeof(reserved));
+            memset(&parameters, 0, sizeof(parameters));
+#if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
+            parameters.as_bytes[0] = dictionary_preferred_reset_cycle_shift;
+#endif
+        }
     };
 #pragma pack(pop)
 
@@ -98,12 +102,6 @@ namespace density {
     public:
         // Previous block's relative start position (parallelizable decompressible output)
         uint32_t relative_position; // previousBlockRelativeStartPosition;
-        inline uint_fast32_t read(location_t *in)
-        {   in->read(this, sizeof(*this)); return sizeof(*this); }
-        inline uint_fast32_t write(location_t *out)
-        {   out->write(this, sizeof(*this)); return sizeof(*this); }
-        inline uint_fast32_t write(location_t *out, const uint32_t relative_position)
-        {   this->relative_position = relative_position; return write(out); }
     };
 #pragma pack(pop)
 }

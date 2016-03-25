@@ -9,6 +9,13 @@ namespace density {
 #pragma pack(4)
     class block_encode_base_t {
     public:
+        typedef enum {
+            state_ready = 0,
+            state_stall_on_input,
+            state_stall_on_output,
+            state_error
+        } state_t;
+        DENSITY_ENUM_RENDER4(state, ready, stall_on_input, stall_on_output, error);
         inline const compression_mode_t mode(void) const { return target_mode; }
         inline const block_type_t get_block_type(void) const { return block_type; }
     protected:
@@ -35,7 +42,7 @@ namespace density {
         uint8_t *input_pointer;
         spookyhash_context_t context;
 
-        inline encode_state_t exit_process(process_t process, encode_state_t state)
+        inline state_t exit_process(process_t process, state_t state)
         {   this->process = process; return state; }
 
         inline uint32_t read_bytes(void) const
@@ -46,9 +53,9 @@ namespace density {
 
         void update_integrity_hash(teleport_t *RESTRICT in, bool pending_exit);
 
-        encode_state_t write_block_header(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        encode_state_t write_block_footer(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        encode_state_t write_mode_marker(location_t *RESTRICT out);
+        state_t write_block_header(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        state_t write_block_footer(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        state_t write_mode_marker(location_t *RESTRICT out);
 
         inline void
         update_totals(teleport_t *RESTRICT in, location_t *RESTRICT out,
@@ -61,9 +68,9 @@ namespace density {
     };
     template<class KERNEL_ENCODE_T>class block_encode_t: public block_encode_base_t {
     public:
-        encode_state_t init(const block_type_t block_type);
-        encode_state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        encode_state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        state_t init(const block_type_t block_type);
+        state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
     private:
         KERNEL_ENCODE_T kernel_encode;
     };
@@ -74,6 +81,15 @@ namespace density {
 #pragma pack(4)
     class block_decode_base_t {
     public:
+        typedef enum {
+            state_ready = 0,
+            state_stall_on_input,
+            state_stall_on_output,
+            state_integrity_check_fail,
+            state_error
+        } state_t;
+        DENSITY_ENUM_RENDER5(state, ready, stall_on_input, stall_on_output,
+                             integrity_check_fail, error);
         inline const compression_mode_t mode(void) const { return target_mode; }
         inline const block_type_t get_block_type(void) const { return block_type; }
     protected:
@@ -108,16 +124,16 @@ namespace density {
         uint8_t *output_pointer;
         spookyhash_context_t context;
 
-        inline decode_state_t exit_process(process_t process, decode_state_t state)
+        inline state_t exit_process(process_t process, state_t state)
         {   this->process = process; return state; }
 
         inline void update_integrity_data(location_t *RESTRICT out)
         {   output_pointer = out->pointer; update = false; }
 
         void update_integrity_hash(location_t *RESTRICT out, bool pending_exit);
-        decode_state_t read_block_header(teleport_t *RESTRICT in, location_t *out);
-        decode_state_t read_block_mode_marker(teleport_t *RESTRICT in);
-        decode_state_t read_block_footer(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        state_t read_block_header(teleport_t *RESTRICT in, location_t *out);
+        state_t read_block_mode_marker(teleport_t *RESTRICT in);
+        state_t read_block_footer(teleport_t *RESTRICT in, location_t *RESTRICT out);
 
         inline void
         update_totals(teleport_t *RESTRICT in, location_t *RESTRICT out,
@@ -130,11 +146,11 @@ namespace density {
     };
     template<class KERNEL_DECODE_T>class block_decode_t: public block_decode_base_t {
     public:
-        decode_state_t
+        state_t
         init(const block_type_t block_type, const main_header_parameters_t parameters,
              const uint_fast8_t end_data_overhead);
-        decode_state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        decode_state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
     private:
         KERNEL_DECODE_T kernel_decode;
     };
