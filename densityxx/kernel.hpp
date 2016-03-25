@@ -22,15 +22,6 @@ namespace density {
         } state_t;
         DENSITY_ENUM_RENDER6(state, ready, info_new_block, info_efficiency_check,
                              stall_on_input, stall_on_output, error);
-
-        inline kernel_encode_t(void) {}
-        virtual ~kernel_encode_t() {}
-
-        virtual compression_mode_t mode(void) const = 0;
-
-        virtual state_t init(void) = 0;
-        virtual state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out) = 0;
-        virtual state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out) = 0;
     };
 
     // decode.
@@ -46,15 +37,5 @@ namespace density {
         } state_t;
         DENSITY_ENUM_RENDER6(state, ready, info_new_block, info_efficiency_check,
                              stall_on_input, stall_on_output, error);
-
-        inline kernel_decode_t(void) {}
-        virtual ~kernel_decode_t() {}
-
-        virtual compression_mode_t mode(void) const = 0;
-
-        virtual state_t init(const main_header_parameters_t parameters,
-                             const uint_fast8_t end_data_overhead) = 0;
-        virtual state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out) = 0;
-        virtual state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out) = 0;
     };
 }

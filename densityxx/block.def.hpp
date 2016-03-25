@@ -7,7 +7,7 @@ namespace density {
     // encode.
 #pragma pack(push)
 #pragma pack(4)
-    class block_encode_t {
+    class block_encode_base_t {
     public:
         typedef enum {
             state_ready = 0,
@@ -16,14 +16,9 @@ namespace density {
             state_error
         } state_t;
         DENSITY_ENUM_RENDER4(state, ready, stall_on_input, stall_on_output, error);
-
-        state_t init(kernel_encode_t *kernel_encode, const block_type_t block_type);
-        state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
-
-        inline uint32_t read_bytes(void) const
-        {   return total_read > in_start ? total_read - in_start: 0; }
-    private:
+        inline const compression_mode_t mode(void) const { return target_mode; }
+        inline const block_type_t get_block_type(void) const { return block_type; }
+    protected:
         typedef enum {
             process_write_block_header,
             process_write_block_mode_marker,
@@ -47,10 +42,11 @@ namespace density {
         uint8_t *input_pointer;
         spookyhash_context_t context;
 
-        kernel_encode_t *kernel_encode;
-
         inline state_t exit_process(process_t process, state_t state)
         {   this->process = process; return state; }
+
+        inline uint32_t read_bytes(void) const
+        {   return total_read > in_start ? total_read - in_start: 0; }
 
         inline void update_integrity_data(teleport_t *RESTRICT in)
         {   input_pointer = in->direct.pointer; update = false; }
@@ -70,13 +66,20 @@ namespace density {
             total_written += available_out_before - out->available_bytes;
         }
     };
+    template<class KERNEL_ENCODE_T>class block_encode_t: public block_encode_base_t {
+    public:
+        state_t init(const block_type_t block_type);
+        state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
+    private:
+        KERNEL_ENCODE_T kernel_encode;
+    };
 #pragma pack(pop)
 
     // decode.
-
 #pragma pack(push)
 #pragma pack(4)
-    class block_decode_t {
+    class block_decode_base_t {
     public:
         typedef enum {
             state_ready = 0,
@@ -87,13 +90,9 @@ namespace density {
         } state_t;
         DENSITY_ENUM_RENDER5(state, ready, stall_on_input, stall_on_output,
                              integrity_check_fail, error);
-
-        state_t
-        init(kernel_decode_t *kernel_decode, const block_type_t block_type,
-             const main_header_parameters_t parameters, const uint_fast8_t end_data_overhead);
-        state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
-    private:
+        inline const compression_mode_t mode(void) const { return target_mode; }
+        inline const block_type_t get_block_type(void) const { return block_type; }
+    protected:
         typedef enum {
             process_read_block_header,
             process_read_block_mode_marker,
@@ -125,8 +124,6 @@ namespace density {
         uint8_t *output_pointer;
         spookyhash_context_t context;
 
-        kernel_decode_t *kernel_decode;
-
         inline state_t exit_process(process_t process, state_t state)
         {   this->process = process; return state; }
 
@@ -146,6 +143,16 @@ namespace density {
             total_read += available_in_before - in->available_bytes_reserved(end_data_overhead);
             total_written += available_out_before - out->available_bytes;
         }
+    };
+    template<class KERNEL_DECODE_T>class block_decode_t: public block_decode_base_t {
+    public:
+        state_t
+        init(const block_type_t block_type, const main_header_parameters_t parameters,
+             const uint_fast8_t end_data_overhead);
+        state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
+    private:
+        KERNEL_DECODE_T kernel_decode;
     };
 #pragma pack(pop)
 }

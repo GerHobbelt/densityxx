@@ -1,6 +1,6 @@
 // see LICENSE.md for license.
 #pragma once
-#include "densityxx/kernel.t.hpp"
+#include "densityxx/kernel.hpp"
 
 namespace density {
     typedef uint64_t cheetah_signature_t;

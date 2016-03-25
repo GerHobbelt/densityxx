@@ -1,6 +1,6 @@
 // see LICENSE.md for license.
 #pragma once
-#include "densityxx/kernel.t.hpp"
+#include "densityxx/kernel.hpp"
 
 namespace density {
     typedef uint64_t chameleon_signature_t;
@@ -26,12 +26,14 @@ namespace density {
     //--- encode ---
     class chameleon_encode_t: public kernel_encode_t {
     public:
-        inline compression_mode_t mode(void) const
+        virtual compression_mode_t mode(void) const
         {   return compression_mode_chameleon_algorithm; }
 
-        state_t init(void);
-        state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        virtual kernel_encode_t::state_t init(void);
+        virtual kernel_encode_t::state_t
+        continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        virtual kernel_encode_t::state_t
+        finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
     private:
         typedef enum {
             process_prepare_new_block,
@@ -54,11 +56,12 @@ namespace density {
         uint_fast64_t reset_cycle;
 #endif
 
-        inline state_t exit_process(process_t process, state_t kernel_encode_state)
+        inline kernel_encode_t::state_t
+        exit_process(process_t process, kernel_encode_t::state_t kernel_encode_state)
         {   this->process = process; return kernel_encode_state; }
         void prepare_new_signature(location_t *RESTRICT out);
-        state_t prepare_new_block(location_t *RESTRICT out);
-        state_t check_state(location_t *RESTRICT out);
+        kernel_encode_t::state_t prepare_new_block(location_t *RESTRICT out);
+        kernel_encode_t::state_t check_state(location_t *RESTRICT out);
         void kernel(location_t *RESTRICT out, const uint16_t, const uint32_t,
                     const uint_fast8_t);
         void process_unit(location_t *RESTRICT in, location_t *RESTRICT out);
@@ -67,20 +70,22 @@ namespace density {
     //--- decode ---
     class chameleon_decode_t: public kernel_decode_t {
     public:
-        inline compression_mode_t mode(void) const
-        {   return compression_mode_chameleon_algorithm; }
-
-        state_t init(const main_header_parameters_t parameters,
-                     const uint_fast8_t end_data_overhead);
-        state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
-    private:
         typedef enum {
             process_check_signature_state,
             process_read_processing_unit,
         } process_t;
         DENSITY_ENUM_RENDER2(process, check_signature_state, read_processing_unit);
 
+        virtual compression_mode_t mode(void) const
+        {   return compression_mode_chameleon_algorithm; }
+
+        virtual kernel_decode_t::state_t
+        init(const main_header_parameters_t parameters, const uint_fast8_t end_data_overhead);
+        virtual kernel_decode_t::state_t
+        continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        virtual kernel_decode_t::state_t
+        finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
+    private:
         chameleon_signature_t signature;
         uint_fast8_t shift;
         uint_fast32_t body_length;
@@ -92,9 +97,10 @@ namespace density {
         chameleon_dictionary_t dictionary;
         uint_fast64_t reset_cycle;
 
-        inline state_t exit_process(process_t process, state_t kernel_decode_state)
+        inline kernel_decode_t::state_t
+        exit_process(process_t process, kernel_decode_t::state_t kernel_decode_state)
         {   this->process = process; return kernel_decode_state; }
-        state_t check_state(location_t *RESTRICT out);
+        kernel_decode_t::state_t check_state(location_t *RESTRICT out);
         void read_signature(location_t *RESTRICT in);
         inline void process_compressed(const uint16_t hash, location_t *RESTRICT out)
         {   DENSITY_MEMCPY(out->pointer, &dictionary.entries[hash].as_uint32_t,

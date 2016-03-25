@@ -1,6 +1,6 @@
 // see LICENSE.md for license.
 #pragma once
-#include "densityxx/kernel.t.hpp"
+#include "densityxx/kernel.hpp"
 
 namespace density {
     typedef uint64_t lion_signature_t;
@@ -99,12 +99,14 @@ namespace density {
     //--- encode ---
     class lion_encode_t: public kernel_encode_t {
     public:
-        inline compression_mode_t mode(void) const
+        virtual compression_mode_t mode(void) const
         {   return compression_mode_lion_algorithm; }
 
-        state_t init(void);
-        state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        virtual kernel_encode_t::state_t init(void);
+        virtual kernel_encode_t::state_t
+        continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        virtual kernel_encode_t::state_t
+        finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
     private:
         typedef enum {
             process_check_block_state,
@@ -142,7 +144,8 @@ namespace density {
         uint_fast64_t reset_cycle;
 #endif
 
-        inline state_t exit_process(process_t process, state_t kernel_encode_state)
+        inline kernel_encode_t::state_t
+        exit_process(process_t process, kernel_encode_t::state_t kernel_encode_state)
         {   this->process = process; return kernel_encode_state; }
         void prepare_new_signature(location_t *RESTRICT out);
         kernel_encode_t::state_t check_block_state(void);
@@ -170,13 +173,15 @@ namespace density {
     //--- decode ---
     class lion_decode_t: public kernel_decode_t {
     public:
-        inline compression_mode_t mode(void) const
+        virtual compression_mode_t mode(void) const
         {   return compression_mode_lion_algorithm; }
 
-        state_t init(const main_header_parameters_t parameters,
-                     const uint_fast8_t end_data_overhead);
-        state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        kernel_decode_t::state_t
+        init(const main_header_parameters_t parameters, const uint_fast8_t end_data_overhead);
+        virtual kernel_decode_t::state_t
+        continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        virtual kernel_decode_t::state_t
+        finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
     private:
         typedef enum {
             process_check_block_state,
@@ -205,9 +210,10 @@ namespace density {
         lion_dictionary_t dictionary;
         uint_fast64_t reset_cycle;
 
-        inline state_t exit_process(process_t process, state_t kernel_decode_state)
+        inline kernel_decode_t::state_t
+        exit_process(process_t process, kernel_decode_t::state_t kernel_decode_state)
         {   this->process = process; return kernel_decode_state; }
-        state_t check_block_state(void);
+        kernel_decode_t::state_t check_block_state(void);
         inline void read_signature_from_memory(location_t *RESTRICT in)
         {   DENSITY_MEMCPY(&signature, in->pointer, sizeof(signature));
             in->pointer += sizeof(signature); }

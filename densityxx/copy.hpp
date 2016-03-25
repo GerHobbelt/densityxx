@@ -1,6 +1,6 @@
 #pragma once
 
-#include "densityxx/kernel.t.hpp"
+#include "densityxx/kernel.hpp"
 
 namespace density {
     class copy_encode_t: public kernel_encode_t {
