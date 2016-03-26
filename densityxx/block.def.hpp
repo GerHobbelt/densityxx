@@ -12,6 +12,8 @@ namespace density {
     public:
         inline const compression_mode_t mode(void) const { return target_mode; }
         inline const block_type_t get_block_type(void) const { return block_type; }
+        inline uint32_t read_bytes(void) const
+        {   return total_read > in_start ? total_read - in_start: 0; }
     protected:
         typedef enum {
             process_write_block_header,
@@ -39,8 +41,6 @@ namespace density {
         inline encode_state_t exit_process(process_t process, encode_state_t state)
         {   this->process = process; return state; }
 
-        inline uint32_t read_bytes(void) const
-        {   return total_read > in_start ? total_read - in_start: 0; }
 
         inline void update_integrity_data(teleport_t *RESTRICT in)
         {   input_pointer = in->direct.pointer; update = false; }

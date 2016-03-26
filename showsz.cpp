@@ -1,4 +1,4 @@
-#include "densityxx/api.hpp"
+#include "densityxx/context.hpp"
 #include "densityxx/chameleon.hpp"
 #include "densityxx/cheetah.hpp"
 #include "densityxx/lion.hpp"
@@ -7,16 +7,9 @@
 int
 main(void)
 {
-    SHOWSZ(density::stream_t);
-    SHOWSZ(density::stream_encode_t);
-    SHOWSZ(density::stream_decode_t);
-    SHOWSZ(density::stream_decode_t::header_information_t);
-    SHOWSZ(density::encode_t);
-    SHOWSZ(density::decode_t);
+    SHOWSZ(density::context_t);
     SHOWSZ(density::main_header_t);
     SHOWSZ(density::main_footer_t);
-    SHOWSZ(density::block_encode_t);
-    SHOWSZ(density::block_decode_t);
     SHOWSZ(density::block_header_t);
     SHOWSZ(density::block_mode_marker_t);
     SHOWSZ(density::block_footer_t);

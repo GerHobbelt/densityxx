@@ -394,7 +394,6 @@ namespace density {
             (state = read_block_footer(in, out)))
             return exit_process(process_read_block_footer, state);
         if (in->available_bytes_reserved(end_data_overhead)) goto read_block_header;
-        if (kernel_decode != NULL) delete kernel_decode;
         return decode_state_ready;
     }
 

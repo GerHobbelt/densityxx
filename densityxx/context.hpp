@@ -11,7 +11,7 @@ namespace density {
         uint_fast64_t available_in_before, available_out_before;
     public:
 #if DENSITY_WRITE_MAIN_FOOTER == DENSITY_YES && DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
-        static const size_t end_data_overhead = sizeof(density::main_footer_t);
+        static const size_t end_data_overhead = sizeof(main_footer_t);
 #else
         static const size_t end_data_overhead = 0;
 #endif
@@ -59,8 +59,10 @@ namespace density {
             out.write(&header, sizeof(header));
             total_written += sizeof(header);
             return encode_state_ready; }
-        inline encode_state_t write_footer(void)
-        {   if (sizeof(footer) > out.available_bytes) return encode_state_stall_on_output;
+        inline encode_state_t write_footer(uint32_t relative_position)
+        {   if (end_data_overhead == 0) return encode_state_ready;
+            footer.relative_position = relative_position;
+            if (sizeof(footer) > out.available_bytes) return encode_state_stall_on_output;
             out.write(&footer, sizeof(footer));
             total_written += sizeof(footer);
             return encode_state_ready; }
@@ -72,7 +74,8 @@ namespace density {
             total_read += sizeof(header);
             return decode_state_ready; }
         inline decode_state_t read_footer(void)
-        {   location_t *read_location = in.read_reserved(sizeof(footer), end_data_overhead);
+        {   if (end_data_overhead == 0) return decode_state_ready;
+            location_t *read_location = in.read_reserved(sizeof(footer), end_data_overhead);
             if (read_location == NULL) return decode_state_stall_on_input;
             read_location->read(&footer, sizeof(footer));
             total_read += sizeof(footer);

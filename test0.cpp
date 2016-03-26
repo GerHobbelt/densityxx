@@ -30,7 +30,7 @@ main(void)
         else if (context.in.available_bytes() < (1 << 19)) break;
     while ((encode_state = context.after(block_encode.finish(context.before()))))
         if ((buffer_state = buffer.action(encode_state, context))) exit_error(buffer_state);
-    while ((encode_state = context.write_footer()))
+    while ((encode_state = context.write_footer(block_encode.read_bytes())))
         if ((buffer_state = buffer.action(encode_state, context))) exit_error(buffer_state);
     if ((buffer_state = buffer.action(density::encode_state_stall_on_output, context)))
         exit_error(buffer_state);

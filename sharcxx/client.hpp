@@ -1,7 +1,6 @@
 // see LICENSE.md for license.
 #pragma once
 
-#include "densityxx/api.hpp"
 #include "sharcxx/header.hpp"
 
 namespace density {
@@ -71,11 +70,5 @@ namespace density {
                       const bool, const bool, const std::string &, const std::string &);
         void decompress(client_io_t * const, const bool,
                         const std::string &, const std::string &);
-    private:
-        uint_fast64_t reload_input_buffer(stream_t *RESTRICT stream) const;
-        uint_fast64_t empty_output_buffer(stream_t *RESTRICT stream) const;
-        void action_required(uint_fast64_t *read, uint_fast64_t *written,
-                             const client_io_t *RESTRICT io_out, stream_t *RESTRICT stream,
-                             const stream_t::state_t stream_state, const char *error_message);
     };
 }

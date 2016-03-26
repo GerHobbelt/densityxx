@@ -1,7 +1,14 @@
 // see LICENSE.md for license.
-#include "sharcxx/client.hpp"
-#include <chrono>
 #include <stdarg.h>
+#include <chrono>
+#include "sharcxx/client.hpp"
+#include "densityxx/file_buffer.hpp"
+#include "densityxx/block.hpp"
+#include "densityxx/context.hpp"
+#include "densityxx/copy.hpp"
+#include "densityxx/chameleon.hpp"
+#include "densityxx/cheetah.hpp"
+#include "densityxx/lion.hpp"
 
 namespace density {
 #ifdef SHARC_ALLOW_ANSI_ESCAPE_SEQUENCES
@@ -51,8 +58,8 @@ namespace density {
         exit(0);
     }
 
-    static uint8_t input_buffer[sharc_preferred_buffer_size];
-    static uint8_t output_buffer[sharc_preferred_buffer_size];
+    typedef file_buffer_t<sharc_preferred_buffer_size,
+                          sharc_preferred_buffer_size> sharc_file_buffer_t;
 
     static void
     exit_error(const char *message_format, ...)
@@ -63,6 +70,11 @@ namespace density {
         vfprintf(stderr, message_format, ap);
         va_end(ap);
         exit(-1);
+    }
+    static void
+    exit_error(const buffer_state_t buffer_state)
+    {
+        exit_error("%s\n", buffer_state_render(buffer_state).c_str());
     }
     static std::string
     format_decimal(uint64_t number)
@@ -89,58 +101,23 @@ namespace density {
             }
         }
         FILE *file = fopen(file_name, options);
-        if (file == NULL) {
-            char message[512];
-            sprintf(message, "Unable to open file %s", file_name);
-            exit_error(message);
-        }
+        if (file == NULL) exit_error("Unable to open file %s.\n", file_name);
         return file;
     }
 
-    inline uint_fast64_t
-    client_io_t::reload_input_buffer(stream_t *RESTRICT stream) const
+    template<class KERNEL_ENCODE_T>static inline uint32_t
+    do_compress(context_t &context, sharc_file_buffer_t &buffer)
     {
-        uint_fast64_t read = (uint_fast64_t)
-            fread(input_buffer, sizeof(uint8_t), sizeof(input_buffer), this->stream);
-        stream->update_input(input_buffer, read);
-        if (read < sizeof(input_buffer) && ferror(this->stream))
-            exit_error("Error reading file");
-        return read;
+        encode_state_t encode_state;
+        buffer_state_t buffer_state;
+        block_encode_t<KERNEL_ENCODE_T> block_encode;
+        block_encode.init(context);
+        while ((encode_state = context.after(block_encode.continue_(context.before()))))
+            if ((buffer_state = buffer.action(encode_state, context))) exit_error(buffer_state);
+        while ((encode_state = context.after(block_encode.finish(context.before()))))
+            if ((buffer_state = buffer.action(encode_state, context))) exit_error(buffer_state);
+        return block_encode.read_bytes();
     }
-
-    inline uint_fast64_t
-    client_io_t::empty_output_buffer(stream_t *RESTRICT stream) const
-    {
-        uint_fast64_t available = stream->output_available_for_use();
-        uint_fast64_t written = (uint_fast64_t)
-            fwrite(output_buffer, sizeof(uint8_t), (size_t)available, this->stream);
-        if (written < available && ferror(this->stream))
-            exit_error("Error writing file");
-        stream->update_output(output_buffer, sizeof(output_buffer));
-        return written;
-    }
-
-    inline void
-    client_io_t::action_required(uint_fast64_t *read, uint_fast64_t *written,
-                                 const client_io_t *RESTRICT io_out,
-                                 stream_t *RESTRICT stream,
-                                 const stream_t::state_t stream_state,
-                                 const char *error_message)
-    {
-        switch (stream_state) {
-        case stream_t::state_stall_on_output:
-            *written = io_out->empty_output_buffer(stream);
-            break;
-        case stream_t::state_stall_on_input:
-            *read = reload_input_buffer(stream);
-            break;
-        case stream_t::state_error_integrity_check_fail:
-            exit_error("Integrity check failed");
-        default:
-            exit_error(error_message);
-        }
-    }
-
     void
     client_io_t::compress(client_io_t *const io_out,
                           const compression_mode_t attempt_mode,
@@ -180,27 +157,38 @@ namespace density {
          * The following code is an example of
          * how to use the Density stream API to compress a file.
          */
+        uint32_t relative_position;
         uint64_t total_written = header_t::write(io_out->stream, origin_type, &attributes);
-        stream_encode_t *stream = new stream_encode_t();
-        stream_t::state_t stream_state;
-        uint_fast64_t read = 0, written = 0;
-        if (stream->prepare(input_buffer, sizeof(input_buffer),
-                            output_buffer, sizeof(output_buffer)))
-            exit_error("Unable to prepare compression");
-        read = reload_input_buffer(stream);
+        context_t context;
+        encode_state_t encode_state;
+        buffer_state_t buffer_state;
+        sharc_file_buffer_t buffer(this->stream, io_out->stream);
         block_type_t block_type =
             integrity_checks ? block_type_with_hashsum_integrity_check: block_type_default;
-        while ((stream_state = stream->init(attempt_mode, block_type)))
-            action_required(&read, &written, io_out, stream, stream_state,
-                            "Unable to initialize compression");
-        while ((read == sharc_preferred_buffer_size) &&
-               (stream_state = stream->continue_()))
-            action_required(&read, &written, io_out, stream, stream_state,
-                            "An error occured during compression");
-        while ((stream_state = stream->finish()))
-            action_required(&read, &written, io_out, stream, stream_state,
-                            "An error occured while finishing compression");
-        io_out->empty_output_buffer(stream);
+
+        buffer.init(attempt_mode, block_type, context);
+        if ((buffer_state = buffer.action(encode_state_stall_on_input, context)))
+            exit_error(buffer_state);
+        while ((encode_state = context.write_header()))
+            if ((buffer_state = buffer.action(encode_state, context))) exit_error(buffer_state);
+        switch (attempt_mode) {
+        case compression_mode_copy:
+            relative_position = do_compress<copy_encode_t>(context, buffer);
+            break;
+        case compression_mode_chameleon_algorithm:
+            relative_position = do_compress<chameleon_encode_t>(context, buffer);
+            break;
+        case compression_mode_cheetah_algorithm:
+            relative_position = do_compress<cheetah_encode_t>(context, buffer);
+            break;
+        case compression_mode_lion_algorithm:
+            relative_position = do_compress<lion_encode_t>(context, buffer);
+            break;
+        }
+        while ((encode_state = context.write_footer(relative_position)))
+            if ((buffer_state = buffer.action(encode_state, context))) exit_error(buffer_state);
+        if ((buffer_state = buffer.action(encode_state_stall_on_output, context)))
+            exit_error(buffer_state);
         /*
          * That's it !
          */
@@ -208,10 +196,10 @@ namespace density {
         if (io_out->origin_type == header_origin_type_file) {
             std::chrono::duration<double> duration = tpend - tpstart;
             const double elapsed = duration.count();
-            total_written += stream->get_total_written();
+            total_written += context.get_total_written();
             fclose(io_out->stream);
             if (origin_type == header_origin_type_file) {
-                uint64_t total_read = stream->get_total_read();
+                uint64_t total_read = context.get_total_read();
                 fclose(this->stream);
                 double ratio = (100.0 * total_written) / total_read;
                 double speed = (1.0 * total_read) / (elapsed * 1000.0 * 1000.0);
@@ -229,9 +217,20 @@ namespace density {
                        format_decimal(total_written).c_str());
             }
         }
-        delete stream;
     }
 
+    template<class KERNEL_DECODE_T>static inline void
+    do_decompress(context_t &context, sharc_file_buffer_t &buffer)
+    {
+        decode_state_t decode_state;
+        buffer_state_t buffer_state;
+        block_decode_t<KERNEL_DECODE_T> block_decode;
+        block_decode.init(context);
+        while ((decode_state = context.after(block_decode.continue_(context.before()))))
+            if ((buffer_state = buffer.action(decode_state, context))) exit_error(buffer_state);
+        while ((decode_state = context.after(block_decode.finish(context.before()))))
+            if ((buffer_state = buffer.action(decode_state, context))) exit_error(buffer_state);
+    }
     void
     client_io_t::decompress(client_io_t *const io_out, const bool prompting,
                             const std::string &in_path, const std::string &out_path)
@@ -257,7 +256,7 @@ namespace density {
             break;
         case header_origin_type_file:
             if (name.size() <= 6 || name.substr(name.size() - 6, 6) != ".sharc")
-                exit_error("filename must terminated with '.sharc'.");
+                exit_error("filename must terminated with '.sharc'.\n");
             io_out->name = name.substr(0, name.size() - 6);
             out_file_path = out_path + io_out->name;
             io_out->stream = check_open_file(out_file_path.c_str(), "wb", prompting);
@@ -271,25 +270,35 @@ namespace density {
          */
         header_t header;
         uint64_t total_read = header.read(this->stream);
-        if (!header.check_validity()) exit_error("Invalid file");
-        stream_decode_t *stream = new stream_decode_t();
-        stream_t::state_t stream_state;
-        uint_fast64_t read = 0, written = 0;
-        if (stream->prepare(input_buffer, sizeof(input_buffer),
-                            output_buffer, sizeof(output_buffer)))
-            exit_error("Unable to prepare decompression");
-        read = reload_input_buffer(stream);
-        while ((stream_state = stream->init(NULL)))
-            action_required(&read, &written, io_out, stream, stream_state,
-                            "Unable to initialize decompression");
-        while ((read == sharc_preferred_buffer_size) &&
-               (stream_state = stream->continue_()))
-            action_required(&read, &written, io_out, stream, stream_state,
-                            "An error occured during decompression");
-        while ((stream_state = stream->finish()))
-            action_required(&read, &written, io_out, stream, stream_state,
-                            "An error occured while finishing decompression");
-        io_out->empty_output_buffer(stream);
+        if (!header.check_validity()) exit_error("Invalid file.\n");
+        context_t context;
+        decode_state_t decode_state;
+        buffer_state_t buffer_state;
+        sharc_file_buffer_t buffer(this->stream, io_out->stream);
+
+        buffer.init(compression_mode_copy, block_type_default, context);
+        if ((buffer_state = buffer.action(decode_state_stall_on_input, context)))
+            exit_error(buffer_state);
+        while ((decode_state = context.read_header()))
+            if ((buffer_state = buffer.action(decode_state, context))) exit_error(buffer_state);
+        switch (context.header.compression_mode()) {
+        case compression_mode_copy:
+            do_decompress<copy_decode_t>(context, buffer);
+            break;
+        case compression_mode_chameleon_algorithm:
+            do_decompress<chameleon_decode_t>(context, buffer);
+            break;
+        case compression_mode_cheetah_algorithm:
+            do_decompress<cheetah_decode_t>(context, buffer);
+            break;
+        case compression_mode_lion_algorithm:
+            do_decompress<lion_decode_t>(context, buffer);
+            break;
+        }
+        while ((decode_state = context.read_footer()))
+            if ((buffer_state = buffer.action(decode_state, context))) exit_error(buffer_state);
+        if ((buffer_state = buffer.action(decode_state_stall_on_output, context)))
+            exit_error(buffer_state);
         /*
          * That's it !
          */
@@ -297,12 +306,12 @@ namespace density {
         if (io_out->origin_type == header_origin_type_file) {
             std::chrono::duration<double> duration = tpend - tpstart;
             const double elapsed = duration.count();
-            uint64_t total_written = stream->get_total_written();
+            uint64_t total_written = context.get_total_written();
             fclose(io_out->stream);
             if (header.origin_type() == header_origin_type_file)
                 header.restore_file_attributes(out_file_path.c_str());
             if (origin_type == header_origin_type_file) {
-                total_read += stream->get_total_read();
+                total_read += context.get_total_read();
                 fclose(this->stream);
                 if (header.origin_type() == header_origin_type_file &&
                     total_written != header.original_file_size())
@@ -325,7 +334,6 @@ namespace density {
                        format_decimal(total_written).c_str());
             }
         }
-        delete stream;
     }
 }
 
