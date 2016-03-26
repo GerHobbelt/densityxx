@@ -31,9 +31,12 @@ namespace density {
         {   this->out.encapsulate(out, szout); }
         inline uint_fast64_t output_available_for_use(void) const { return out.used(); }
 
-        inline void init(const uint8_t *RESTRICT in, const uint_fast64_t available_in,
+        inline void init(const compression_mode_t compression_mode,
+                         const block_type_t block_type,
+                         const uint8_t *RESTRICT in, const uint_fast64_t available_in,
                          uint8_t *RESTRICT out, const uint_fast64_t available_out)
-        {   total_read = total_written = 0;
+        {   header.setup(compression_mode, block_type);
+            total_read = total_written = 0;
             this->in.reset_staging_buffer();
             update_input(in, available_in);
             update_output(out, available_out); }
