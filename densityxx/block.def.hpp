@@ -34,7 +34,7 @@ namespace density {
         // integrity_data.
         bool update;
         uint8_t *input_pointer;
-        spookyhash_context_t context;
+        spookyhash_context_t spooky;
 
         inline encode_state_t exit_process(process_t process, encode_state_t state)
         {   this->process = process; return state; }
@@ -62,9 +62,9 @@ namespace density {
     };
     template<class KERNEL_ENCODE_T>class block_encode_t: public block_encode_base_t {
     public:
-        encode_state_t init(context_t *context);
-        encode_state_t continue_(context_t *context);
-        encode_state_t finish(context_t *context);
+        encode_state_t init(context_t &context);
+        encode_state_t continue_(context_t &context);
+        encode_state_t finish(context_t &context);
     private:
         KERNEL_ENCODE_T kernel_encode;
     };
@@ -107,7 +107,7 @@ namespace density {
         // integrity_data.
         bool update;
         uint8_t *output_pointer;
-        spookyhash_context_t context;
+        spookyhash_context_t spooky;
 
         inline decode_state_t exit_process(process_t process, decode_state_t state)
         {   this->process = process; return state; }
@@ -131,9 +131,9 @@ namespace density {
     };
     template<class KERNEL_DECODE_T>class block_decode_t: public block_decode_base_t {
     public:
-        decode_state_t init(context_t *context);
-        decode_state_t continue_(context_t *context);
-        decode_state_t finish(context_t *context);
+        decode_state_t init(context_t &context);
+        decode_state_t continue_(context_t &context);
+        decode_state_t finish(context_t &context);
     private:
         KERNEL_DECODE_T kernel_decode;
     };

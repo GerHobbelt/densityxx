@@ -148,6 +148,14 @@ namespace density {
     DENSITY_ENUM_RENDER2(block_type, default, with_hashsum_integrity_check);
 
     typedef enum {
+        buffer_state_ready = 0,
+        buffer_state_error,
+        buffer_state_error_on_input,
+        buffer_state_error_on_output
+    } buffer_state_t;
+    DENSITY_ENUM_RENDER4(buffer_state, ready, error, error_on_input, error_on_output);
+
+    typedef enum {
         encode_state_ready = 0,
         encode_state_error,
         encode_state_stall_on_input,

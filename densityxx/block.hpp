@@ -8,20 +8,20 @@ namespace density {
     const uint64_t spookyhash_seed_2 = 0xdef;
     // encode.
     template<class KERNEL_ENCODE_T> inline encode_state_t
-    block_encode_t<KERNEL_ENCODE_T>::init(context_t *context)
+    block_encode_t<KERNEL_ENCODE_T>::init(context_t &context)
     {
         current_mode = target_mode = kernel_encode.mode();
-        block_type = context->header.block_type();
+        block_type = context.header.block_type();
         total_read = total_written = 0;
         if (block_type == block_type_with_hashsum_integrity_check) update = true;
         kernel_encode.init();
         return exit_process(process_write_block_header, encode_state_ready);
     }
     template<class KERNEL_ENCODE_T> inline encode_state_t
-    block_encode_t<KERNEL_ENCODE_T>::continue_(context_t *context)
+    block_encode_t<KERNEL_ENCODE_T>::continue_(context_t &context)
     {
-        teleport_t *in = &context->in;
-        location_t *out = &context->out;
+        teleport_t *in = &context.in;
+        location_t *out = &context.out;
         encode_state_t state;
         kernel_encode_t::state_t kernel_encode_state;
         uint_fast64_t available_in_before, available_out_before;
@@ -95,10 +95,10 @@ namespace density {
         goto write_block_header;
     }
     template<class KERNEL_ENCODE_T> inline encode_state_t
-    block_encode_t<KERNEL_ENCODE_T>::finish(context_t *context)
+    block_encode_t<KERNEL_ENCODE_T>::finish(context_t &context)
     {
-        teleport_t *in = &context->in;
-        location_t *out = &context->out;
+        teleport_t *in = &context.in;
+        location_t *out = &context.out;
         encode_state_t state;
         kernel_encode_t::state_t kernel_encode_state;
         uint_fast64_t available_in_before, available_out_before;
@@ -165,7 +165,6 @@ namespace density {
             (state = write_block_footer(in, out)))
             return exit_process(process_write_block_footer, state);
         if (in->available_bytes()) goto write_block_header;
-        if (kernel_encode != NULL) delete kernel_encode;
         return encode_state_ready;
     }
 
@@ -176,10 +175,10 @@ namespace density {
         const uint8_t *const pointer_after = in->direct.pointer;
         const uint_fast64_t processed = pointer_after - pointer_before;
         if (pending_exit) {
-            context.update(input_pointer, processed);
+            spooky.update(input_pointer, processed);
             update = true;
         } else {
-            context.update(input_pointer, processed - in->staging.available_bytes);
+            spooky.update(input_pointer, processed - in->staging.available_bytes);
             update_integrity_data(in);
         }
     }
@@ -199,8 +198,8 @@ namespace density {
         out_start = total_written;
 
         if (block_type == block_type_with_hashsum_integrity_check) {
-            context.init(spookyhash_seed_1, spookyhash_seed_2);
-            context.update(in->staging.pointer, in->staging.available_bytes);
+            spooky.init(spookyhash_seed_1, spookyhash_seed_2);
+            spooky.update(in->staging.pointer, in->staging.available_bytes);
             update_integrity_data(in);
         }
         return encode_state_ready;
@@ -211,7 +210,7 @@ namespace density {
         block_footer_t block_footer;
         if (sizeof(block_footer) > out->available_bytes) return encode_state_stall_on_output;
         update_integrity_hash(in, false);
-        context.final(&block_footer.hashsum1, &block_footer.hashsum2);
+        spooky.final(&block_footer.hashsum1, &block_footer.hashsum2);
         total_written += block_footer.write(out);
         return encode_state_ready;
     }
@@ -229,25 +228,25 @@ namespace density {
 
     // decode.
     template<class KERNEL_DECODE_T>inline decode_state_t
-    block_decode_t<KERNEL_DECODE_T>::init(context_t *context)
+    block_decode_t<KERNEL_DECODE_T>::init(context_t &context)
     {
         current_mode = target_mode = kernel_decode.mode();
-        block_type = context->header.block_type();
-        read_block_header_content = context->header.parameters().as_bytes[0] ? true: false;
+        block_type = context.header.block_type();
+        read_block_header_content = context.header.parameters().as_bytes[0] ? true: false;
         total_read = total_written = 0;
-        end_data_overhead = context->end_data_overhead;
+        end_data_overhead = context.end_data_overhead;
         if (block_type == block_type_with_hashsum_integrity_check) {
             update = true;
             end_data_overhead += sizeof(block_footer_t);
         }
-        kernel_decode.init(context->header.parameters(), end_data_overhead);
+        kernel_decode.init(context.header.parameters(), end_data_overhead);
         return exit_process(process_read_block_header, decode_state_ready);
     }
     template<class KERNEL_DECODE_T>inline decode_state_t
-    block_decode_t<KERNEL_DECODE_T>::continue_(context_t *context)
+    block_decode_t<KERNEL_DECODE_T>::continue_(context_t &context)
     {
-        teleport_t *in = &context->in;
-        location_t *out = &context->out;
+        teleport_t *in = &context.in;
+        location_t *out = &context.out;
         decode_state_t state;
         kernel_decode_t::state_t kernel_decode_state;
         uint_fast64_t available_in_before, available_out_before;
@@ -321,10 +320,10 @@ namespace density {
         goto read_block_header;
     }
     template<class KERNEL_DECODE_T>inline decode_state_t
-    block_decode_t<KERNEL_DECODE_T>::finish(context_t *context)
+    block_decode_t<KERNEL_DECODE_T>::finish(context_t &context)
     {
-        teleport_t *in = &context->in;
-        location_t *out = &context->out;
+        teleport_t *in = &context.in;
+        location_t *out = &context.out;
         decode_state_t state;
         kernel_decode_t::state_t kernel_decode_state;
         uint_fast64_t available_in_before, available_out_before;
@@ -405,7 +404,7 @@ namespace density {
         const uint8_t *const pointer_before = output_pointer;
         const uint8_t *const pointer_after = out->pointer;
         const uint_fast64_t processed = pointer_after - pointer_before;
-        context.update(output_pointer, processed);
+        spooky.update(output_pointer, processed);
         if (pending_exit) update = true;
         else update_integrity_data(out);
     }
@@ -420,7 +419,7 @@ namespace density {
         if (read_block_header_content)
             total_read += last_block_header.read(read_location);
         if (block_type == block_type_with_hashsum_integrity_check) {
-            context.init(spookyhash_seed_1, spookyhash_seed_2);
+            spooky.init(spookyhash_seed_1, spookyhash_seed_2);
             update_integrity_data(out);
         }
         return decode_state_ready;
@@ -443,7 +442,7 @@ namespace density {
             return decode_state_stall_on_input;
         update_integrity_hash(out, false);
         uint64_t hashsum1, hashsum2;
-        context.final(&hashsum1, &hashsum2);
+        spooky.final(&hashsum1, &hashsum2);
         total_read += last_block_footer.read(read_location);
         return last_block_footer.check(hashsum1, hashsum2) ? decode_state_ready:
             decode_state_integrity_check_fail;

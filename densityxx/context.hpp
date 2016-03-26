@@ -38,10 +38,10 @@ namespace density {
             update_input(in, available_in);
             update_output(out, available_out); }
 
-        inline context_t *before(void)
+        inline context_t &before(void)
         {   available_in_before = in.available_bytes();
             available_out_before = out.available_bytes;
-            return this; }
+            return *this; }
         inline encode_state_t after(encode_state_t state)
         {   total_read += available_in_before - in.available_bytes();
             total_written += available_out_before - out.available_bytes;
