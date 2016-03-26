@@ -24,6 +24,9 @@ namespace density {
         inline file_buffer_t(FILE *rfp, FILE *wfp): rfp(rfp), wfp(wfp) {}
         inline ~file_buffer_t() {}
 
+        inline size_t get_in_size(void) const { return sizeof(in); }
+        inline size_t get_out_size(void) const { return sizeof(out); }
+
         inline void init(const compression_mode_t compression_mode,
                          const block_type_t block_type, context_t &context)
         {   context.init(compression_mode, block_type, in, sizeof(in), out, sizeof(out)); }

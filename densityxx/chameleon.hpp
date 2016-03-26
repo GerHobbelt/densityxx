@@ -153,7 +153,6 @@ namespace density {
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
         reset_cycle = dictionary_preferred_reset_cycle - 1;
 #endif
-        DENSITY_SHOW_ENCODE(init);
         return exit_process(process_prepare_new_block, state_ready);
     }
     inline kernel_encode_t::state_t
@@ -171,17 +170,14 @@ namespace density {
         }
         // Prepare new block
     prepare_new_block:
-        DENSITY_SHOW_ENCODE(prepare_new_block);
         if ((return_state = prepare_new_block(out)))
             return exit_process(process_prepare_new_block, return_state);
         // Check signature state
     check_signature_state:
-        DENSITY_SHOW_ENCODE(check_signature_state);
         if ((return_state = check_state(out)))
             return exit_process(process_check_signature_state, return_state);
         // Try to read a complete chunk unit
     read_chunk:
-        DENSITY_SHOW_ENCODE(read_chunk);
         pointer_out_before = out->pointer;
         if (!(read_memory_location = in->read(chameleon_encode_process_unit_size)))
             return exit_process(process_read_chunk, state_stall_on_input);
@@ -207,17 +203,14 @@ namespace density {
         }
         // Prepare new block
     prepare_new_block:
-        DENSITY_SHOW_ENCODE(prepare_new_block);
         if ((return_state = prepare_new_block(out)))
             return exit_process(process_prepare_new_block, return_state);
         // Check signature state
     check_signature_state:
-        DENSITY_SHOW_ENCODE(check_signature_state);
         if ((return_state = check_state(out)))
             return exit_process(process_check_signature_state, return_state);
         // Try to read a complete chunk unit
     read_chunk:
-        DENSITY_SHOW_ENCODE(read_chunk);
         pointer_out_before = out->pointer;
         if (!(read_memory_location = in->read(chameleon_encode_process_unit_size)))
             goto step_by_step;
@@ -227,7 +220,6 @@ namespace density {
         goto exit;
         // Read step by step
     step_by_step:
-        DENSITY_SHOW_ENCODE(step_by_step);
         while (shift != DENSITY_BITSIZEOF(chameleon_signature_t) &&
                (read_memory_location = in->read(sizeof(uint32_t)))) {
             uint32_t chunk;
@@ -238,7 +230,6 @@ namespace density {
             read_memory_location->available_bytes -= sizeof(chunk);
         }
     exit:
-        DENSITY_SHOW_ENCODE(exit);
         out->available_bytes -= (out->pointer - pointer_out_before);
         if (in->available_bytes() >= sizeof(uint32_t)) goto check_signature_state;
         // Copy the remaining bytes
