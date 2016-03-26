@@ -7,7 +7,7 @@ namespace density {
     const uint64_t spookyhash_seed_1 = 0xabc;
     const uint64_t spookyhash_seed_2 = 0xdef;
     // encode.
-    template<class KERNEL_ENCODE_T> inline encode_state_t
+    template<class KERNEL_ENCODE_T> DENSITY_INLINE encode_state_t
     block_encode_t<KERNEL_ENCODE_T>::init(context_t &context)
     {
         current_mode = target_mode = kernel_encode.mode();
@@ -17,7 +17,7 @@ namespace density {
         kernel_encode.init();
         return exit_process(process_write_block_header, encode_state_ready);
     }
-    template<class KERNEL_ENCODE_T> inline encode_state_t
+    template<class KERNEL_ENCODE_T> DENSITY_INLINE encode_state_t
     block_encode_t<KERNEL_ENCODE_T>::continue_(context_t &context)
     {
         teleport_t *in = &context.in;
@@ -94,7 +94,7 @@ namespace density {
             return exit_process(process_write_block_footer, state);
         goto write_block_header;
     }
-    template<class KERNEL_ENCODE_T> inline encode_state_t
+    template<class KERNEL_ENCODE_T> DENSITY_INLINE encode_state_t
     block_encode_t<KERNEL_ENCODE_T>::finish(context_t &context)
     {
         teleport_t *in = &context.in;
@@ -168,7 +168,7 @@ namespace density {
         return encode_state_ready;
     }
 
-    inline void
+    DENSITY_INLINE void
     block_encode_base_t::update_integrity_hash(teleport_t *RESTRICT in, bool pending_exit)
     {
         const uint8_t *const pointer_before = input_pointer;
@@ -182,7 +182,7 @@ namespace density {
             update_integrity_data(in);
         }
     }
-    inline encode_state_t
+    DENSITY_INLINE encode_state_t
     block_encode_base_t::write_block_header(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
         if (sizeof(block_header_t) > out->available_bytes) return encode_state_stall_on_output;
@@ -204,7 +204,7 @@ namespace density {
         }
         return encode_state_ready;
     }
-    inline encode_state_t
+    DENSITY_INLINE encode_state_t
     block_encode_base_t::write_block_footer(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
         block_footer_t block_footer;
@@ -214,7 +214,7 @@ namespace density {
         total_written += block_footer.write(out);
         return encode_state_ready;
     }
-    inline encode_state_t
+    DENSITY_INLINE encode_state_t
     block_encode_base_t::write_mode_marker(location_t *RESTRICT out)
     {
         block_mode_marker_t block_mode_marker;
@@ -227,7 +227,7 @@ namespace density {
     }
 
     // decode.
-    template<class KERNEL_DECODE_T>inline decode_state_t
+    template<class KERNEL_DECODE_T>DENSITY_INLINE decode_state_t
     block_decode_t<KERNEL_DECODE_T>::init(context_t &context)
     {
         current_mode = target_mode = kernel_decode.mode();
@@ -242,7 +242,7 @@ namespace density {
         kernel_decode.init(context.header.parameters(), end_data_overhead);
         return exit_process(process_read_block_header, decode_state_ready);
     }
-    template<class KERNEL_DECODE_T>inline decode_state_t
+    template<class KERNEL_DECODE_T>DENSITY_INLINE decode_state_t
     block_decode_t<KERNEL_DECODE_T>::continue_(context_t &context)
     {
         teleport_t *in = &context.in;
@@ -319,7 +319,7 @@ namespace density {
             return exit_process(process_read_block_footer, state);
         goto read_block_header;
     }
-    template<class KERNEL_DECODE_T>inline decode_state_t
+    template<class KERNEL_DECODE_T>DENSITY_INLINE decode_state_t
     block_decode_t<KERNEL_DECODE_T>::finish(context_t &context)
     {
         teleport_t *in = &context.in;
@@ -397,7 +397,7 @@ namespace density {
         return decode_state_ready;
     }
 
-    inline void
+    DENSITY_INLINE void
     block_decode_base_t::update_integrity_hash(location_t *RESTRICT out, bool pending_exit)
     {
         const uint8_t *const pointer_before = output_pointer;
@@ -407,7 +407,7 @@ namespace density {
         if (pending_exit) update = true;
         else update_integrity_data(out);
     }
-    inline decode_state_t
+    DENSITY_INLINE decode_state_t
     block_decode_base_t::read_block_header(teleport_t *RESTRICT in, location_t *out)
     {
         location_t *read_location;
@@ -423,7 +423,7 @@ namespace density {
         }
         return decode_state_ready;
     }
-    inline decode_state_t
+    DENSITY_INLINE decode_state_t
     block_decode_base_t::read_block_mode_marker(teleport_t *RESTRICT in)
     {
         location_t *read_location;
@@ -433,7 +433,7 @@ namespace density {
         current_mode = (compression_mode_t)last_mode_marker.mode;
         return decode_state_ready;
     }
-    inline decode_state_t
+    DENSITY_INLINE decode_state_t
     block_decode_base_t::read_block_footer(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
         location_t *read_location;

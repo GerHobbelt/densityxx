@@ -20,18 +20,18 @@ namespace density {
         main_header_t header;
         main_footer_t footer;
 
-        inline context_t(void): in(memory_teleport_buffer_size), out() {}
+        DENSITY_INLINE context_t(void): in(memory_teleport_buffer_size), out() {}
 
-        inline const uint_fast64_t get_total_read(void) const { return total_read; }
-        inline const uint_fast64_t get_total_written(void) const { return total_written; }
+        DENSITY_INLINE const uint_fast64_t get_total_read(void) const { return total_read; }
+        DENSITY_INLINE const uint_fast64_t get_total_written(void) const { return total_written; }
 
-        inline void update_input(const uint8_t *RESTRICT in, const uint_fast64_t szin)
+        DENSITY_INLINE void update_input(const uint8_t *RESTRICT in, const uint_fast64_t szin)
         {   this->in.change_input_buffer(in, szin); }
-        inline void update_output(uint8_t *RESTRICT out, const uint_fast64_t szout)
+        DENSITY_INLINE void update_output(uint8_t *RESTRICT out, const uint_fast64_t szout)
         {   this->out.encapsulate(out, szout); }
-        inline uint_fast64_t output_available_for_use(void) const { return out.used(); }
+        DENSITY_INLINE uint_fast64_t output_available_for_use(void) const { return out.used(); }
 
-        inline void init(const compression_mode_t compression_mode,
+        DENSITY_INLINE void init(const compression_mode_t compression_mode,
                          const block_type_t block_type,
                          const uint8_t *RESTRICT in, const uint_fast64_t available_in,
                          uint8_t *RESTRICT out, const uint_fast64_t available_out)
@@ -41,25 +41,25 @@ namespace density {
             update_input(in, available_in);
             update_output(out, available_out); }
 
-        inline context_t &before(void)
+        DENSITY_INLINE context_t &before(void)
         {   available_in_before = in.available_bytes();
             available_out_before = out.available_bytes;
             return *this; }
-        inline encode_state_t after(encode_state_t state)
+        DENSITY_INLINE encode_state_t after(encode_state_t state)
         {   total_read += available_in_before - in.available_bytes();
             total_written += available_out_before - out.available_bytes;
             return state; }
-        inline decode_state_t after(decode_state_t state)
+        DENSITY_INLINE decode_state_t after(decode_state_t state)
         {   total_read += available_in_before - in.available_bytes_reserved(end_data_overhead);
             total_written += available_out_before - out.available_bytes;
             return state; }
 
-        inline encode_state_t write_header(void)
+        DENSITY_INLINE encode_state_t write_header(void)
         {   if (sizeof(header) > out.available_bytes) return encode_state_stall_on_output;
             out.write(&header, sizeof(header));
             total_written += sizeof(header);
             return encode_state_ready; }
-        inline encode_state_t write_footer(uint32_t relative_position)
+        DENSITY_INLINE encode_state_t write_footer(uint32_t relative_position)
         {   if (end_data_overhead == 0) return encode_state_ready;
             footer.relative_position = relative_position;
             if (sizeof(footer) > out.available_bytes) return encode_state_stall_on_output;
@@ -67,13 +67,13 @@ namespace density {
             total_written += sizeof(footer);
             return encode_state_ready; }
 
-        inline decode_state_t read_header(void)
+        DENSITY_INLINE decode_state_t read_header(void)
         {   location_t *read_location = in.read_reserved(sizeof(header), end_data_overhead);
             if (read_location == NULL) return decode_state_stall_on_input;
             read_location->read(&header, sizeof(header));
             total_read += sizeof(header);
             return decode_state_ready; }
-        inline decode_state_t read_footer(void)
+        DENSITY_INLINE decode_state_t read_footer(void)
         {   if (end_data_overhead == 0) return decode_state_ready;
             location_t *read_location = in.read_reserved(sizeof(footer), end_data_overhead);
             if (read_location == NULL) return decode_state_stall_on_input;

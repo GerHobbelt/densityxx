@@ -27,13 +27,13 @@ namespace density {
 
         entry_t entries[1 << hash_bits];
         prediction_entry_t prediction_entries[1 << hash_bits];
-        inline void reset(void) { memset(this, 0, sizeof(*this)); }
+        DENSITY_INLINE void reset(void) { memset(this, 0, sizeof(*this)); }
     };
 
     //--- encode ---
     class cheetah_encode_t: public kernel_encode_t {
     public:
-        inline compression_mode_t mode(void) const
+        DENSITY_INLINE compression_mode_t mode(void) const
         {   return compression_mode_cheetah_algorithm; }
 
         state_t init(void);
@@ -59,7 +59,7 @@ namespace density {
 #if DENSITY_ENABLE_PARALLELIZABLE_DECOMPRESSIBLE_OUTPUT == DENSITY_YES
         uint_fast64_t reset_cycle;
 #endif
-        inline state_t exit_process(process_t process, state_t kernel_encode_state)
+        DENSITY_INLINE state_t exit_process(process_t process, state_t kernel_encode_state)
         {   this->process = process; return kernel_encode_state; }
         void prepare_new_signature(location_t *RESTRICT out);
         state_t prepare_new_block(location_t *RESTRICT out);
@@ -72,7 +72,7 @@ namespace density {
     //--- decode ---
     class cheetah_decode_t: public kernel_decode_t {
     public:
-        inline compression_mode_t mode(void) const
+        DENSITY_INLINE compression_mode_t mode(void) const
         {   return compression_mode_cheetah_algorithm; }
 
         state_t init(const main_header_parameters_t parameters,
@@ -97,7 +97,7 @@ namespace density {
         cheetah_dictionary_t dictionary;
         uint_fast64_t reset_cycle;
 
-        inline state_t exit_process(process_t process, state_t kernel_decode_state)
+        DENSITY_INLINE state_t exit_process(process_t process, state_t kernel_decode_state)
         {   this->process = process; return kernel_decode_state; }
         state_t check_state(location_t *RESTRICT out);
         void read_signature(location_t *RESTRICT in);

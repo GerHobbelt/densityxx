@@ -11,11 +11,11 @@ namespace density {
     public:
         // Previous block's relative start position (parallelizable decompressible output)
         uint32_t relative_position; // previousBlockRelativeStartPosition
-        inline uint_fast32_t read(location_t *in)
+        DENSITY_INLINE uint_fast32_t read(location_t *in)
         {   in->read(this, sizeof(*this)); return sizeof(*this); }
-        inline uint_fast32_t write(location_t *out)
+        DENSITY_INLINE uint_fast32_t write(location_t *out)
         {   out->write(this, sizeof(*this)); return sizeof(*this); }
-        inline uint_fast32_t write(location_t *out, const uint32_t relative_position)
+        DENSITY_INLINE uint_fast32_t write(location_t *out, const uint32_t relative_position)
         {   this->relative_position = relative_position; return write(out); }
     };
 #pragma pack(pop)
@@ -27,11 +27,11 @@ namespace density {
     public:
         uint8_t mode; // activeBlockMode
         uint8_t reserved;
-        inline uint_fast32_t read(location_t *in)
+        DENSITY_INLINE uint_fast32_t read(location_t *in)
         {   in->read(this, sizeof(*this)); return sizeof(*this); }
-        inline uint_fast32_t write(location_t *out)
+        DENSITY_INLINE uint_fast32_t write(location_t *out)
         {   out->write(this, sizeof(*this)); return sizeof(*this); }
-        inline uint_fast32_t write(location_t *out, const compression_mode_t mode)
+        DENSITY_INLINE uint_fast32_t write(location_t *out, const compression_mode_t mode)
         {   this->mode = mode; reserved = 0; return write(out); }
     };
 #pragma pack(pop)
@@ -43,15 +43,15 @@ namespace density {
     public:
         uint64_t hashsum1;
         uint64_t hashsum2;
-        inline uint_fast32_t read(location_t *in)
+        DENSITY_INLINE uint_fast32_t read(location_t *in)
         {   in->read(this, sizeof(*this)); return sizeof(*this); }
-        inline uint_fast32_t write(location_t *out)
+        DENSITY_INLINE uint_fast32_t write(location_t *out)
         {   out->write(this, sizeof(*this)); return sizeof(*this); }
-        inline uint_fast32_t
+        DENSITY_INLINE uint_fast32_t
         write(location_t *out, uint64_t hashsum1, uint64_t hashsum2)
         {   this->hashsum1 = hashsum1; this->hashsum2 = hashsum2; return write(out); }
 
-        inline bool check(uint64_t hashsum1, uint64_t hashsum2)
+        DENSITY_INLINE bool check(uint64_t hashsum1, uint64_t hashsum2)
         {   return this->hashsum1 == hashsum1 && this->hashsum2 == hashsum2; }
     };
 #pragma pack(pop)
@@ -73,14 +73,14 @@ namespace density {
         uint8_t _reserved[3];
         main_header_parameters_t _parameters;
     public:
-        inline const compression_mode_t compression_mode(void) const
+        DENSITY_INLINE const compression_mode_t compression_mode(void) const
         {   return (const compression_mode_t)_compression_mode; }
-        inline const block_type_t block_type(void) const
+        DENSITY_INLINE const block_type_t block_type(void) const
         {   return (const block_type_t)_block_type; }
-        inline const main_header_parameters_t &parameters(void) const
+        DENSITY_INLINE const main_header_parameters_t &parameters(void) const
         {   return _parameters; }
 
-        inline void
+        DENSITY_INLINE void
         setup(const compression_mode_t compression_mode, const block_type_t block_type)
         {
             _version[0] = major_version;

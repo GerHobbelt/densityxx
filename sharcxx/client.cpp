@@ -105,7 +105,7 @@ namespace density {
         return file;
     }
 
-    template<class KERNEL_ENCODE_T>static inline uint32_t
+    template<class KERNEL_ENCODE_T>static DENSITY_INLINE uint32_t
     do_compress(context_t &context, sharc_file_buffer_t *buffer)
     {
         uint_fast64_t read;
@@ -228,7 +228,7 @@ namespace density {
         }
     }
 
-    template<class KERNEL_DECODE_T>static inline void
+    template<class KERNEL_DECODE_T>static DENSITY_INLINE void
     do_decompress(context_t &context, sharc_file_buffer_t *buffer)
     {
         uint_fast64_t read;

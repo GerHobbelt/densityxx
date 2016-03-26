@@ -29,7 +29,7 @@ namespace density {
         lion_form_dictionary_c, lion_form_predictions_c, lion_form_dictionary_d };
     static const uint8_t sz_init_forms = sizeof(init_forms) / sizeof(init_forms[0]);
 
-    inline void
+    DENSITY_INLINE void
     lion_form_data_t::init(void)
     {
         lion_form_node_t *cur, *prev = NULL;
@@ -44,7 +44,7 @@ namespace density {
         usages = 0;
     }
 
-    inline void
+    DENSITY_INLINE void
     lion_form_data_t::update(lion_form_node_t *RESTRICT const form, const uint8_t usage,
                              lion_form_node_t *RESTRICT const previous_form,
                              const uint8_t previous_usage)
@@ -59,14 +59,14 @@ namespace density {
         }
     }
 
-    inline void
+    DENSITY_INLINE void
     lion_form_data_t::flatten(const uint8_t usage)
     {
         if (DENSITY_UNLIKELY(usage & 0x80)) // Flatten usage values
             usages = (usages >> 1) & 0x7f7f7f7f7f7f7f7fllu;
     }
 
-    inline const lion_form_t
+    DENSITY_INLINE const lion_form_t
     lion_form_data_t::increment_usage(lion_form_node_t *RESTRICT const form)
     {
         const lion_form_t form_value = form->form;
@@ -78,7 +78,7 @@ namespace density {
         return form_value;
     }
 
-    inline lion_entropy_code_t
+    DENSITY_INLINE lion_entropy_code_t
     lion_form_data_t::get_encoding(const lion_form_t form)
     {
         uint8_t *u8usages = (uint8_t *)&usages;
@@ -95,7 +95,7 @@ namespace density {
     }
 
     //--- encode ---
-    inline void
+    DENSITY_INLINE void
     lion_encode_t::prepare_new_signature(location_t *RESTRICT out)
     {
         signature = (lion_signature_t *) (out->pointer);
@@ -103,7 +103,7 @@ namespace density {
         out->pointer += sizeof(lion_signature_t);
     }
 
-    inline kernel_encode_t::state_t
+    DENSITY_INLINE kernel_encode_t::state_t
     lion_encode_t::check_block_state(void)
     {
         if (DENSITY_LIKELY((chunks_count & (lion_chunks_per_process_unit_big - 1))))
@@ -128,7 +128,7 @@ namespace density {
         return state_ready;
     }
 
-    inline void
+    DENSITY_INLINE void
     lion_encode_t::push_to_proximity_signature(const uint64_t content, const uint_fast8_t bits)
     {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -141,7 +141,7 @@ namespace density {
         shift += bits;
     }
 
-    inline void
+    DENSITY_INLINE void
     lion_encode_t::push_to_signature(location_t *RESTRICT out, const uint64_t content,
                                      const uint_fast8_t bits)
     {
@@ -186,7 +186,7 @@ namespace density {
         push_code_to_signature(out, form_data.get_encoding(LION_FORM)); \
         DENSITY_MEMCPY(out->pointer, &VAR, sizeof(VAR));                \
         out->pointer += sizeof(VAR)
-    inline void
+    DENSITY_INLINE void
     lion_encode_t::kernel(location_t *RESTRICT out, const uint16_t hash, const uint32_t chunk)
     {
         lion_dictionary_t *const dictionary = &this->dictionary;
@@ -231,7 +231,7 @@ namespace density {
         last_hash = hash;
     }
 
-    inline void
+    DENSITY_INLINE void
     lion_encode_t::process_unit_generic(const uint_fast8_t chunks_per_process_unit,
                                         const uint_fast16_t process_unit_size,
                                         location_t *RESTRICT in, location_t *RESTRICT out)
@@ -254,7 +254,7 @@ namespace density {
         in->available_bytes -= process_unit_size;
     }
 
-    inline void
+    DENSITY_INLINE void
     lion_encode_t::process_step_unit(location_t *RESTRICT in, location_t *RESTRICT out)
     {
         uint32_t chunk;
@@ -265,7 +265,7 @@ namespace density {
         in->available_bytes -= sizeof(chunk);
     }
 
-    inline kernel_encode_t::state_t
+    DENSITY_INLINE kernel_encode_t::state_t
     lion_encode_t::init(void)
     {
         chunks_count = 0;
@@ -301,7 +301,7 @@ namespace density {
     }
 #endif
 
-    inline kernel_encode_t::state_t
+    DENSITY_INLINE kernel_encode_t::state_t
     lion_encode_t::continue_(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
         state_t return_state;
@@ -364,7 +364,7 @@ namespace density {
         // New loop
         goto check_block_state;
     }
-    inline kernel_encode_t::state_t
+    DENSITY_INLINE kernel_encode_t::state_t
     lion_encode_t::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
         state_t return_state;
@@ -472,7 +472,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
     DENSITY_BINARY_TO_UINT(1111111)
 };
 #endif
-    inline kernel_decode_t::state_t
+    DENSITY_INLINE kernel_decode_t::state_t
     lion_decode_t::check_block_state(void)
     {
         if (DENSITY_UNLIKELY((chunks_count >= lion_preferred_efficiency_check_chunks)
@@ -493,7 +493,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         }
         return state_ready;
     }
-    inline void
+    DENSITY_INLINE void
     lion_decode_t::prediction_a(location_t *RESTRICT in, location_t *RESTRICT out,
                                 uint16_t *RESTRICT const hash, uint32_t *RESTRICT const chunk)
     {
@@ -502,7 +502,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         last_chunk = *chunk;
         last_hash = *hash;
     }
-    inline void
+    DENSITY_INLINE void
     lion_decode_t::prediction_b(location_t *RESTRICT in, location_t *RESTRICT out,
                                 uint16_t *RESTRICT const hash, uint32_t *RESTRICT const chunk)
     {
@@ -514,7 +514,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         last_chunk = *chunk;
         last_hash = *hash;
     }
-    inline void
+    DENSITY_INLINE void
     lion_decode_t::prediction_c(location_t *RESTRICT in, location_t *RESTRICT out,
                                 uint16_t *RESTRICT const hash, uint32_t *RESTRICT const chunk)
     {
@@ -526,7 +526,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         last_chunk = *chunk;
         last_hash = *hash;
     }
-    inline void
+    DENSITY_INLINE void
     lion_decode_t::dictionary_a(location_t *RESTRICT in, location_t *RESTRICT out,
                                 uint16_t *RESTRICT const hash, uint32_t *RESTRICT const chunk)
     {
@@ -537,7 +537,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         last_chunk = *chunk;
         last_hash = *hash;
     }
-    inline void
+    DENSITY_INLINE void
     lion_decode_t::dictionary_b(location_t *RESTRICT in, location_t *RESTRICT out,
                                 uint16_t *RESTRICT const hash, uint32_t *RESTRICT const chunk)
     {
@@ -550,7 +550,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         last_chunk = *chunk;
         last_hash = *hash;
     }
-    inline void
+    DENSITY_INLINE void
     lion_decode_t::dictionary_c(location_t *RESTRICT in, location_t *RESTRICT out,
                                 uint16_t *RESTRICT const hash, uint32_t *RESTRICT const chunk)
     {
@@ -563,7 +563,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         last_chunk = *chunk;
         last_hash = *hash;
     }
-    inline void
+    DENSITY_INLINE void
     lion_decode_t::dictionary_d(location_t *RESTRICT in, location_t *RESTRICT out,
                                 uint16_t *RESTRICT const hash, uint32_t *RESTRICT const chunk)
     {
@@ -576,7 +576,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         last_chunk = *chunk;
         last_hash = *hash;
     }
-    inline void
+    DENSITY_INLINE void
     lion_decode_t::plain(location_t *RESTRICT in, location_t *RESTRICT out,
                          uint16_t *RESTRICT const hash, uint32_t *RESTRICT const chunk)
     {
@@ -592,7 +592,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         last_chunk = *chunk;
         last_hash = *hash;
     }
-    inline void
+    DENSITY_INLINE void
     lion_decode_t::chunk(location_t *RESTRICT in, location_t *RESTRICT out,
                          const lion_form_t form)
     {
@@ -609,7 +609,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         default: break;
         }
     }
-    inline const lion_form_t
+    DENSITY_INLINE const lion_form_t
     lion_decode_t::read_form(location_t *RESTRICT in)
     {
         const uint_fast8_t shift = this->shift;
@@ -639,7 +639,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
                                              secondary_trailing_zeroes);
         }
     }
-    inline void
+    DENSITY_INLINE void
     lion_decode_t::process_form(location_t *RESTRICT in, location_t *RESTRICT out)
     {
         const uint_fast8_t shift = this->shift;
@@ -652,7 +652,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
             break;
         }
     }
-    inline void
+    DENSITY_INLINE void
     lion_decode_t::process_unit_(location_t *RESTRICT in, location_t *RESTRICT out)
     {
 #ifdef __clang__
@@ -666,7 +666,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
 #endif
         chunks_count += lion_chunks_per_process_unit_big;
     }
-    inline lion_decode_t::step_by_step_status_t
+    DENSITY_INLINE lion_decode_t::step_by_step_status_t
     lion_decode_t::chunk_step_by_step(location_t *RESTRICT read_memory_location,
                                       teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
@@ -692,7 +692,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         return step_by_step_status_proceed;
     }
 
-    inline kernel_decode_t::state_t
+    DENSITY_INLINE kernel_decode_t::state_t
     lion_decode_t::init(const main_header_parameters_t parameters,
                         const uint_fast8_t end_data_overhead)
     {
@@ -717,7 +717,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
 // 8 bytes (new signature) + 3 bits (lowest rank form) + 2 * (3 bit flags (DENSITY_LION_FORM_SECONDARY_ACCESS + DENSITY_LION_BIGRAM_PRIMARY_SIGNATURE_FLAG_SECONDARY_ACCESS + DENSITY_LION_BIGRAM_SECONDARY_SIGNATURE_FLAG_PLAIN) + 2 bytes)
 #define DENSITY_LION_DECODE_MAX_BYTES_TO_READ_FOR_PROCESS_UNIT \
     (1 + ((lion_chunks_per_process_unit_big * DENSITY_LION_DECODE_MAX_BITS_TO_READ_FOR_CHUNK) >> 3))
-    inline kernel_decode_t::state_t
+    DENSITY_INLINE kernel_decode_t::state_t
     lion_decode_t::continue_(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
         state_t return_state;
@@ -755,7 +755,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         // New loop
         goto check_block_state;
     }
-    inline kernel_decode_t::state_t
+    DENSITY_INLINE kernel_decode_t::state_t
     lion_decode_t::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
     {
         state_t return_state;

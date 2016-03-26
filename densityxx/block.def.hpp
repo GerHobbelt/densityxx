@@ -10,9 +10,9 @@ namespace density {
 #pragma pack(4)
     class block_encode_base_t {
     public:
-        inline const compression_mode_t mode(void) const { return target_mode; }
-        inline const block_type_t get_block_type(void) const { return block_type; }
-        inline uint32_t read_bytes(void) const
+        DENSITY_INLINE const compression_mode_t mode(void) const { return target_mode; }
+        DENSITY_INLINE const block_type_t get_block_type(void) const { return block_type; }
+        DENSITY_INLINE uint32_t read_bytes(void) const
         {   return total_read > in_start ? total_read - in_start: 0; }
     protected:
         typedef enum {
@@ -38,11 +38,11 @@ namespace density {
         uint8_t *input_pointer;
         spookyhash_context_t spooky;
 
-        inline encode_state_t exit_process(process_t process, encode_state_t state)
+        DENSITY_INLINE encode_state_t exit_process(process_t process, encode_state_t state)
         {   this->process = process; return state; }
 
 
-        inline void update_integrity_data(teleport_t *RESTRICT in)
+        DENSITY_INLINE void update_integrity_data(teleport_t *RESTRICT in)
         {   input_pointer = in->direct.pointer; update = false; }
 
         void update_integrity_hash(teleport_t *RESTRICT in, bool pending_exit);
@@ -51,7 +51,7 @@ namespace density {
         encode_state_t write_block_footer(teleport_t *RESTRICT in, location_t *RESTRICT out);
         encode_state_t write_mode_marker(location_t *RESTRICT out);
 
-        inline void
+        DENSITY_INLINE void
         update_totals(teleport_t *RESTRICT in, location_t *RESTRICT out,
                       const uint_fast64_t available_in_before,
                       const uint_fast64_t available_out_before)
@@ -75,8 +75,8 @@ namespace density {
 #pragma pack(4)
     class block_decode_base_t {
     public:
-        inline const compression_mode_t mode(void) const { return target_mode; }
-        inline const block_type_t get_block_type(void) const { return block_type; }
+        DENSITY_INLINE const compression_mode_t mode(void) const { return target_mode; }
+        DENSITY_INLINE const block_type_t get_block_type(void) const { return block_type; }
     protected:
         typedef enum {
             process_read_block_header,
@@ -109,10 +109,10 @@ namespace density {
         uint8_t *output_pointer;
         spookyhash_context_t spooky;
 
-        inline decode_state_t exit_process(process_t process, decode_state_t state)
+        DENSITY_INLINE decode_state_t exit_process(process_t process, decode_state_t state)
         {   this->process = process; return state; }
 
-        inline void update_integrity_data(location_t *RESTRICT out)
+        DENSITY_INLINE void update_integrity_data(location_t *RESTRICT out)
         {   output_pointer = out->pointer; update = false; }
 
         void update_integrity_hash(location_t *RESTRICT out, bool pending_exit);
@@ -120,7 +120,7 @@ namespace density {
         decode_state_t read_block_mode_marker(teleport_t *RESTRICT in);
         decode_state_t read_block_footer(teleport_t *RESTRICT in, location_t *RESTRICT out);
 
-        inline void
+        DENSITY_INLINE void
         update_totals(teleport_t *RESTRICT in, location_t *RESTRICT out,
                       const uint_fast64_t available_in_before,
                       const uint_fast64_t available_out_before)

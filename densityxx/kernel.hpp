@@ -6,7 +6,7 @@
 namespace density {
     const size_t hash_bits = 16;
     const uint32_t hash_multiplier = 0x9D6EF916U;
-    inline uint16_t hash_algorithm(const uint32_t value32)
+    DENSITY_INLINE uint16_t hash_algorithm(const uint32_t value32)
     {   return (uint16_t)((value32 * hash_multiplier) >> (32 - hash_bits)); }
 
     // encode.

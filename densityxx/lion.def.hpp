@@ -93,13 +93,13 @@ namespace density {
         bigram_entry_t bigrams[1 << DENSITY_BITSIZEOF(uint8_t)];
         chunk_entry_t chunks[1 << hash_bits];
         chunk_prediction_entry_t predictions[1 << hash_bits];
-        inline void reset(void) { memset(this, 0, sizeof(*this)); }
+        DENSITY_INLINE void reset(void) { memset(this, 0, sizeof(*this)); }
     };
 
     //--- encode ---
     class lion_encode_t: public kernel_encode_t {
     public:
-        inline compression_mode_t mode(void) const
+        DENSITY_INLINE compression_mode_t mode(void) const
         {   return compression_mode_lion_algorithm; }
 
         state_t init(void);
@@ -142,7 +142,7 @@ namespace density {
         uint_fast64_t reset_cycle;
 #endif
 
-        inline state_t exit_process(process_t process, state_t kernel_encode_state)
+        DENSITY_INLINE state_t exit_process(process_t process, state_t kernel_encode_state)
         {   this->process = process; return kernel_encode_state; }
         void prepare_new_signature(location_t *RESTRICT out);
         kernel_encode_t::state_t check_block_state(void);
@@ -150,17 +150,17 @@ namespace density {
         void push_to_signature(location_t *RESTRICT out, const uint64_t content,
                                const uint_fast8_t bits);
         //void push_zero_to_signature(location_t *RESTRICT out, const uint_fast8_t bits);
-        inline void
+        DENSITY_INLINE void
         push_code_to_signature(location_t *RESTRICT out, const lion_entropy_code_t code)
         {   push_to_signature(out, code.value, code.bit_length); }
         void kernel(location_t *RESTRICT out, const uint16_t hash, const uint32_t chunk);
         void process_unit_generic(const uint_fast8_t chunks_per_process_unit,
                                   const uint_fast16_t process_unit_size,
                                   location_t *RESTRICT in, location_t *RESTRICT out);
-        inline void process_unit_small(location_t *RESTRICT in, location_t *RESTRICT out)
+        DENSITY_INLINE void process_unit_small(location_t *RESTRICT in, location_t *RESTRICT out)
         {   process_unit_generic(lion_chunks_per_process_unit_small,
                                  lion_process_unit_size_small, in, out); }
-        inline void
+        DENSITY_INLINE void
         process_unit_big(location_t *RESTRICT in, location_t *RESTRICT out)
         {   process_unit_generic(lion_chunks_per_process_unit_big,
                                  lion_process_unit_size_big, in, out); }
@@ -170,7 +170,7 @@ namespace density {
     //--- decode ---
     class lion_decode_t: public kernel_decode_t {
     public:
-        inline compression_mode_t mode(void) const
+        DENSITY_INLINE compression_mode_t mode(void) const
         {   return compression_mode_lion_algorithm; }
 
         state_t init(const main_header_parameters_t parameters,
@@ -205,35 +205,35 @@ namespace density {
         lion_dictionary_t dictionary;
         uint_fast64_t reset_cycle;
 
-        inline state_t exit_process(process_t process, state_t kernel_decode_state)
+        DENSITY_INLINE state_t exit_process(process_t process, state_t kernel_decode_state)
         {   this->process = process; return kernel_decode_state; }
         state_t check_block_state(void);
-        inline void read_signature_from_memory(location_t *RESTRICT in)
+        DENSITY_INLINE void read_signature_from_memory(location_t *RESTRICT in)
         {   DENSITY_MEMCPY(&signature, in->pointer, sizeof(signature));
             in->pointer += sizeof(signature); }
-        inline void
+        DENSITY_INLINE void
         update_predictions_model(lion_dictionary_t::chunk_prediction_entry_t *const
                                  RESTRICT predictions,
                                  const uint32_t chunk)
         {   DENSITY_MEMMOVE((uint32_t *) predictions + 1, predictions, 2 * sizeof(uint32_t));
             // Move chunk to the top of the predictions list
             *(uint32_t *) predictions = chunk; }
-        inline void
+        DENSITY_INLINE void
         update_dictionary_model(lion_dictionary_t::chunk_entry_t *const RESTRICT entry,
                                 const uint32_t chunk)
         {   DENSITY_MEMMOVE((uint32_t *) entry + 1, entry, 3 * sizeof(uint32_t));
             *(uint32_t *) entry = chunk; }
-        inline void
+        DENSITY_INLINE void
         read_hash(location_t *RESTRICT in, uint16_t *RESTRICT const hash)
         {   DENSITY_MEMCPY(hash, in->pointer, sizeof(uint16_t));
             in->pointer += sizeof(uint16_t); }
-        inline void
+        DENSITY_INLINE void
         prediction_generic(location_t *RESTRICT out, uint16_t *RESTRICT const hash,
                            uint32_t *RESTRICT const chunk)
         {   *hash = hash_algorithm(*chunk);
             DENSITY_MEMCPY(out->pointer, chunk, sizeof(*chunk));
             out->pointer += sizeof(*chunk); }
-        inline void
+        DENSITY_INLINE void
         dictionary_generic(location_t *RESTRICT in, location_t *RESTRICT out,
                            uint16_t *RESTRICT const hash, uint32_t *RESTRICT const chunk)
         {   DENSITY_MEMCPY(out->pointer, chunk, sizeof(*chunk));

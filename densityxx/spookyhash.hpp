@@ -4,14 +4,14 @@
 
 namespace density {
 #define SPOOKYHASH_ALLOW_UNALIGNED_READS   1
-    inline uint64_t spookyhash_rotate(uint64_t x, uint64_t k)
+    DENSITY_INLINE uint64_t spookyhash_rotate(uint64_t x, uint64_t k)
     {   return (x << k) | (x >> (64 - k)); }
 
     const size_t spookyhash_block_size = spookyhash_variables * 8;
     const size_t spookyhash_buffer_size = 2 * spookyhash_block_size;
     const uint64_t spookyhash_constant = 0xdeadbeefdeadbeefLL;
 
-    inline void
+    DENSITY_INLINE void
     spookyhash_short_end(uint64_t *RESTRICT h0, uint64_t *RESTRICT h1,
                          uint64_t *RESTRICT h2, uint64_t *RESTRICT h3) {
         *h3 ^= *h2;
@@ -49,7 +49,7 @@ namespace density {
         *h1 += *h0;
     }
 
-    inline void
+    DENSITY_INLINE void
     spookyhash_short_mix(uint64_t *RESTRICT h0, uint64_t *RESTRICT h1,
                          uint64_t *RESTRICT h2, uint64_t *RESTRICT h3) {
         *h2 = spookyhash_rotate(*h2, 50);
@@ -90,7 +90,7 @@ namespace density {
         *h3 ^= *h1;
     }
 
-    inline void
+    DENSITY_INLINE void
     spookyhash_short(const void *RESTRICT message, size_t length,
                      uint64_t *RESTRICT hash1, uint64_t *RESTRICT hash2) {
 #if !SPOOKYHASH_ALLOW_UNALIGNED_READS
@@ -185,7 +185,7 @@ namespace density {
         *hash2 = b;
     }
 
-    inline void
+    DENSITY_INLINE void
     spookyhash_mix(const uint64_t *RESTRICT data,
                    uint64_t *RESTRICT s0, uint64_t *RESTRICT s1,
                    uint64_t *RESTRICT s2, uint64_t *RESTRICT s3,
@@ -255,7 +255,7 @@ namespace density {
         *s10 += *s0;
     }
 
-    inline void
+    DENSITY_INLINE void
     spookyhash_end_partial(uint64_t *RESTRICT h0, uint64_t *RESTRICT h1,
                            uint64_t *RESTRICT h2, uint64_t *RESTRICT h3,
                            uint64_t *RESTRICT h4, uint64_t *RESTRICT h5,
@@ -300,7 +300,7 @@ namespace density {
         *h0 = spookyhash_rotate(*h0, 54);
     }
 
-    inline void
+    DENSITY_INLINE void
     spookyhash_end(const uint64_t *RESTRICT data,
                    uint64_t *RESTRICT h0, uint64_t *RESTRICT h1,
                    uint64_t *RESTRICT h2, uint64_t *RESTRICT h3,
@@ -325,7 +325,7 @@ namespace density {
         spookyhash_end_partial(h0, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11);
     }
 
-    inline void
+    DENSITY_INLINE void
     spookyhash_128(const void *RESTRICT message, size_t length,
                    uint64_t *RESTRICT hash1, uint64_t *RESTRICT hash2)
     {
@@ -376,7 +376,7 @@ namespace density {
         *hash2 = h1;
     }
 
-    inline uint64_t
+    DENSITY_INLINE uint64_t
     spookyhash_64(const void *message, size_t length, uint64_t seed)
     {
         uint64_t hash1 = seed;
@@ -384,7 +384,7 @@ namespace density {
         return hash1;
     }
 
-    inline uint32_t
+    DENSITY_INLINE uint32_t
     spookyhash_32(const void *message, size_t length, uint32_t seed)
     {
         uint64_t hash1 = seed, hash2 = seed;
@@ -392,14 +392,14 @@ namespace density {
         return (uint32_t) hash1;
     }
 
-    inline void
+    DENSITY_INLINE void
     spookyhash_context_t::init(uint64_t seed1, uint64_t seed2)
     {
         m_length = 0; m_remainder = 0;
         m_state[0] = seed1; m_state[1] = seed2;
     }
 
-    inline void
+    DENSITY_INLINE void
     spookyhash_context_t::update(const void *RESTRICT message, size_t length)
     {
         uint64_t h0, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11;
@@ -488,7 +488,7 @@ namespace density {
         m_state[11] = h11;
     }
 
-    inline void
+    DENSITY_INLINE void
     spookyhash_context_t::final(uint64_t *hash1, uint64_t *hash2)
     {
         if (m_length < spookyhash_buffer_size) {
