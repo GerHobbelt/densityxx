@@ -4,3 +4,4 @@
 #include "densityxx/chameleon.hpp"
 #include "densityxx/cheetah.hpp"
 #include "densityxx/lion.hpp"
+#include "densityxx/api.hpp"
