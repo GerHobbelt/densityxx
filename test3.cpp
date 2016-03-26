@@ -21,6 +21,8 @@ main(void)
 
     buffer.init(density::compression_mode_lion_algorithm, density::block_type_default, context);
     block_encode.init(context);
+    if ((buffer_state = buffer.action(density::encode_state_stall_on_input, context)))
+        exit_error(buffer_state);
     while ((encode_state = context.write_header()))
         if ((buffer_state = buffer.action(encode_state, context))) exit_error(buffer_state);
     while ((encode_state = context.after(block_encode.continue_(context.before()))))
