@@ -108,16 +108,17 @@ namespace density {
     template<class KERNEL_ENCODE_T>static inline uint32_t
     do_compress(context_t &context, sharc_file_buffer_t *buffer)
     {
+        uint_fast64_t read;
         encode_state_t encode_state;
         buffer_state_t buffer_state;
         block_encode_t<KERNEL_ENCODE_T> *block_encode = new block_encode_t<KERNEL_ENCODE_T>();
         block_encode->init(context);
         while ((encode_state = context.after(block_encode->continue_(context.before()))))
-            if ((buffer_state = buffer->action(encode_state, context)))
+            if ((buffer_state = buffer->action(&read, encode_state, context)))
                 exit_error(buffer_state);
-            else if (context.in.available_bytes() < buffer->get_in_size()) break;
+            else if (read < buffer->get_in_size()) break;
         while ((encode_state = context.after(block_encode->finish(context.before()))))
-            if ((buffer_state = buffer->action(encode_state, context)))
+            if ((buffer_state = buffer->action(NULL, encode_state, context)))
                 exit_error(buffer_state);
         uint32_t relative_position = block_encode->read_bytes();
         delete block_encode;
@@ -172,10 +173,10 @@ namespace density {
             integrity_checks ? block_type_with_hashsum_integrity_check: block_type_default;
 
         buffer->init(attempt_mode, block_type, context);
-        if ((buffer_state = buffer->action(encode_state_stall_on_input, context)))
+        if ((buffer_state = buffer->action(NULL, encode_state_stall_on_input, context)))
             exit_error(buffer_state);
         while ((encode_state = context.write_header()))
-            if ((buffer_state = buffer->action(encode_state, context)))
+            if ((buffer_state = buffer->action(NULL, encode_state, context)))
                 exit_error(buffer_state);
         switch (attempt_mode) {
         case compression_mode_copy:
@@ -192,9 +193,9 @@ namespace density {
             break;
         }
         while ((encode_state = context.write_footer(relative_position)))
-            if ((buffer_state = buffer->action(encode_state, context)))
+            if ((buffer_state = buffer->action(NULL, encode_state, context)))
                 exit_error(buffer_state);
-        if ((buffer_state = buffer->action(encode_state_stall_on_output, context)))
+        if ((buffer_state = buffer->action(NULL, encode_state_stall_on_output, context)))
             exit_error(buffer_state);
         delete buffer;
         /*
@@ -230,17 +231,17 @@ namespace density {
     template<class KERNEL_DECODE_T>static inline void
     do_decompress(context_t &context, sharc_file_buffer_t *buffer)
     {
+        uint_fast64_t read;
         decode_state_t decode_state;
         buffer_state_t buffer_state;
         block_decode_t<KERNEL_DECODE_T> *block_decode = new block_decode_t<KERNEL_DECODE_T>();
         block_decode->init(context);
         while ((decode_state = context.after(block_decode->continue_(context.before()))))
-            if ((buffer_state = buffer->action(decode_state, context)))
+            if ((buffer_state = buffer->action(&read, decode_state, context)))
                 exit_error(buffer_state);
-            else if (context.in.available_bytes() < buffer->get_in_size())
-                break;
+            else if (read < buffer->get_in_size()) break;
         while ((decode_state = context.after(block_decode->finish(context.before()))))
-            if ((buffer_state = buffer->action(decode_state, context)))
+            if ((buffer_state = buffer->action(NULL, decode_state, context)))
                 exit_error(buffer_state);
         delete block_decode;
     }
@@ -290,10 +291,10 @@ namespace density {
         sharc_file_buffer_t *buffer = new sharc_file_buffer_t(this->stream, io_out->stream);
 
         buffer->init(compression_mode_copy, block_type_default, context);
-        if ((buffer_state = buffer->action(decode_state_stall_on_input, context)))
+        if ((buffer_state = buffer->action(NULL, decode_state_stall_on_input, context)))
             exit_error(buffer_state);
         while ((decode_state = context.read_header()))
-            if ((buffer_state = buffer->action(decode_state, context)))
+            if ((buffer_state = buffer->action(NULL, decode_state, context)))
                 exit_error(buffer_state);
         switch (context.header.compression_mode()) {
         case compression_mode_copy:
@@ -310,9 +311,9 @@ namespace density {
             break;
         }
         while ((decode_state = context.read_footer()))
-            if ((buffer_state = buffer->action(decode_state, context)))
+            if ((buffer_state = buffer->action(NULL, decode_state, context)))
                 exit_error(buffer_state);
-        if ((buffer_state = buffer->action(decode_state_stall_on_output, context)))
+        if ((buffer_state = buffer->action(NULL, decode_state_stall_on_output, context)))
             exit_error(buffer_state);
         delete buffer;
         /*
