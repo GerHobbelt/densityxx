@@ -367,7 +367,7 @@ main(int argc, char *argv[])
     density::sharc_action_t action = density::sharc_action_compress;
     density::compression_mode_t mode = density::compression_mode_chameleon_algorithm;
     bool prompting = true;
-    bool integrity_checks = true;
+    bool integrity_checks = false;
     density::client_io_t in;
     density::client_io_t out;
     bool path_mode = density::sharc_file_output_path;
