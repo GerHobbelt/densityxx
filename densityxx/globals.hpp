@@ -41,7 +41,6 @@
 
 #define RESTRICT
 
-#define DENSITY_INLINE inline __attribute__((always_inline))
 #define DENSITY_MEMCPY  __builtin_memcpy
 #define DENSITY_MEMMOVE  __builtin_memmove
 
@@ -64,7 +63,7 @@
 #endif
 
 #define DENSITY_ENUM_RENDER_PROTOTYPE(ENUM_TYPE)                        \
-    DENSITY_INLINE std::string ENUM_TYPE##_render(const ENUM_TYPE##_t ENUM_TYPE)
+    inline std::string ENUM_TYPE##_render(const ENUM_TYPE##_t ENUM_TYPE)
 #define DENSITY_ENUM_RENDER_VALUE(ENUM_TYPE, ENUM_VALUE)                \
     case ENUM_TYPE##_##ENUM_VALUE: return #ENUM_TYPE "_" #ENUM_VALUE
 
