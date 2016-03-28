@@ -3,14 +3,15 @@
 from glob import glob
 from os.path import join as pathjoin
 
+ccflags = ['-Wall', '-std=c++11']
 cppdefines = [('_FILE_OFFSET_BITS', 64)]
 linkflags = []
 if ARGUMENTS.get('debug', 0):
-    ccflags = ['-g', '-Wall', '-std=c++11']
+    ccflags.extend(['-g', '-O0'])
     cppdefines.append('DENSITY_SHOW')
     cppdefines.append(('DENSITY_INLINE', ''))
 else:
-    ccflags = ['-O3', '-Wall', '-flto', '-Ofast', '-std=c++11']
+    ccflags.extend(['-O3', '-flto', '-Ofast'])
     cppdefines.append(('DENSITY_INLINE', 'inline __attribute__((always_inline))'))
 
 if ARGUMENTS.get('prof', 0):
