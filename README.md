@@ -18,14 +18,14 @@ Changes
 -------
 
 To use C++ features to simplify the code, the following changes are applied:
-* All enum, function, struct, class, variables are put into namespace "density". For these names:
-   * Remove the prefix "density_".
-   * Use xxx_xxx name scheme.
-   * Use suffix "_t" for name of types.
-   * Always use lowercase letters.
-* The name of all macros are not changed because they are not support namespace.
-* For the name that put into e name of enum, function, struct, class, varables 
-* All compress algorithmes are implemented in subclass of kernel_encode_t & kernel_decode_t. No more function pointer are required.
-* Each member functions in spookyhash.hpp, memory.hpp, format.hpp, kernel.hpp, block.hpp are inlined.
+* name convention is changed to follow these rules:
+  * Remove the prefix "density_" or "DENSITY_" because the enum, function, struct, class, variables are put into namespace "density".
+  * The macro names are not changed because they can not be put into namespace.
+  * Always use xxx_xxx name scheme, but not XxxXxx.
+  * Always use lowercase letters.
+  * Use suffix "_t" for name of types, classes & structures.
+* Every member and functions are inlined to speed it up, just like density itself.
+* Use template to combine algorithm with block framework, so virtual functions, functions pointers are not required to speed it up.
+* Use context_t to do the framework task, so not all code has to be templated. This feature removes encode_t/decode_t & stream_encode_t/stream_decode_t.
 * The size of generated binary decreased greatly.
 * Combine the three packages, spookyhash, density, sharc into one package.
