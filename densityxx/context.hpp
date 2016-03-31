@@ -25,16 +25,16 @@ namespace density {
         DENSITY_INLINE const uint_fast64_t get_total_read(void) const { return total_read; }
         DENSITY_INLINE const uint_fast64_t get_total_written(void) const { return total_written; }
 
-        DENSITY_INLINE void update_input(const uint8_t *RESTRICT in, const uint_fast64_t szin)
+        DENSITY_INLINE void update_input(const uint8_t *in, const uint_fast64_t szin)
         {   this->in.change_input_buffer(in, szin); }
-        DENSITY_INLINE void update_output(uint8_t *RESTRICT out, const uint_fast64_t szout)
+        DENSITY_INLINE void update_output(uint8_t *out, const uint_fast64_t szout)
         {   this->out.encapsulate(out, szout); }
         DENSITY_INLINE uint_fast64_t output_available_for_use(void) const { return out.used(); }
 
         DENSITY_INLINE void init(const compression_mode_t compression_mode,
-                         const block_type_t block_type,
-                         const uint8_t *RESTRICT in, const uint_fast64_t available_in,
-                         uint8_t *RESTRICT out, const uint_fast64_t available_out)
+                                 const block_type_t block_type,
+                                 const uint8_t *in, const uint_fast64_t available_in,
+                                 uint8_t *out, const uint_fast64_t available_out)
         {   header.setup(compression_mode, block_type);
             total_read = total_written = 0;
             this->in.reset_staging_buffer();

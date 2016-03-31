@@ -43,7 +43,7 @@ namespace density {
         DENSITY_BITSIZEOF(chameleon_signature_t) * sizeof(uint32_t);
 
     DENSITY_INLINE void
-    chameleon_encode_t::prepare_new_signature(location_t *RESTRICT out)
+    chameleon_encode_t::prepare_new_signature(location_t *out)
     {
         signatures_count++;
         shift = 0;
@@ -56,7 +56,7 @@ namespace density {
     }
 
     DENSITY_INLINE kernel_encode_t::state_t
-    chameleon_encode_t::prepare_new_block(location_t *RESTRICT out)
+    chameleon_encode_t::prepare_new_block(location_t *out)
     {
         if (chameleon_maximum_compressed_unit_size > out->available_bytes)
             return state_stall_on_output;
@@ -85,7 +85,7 @@ namespace density {
     }
 
     DENSITY_INLINE kernel_encode_t::state_t
-    chameleon_encode_t::check_state(location_t *RESTRICT out)
+    chameleon_encode_t::check_state(location_t *out)
     {
         state_t kernel_encode_state;
         switch (shift) {
@@ -103,7 +103,7 @@ namespace density {
     }
 
     DENSITY_INLINE void
-    chameleon_encode_t::kernel(location_t *RESTRICT out, const uint16_t hash,
+    chameleon_encode_t::kernel(location_t *out, const uint16_t hash,
                                const uint32_t chunk, const uint_fast8_t shift)
     {
         chameleon_dictionary_t::entry_t *const found = &dictionary.entries[hash];
@@ -121,7 +121,7 @@ namespace density {
     }
 
     DENSITY_INLINE void
-    chameleon_encode_t::process_unit(location_t *RESTRICT in, location_t *RESTRICT out)
+    chameleon_encode_t::process_unit(location_t *in, location_t *out)
     {
         uint32_t chunk;
         uint_fast8_t count = 0;
@@ -156,7 +156,7 @@ namespace density {
         return exit_process(process_prepare_new_block, state_ready);
     }
     DENSITY_INLINE kernel_encode_t::state_t
-    chameleon_encode_t::continue_(teleport_t *RESTRICT in, location_t *RESTRICT out)
+    chameleon_encode_t::continue_(teleport_t *in, location_t *out)
     {
         state_t return_state;
         uint8_t *pointer_out_before;
@@ -189,7 +189,7 @@ namespace density {
         goto check_signature_state;
     }
     DENSITY_INLINE kernel_encode_t::state_t
-    chameleon_encode_t::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
+    chameleon_encode_t::finish(teleport_t *in, location_t *out)
     {
         state_t return_state;
         uint8_t *pointer_out_before;
@@ -240,7 +240,7 @@ namespace density {
 
     //--- decode ---
     DENSITY_INLINE kernel_decode_t::state_t
-    chameleon_decode_t::check_state(location_t *RESTRICT out)
+    chameleon_decode_t::check_state(location_t *out)
     {
         if (out->available_bytes < chameleon_decompressed_unit_size)
             return state_stall_on_output;
@@ -269,7 +269,7 @@ namespace density {
     }
 
     DENSITY_INLINE void
-    chameleon_decode_t::read_signature(location_t *RESTRICT in)
+    chameleon_decode_t::read_signature(location_t *in)
     {
         //DENSITY_SHOW_IN(in, sizeof(signature));
         DENSITY_MEMCPY(&signature, in->pointer, sizeof(signature));
@@ -279,8 +279,7 @@ namespace density {
     }
 
     DENSITY_INLINE void
-    chameleon_decode_t::kernel(location_t *RESTRICT in, location_t *RESTRICT out,
-                               const bool compressed)
+    chameleon_decode_t::kernel(location_t *in, location_t *out, const bool compressed)
     {
         if (compressed) {
             uint16_t hash;
@@ -300,7 +299,7 @@ namespace density {
     }
 
     DENSITY_INLINE void
-    chameleon_decode_t::process_data(location_t *RESTRICT in, location_t *RESTRICT out)
+    chameleon_decode_t::process_data(location_t *in, location_t *out)
     {
         uint_fast8_t count = 0;
 #ifdef __clang__
@@ -330,7 +329,7 @@ namespace density {
         return exit_process(process_check_signature_state, state_ready);
     }
     DENSITY_INLINE kernel_decode_t::state_t
-    chameleon_decode_t::continue_(teleport_t *RESTRICT in, location_t *RESTRICT out)
+    chameleon_decode_t::continue_(teleport_t *in, location_t *out)
     {
         state_t return_state;
         location_t *read_memory_location;
@@ -360,7 +359,7 @@ namespace density {
         goto check_signature_state;
     }
     DENSITY_INLINE kernel_decode_t::state_t
-    chameleon_decode_t::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
+    chameleon_decode_t::finish(teleport_t *in, location_t *out)
     {
         state_t return_state;
         location_t *read_memory_location;

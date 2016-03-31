@@ -32,8 +32,8 @@ namespace density {
         header_file_information_t header_file_information;
     public:
         static uint_fast32_t
-        write(FILE *RESTRICT wfp, const header_origin_type_t header_origin_type,
-              const struct stat *RESTRICT stat);
+        write(FILE *wfp, const header_origin_type_t header_origin_type,
+              const struct stat *stat);
 
         inline bool check_validity(void) const
         {   return header_generic.magic_number == header_magic_number; }
@@ -41,8 +41,8 @@ namespace density {
         {   return (header_origin_type_t)header_generic.origin_type; }
         inline uint64_t original_file_size(void) const
         {   return header_file_information.original_file_size; }
-        uint_fast32_t read(FILE *RESTRICT rfp);
-        bool restore_file_attributes(const char *RESTRICT file_name);
+        uint_fast32_t read(FILE *rfp);
+        bool restore_file_attributes(const char *file_name);
     };
 #pragma pack(pop)
 }

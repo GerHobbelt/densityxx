@@ -37,8 +37,8 @@ namespace density {
         {   return compression_mode_cheetah_algorithm; }
 
         state_t init(void);
-        state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        state_t continue_(teleport_t *in, location_t *out);
+        state_t finish(teleport_t *in, location_t *out);
     private:
         typedef enum {
             process_prepare_new_block,
@@ -61,12 +61,12 @@ namespace density {
 #endif
         DENSITY_INLINE state_t exit_process(process_t process, state_t kernel_encode_state)
         {   this->process = process; return kernel_encode_state; }
-        void prepare_new_signature(location_t *RESTRICT out);
-        state_t prepare_new_block(location_t *RESTRICT out);
-        state_t check_state(location_t *RESTRICT out);
-        void kernel(location_t *RESTRICT out, const uint16_t hash,
+        void prepare_new_signature(location_t *out);
+        state_t prepare_new_block(location_t *out);
+        state_t check_state(location_t *out);
+        void kernel(location_t *out, const uint16_t hash,
                     const uint32_t chunk, const uint_fast8_t shift);
-        void process_unit(location_t *RESTRICT in, location_t *RESTRICT out);
+        void process_unit(location_t *in, location_t *out);
     };
 
     //--- decode ---
@@ -77,8 +77,8 @@ namespace density {
 
         state_t init(const main_header_parameters_t parameters,
                      const uint_fast8_t end_data_overhead);
-        state_t continue_(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        state_t finish(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        state_t continue_(teleport_t *in, location_t *out);
+        state_t finish(teleport_t *in, location_t *out);
     private:
         typedef enum {
             process_check_signature_state,
@@ -99,14 +99,14 @@ namespace density {
 
         DENSITY_INLINE state_t exit_process(process_t process, state_t kernel_decode_state)
         {   this->process = process; return kernel_decode_state; }
-        state_t check_state(location_t *RESTRICT out);
-        void read_signature(location_t *RESTRICT in);
-        void process_predicted(location_t *RESTRICT out);
-        void process_compressed_a(const uint16_t hash, location_t *RESTRICT out);
-        void process_compressed_b(const uint16_t hash, location_t *RESTRICT out);
-        void process_uncompressed(const uint32_t chunk, location_t *RESTRICT out);
-        void kernel(location_t *RESTRICT in, location_t *RESTRICT out, const uint8_t mode);
-        void process_data(location_t *RESTRICT in, location_t *RESTRICT out);
+        state_t check_state(location_t *out);
+        void read_signature(location_t *in);
+        void process_predicted(location_t *out);
+        void process_compressed_a(const uint16_t hash, location_t *out);
+        void process_compressed_b(const uint16_t hash, location_t *out);
+        void process_uncompressed(const uint32_t chunk, location_t *out);
+        void kernel(location_t *in, location_t *out, const uint8_t mode);
+        void process_data(location_t *in, location_t *out);
     };
 #pragma pack(pop)
 }

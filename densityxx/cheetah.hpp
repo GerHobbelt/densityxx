@@ -26,7 +26,7 @@ namespace density {
         (DENSITY_BITSIZEOF(cheetah_signature_t) >> 1) * sizeof(uint32_t);
 
     DENSITY_INLINE void
-    cheetah_encode_t::prepare_new_signature(location_t *RESTRICT out)
+    cheetah_encode_t::prepare_new_signature(location_t *out)
     {
         signatures_count++;
         shift = 0;
@@ -37,7 +37,7 @@ namespace density {
         out->available_bytes -= sizeof(cheetah_signature_t);
     }
     DENSITY_INLINE kernel_encode_t::state_t
-    cheetah_encode_t::prepare_new_block(location_t *RESTRICT out)
+    cheetah_encode_t::prepare_new_block(location_t *out)
     {
         if (cheetah_maximum_compressed_unit_size > out->available_bytes)
             return state_stall_on_output;
@@ -65,7 +65,7 @@ namespace density {
         return state_ready;
     }
     DENSITY_INLINE kernel_encode_t::state_t
-    cheetah_encode_t::check_state(location_t *RESTRICT out)
+    cheetah_encode_t::check_state(location_t *out)
     {
         state_t return_state;
         switch (shift) {
@@ -82,7 +82,7 @@ namespace density {
         return state_ready;
     }
     DENSITY_INLINE void
-    cheetah_encode_t::kernel(location_t *RESTRICT out, const uint16_t hash,
+    cheetah_encode_t::kernel(location_t *out, const uint16_t hash,
                              const uint32_t chunk, const uint_fast8_t shift)
     {
         uint32_t *predicted_chunk = (uint32_t *)&dictionary.prediction_entries[last_hash];
@@ -112,7 +112,7 @@ namespace density {
         last_hash = hash;
     }
     DENSITY_INLINE void
-    cheetah_encode_t::process_unit(location_t *RESTRICT in, location_t *RESTRICT out)
+    cheetah_encode_t::process_unit(location_t *in, location_t *out)
     {
         uint32_t chunk;
         uint_fast8_t count = 0;
@@ -147,7 +147,7 @@ namespace density {
         return exit_process(process_prepare_new_block, state_ready);
     }
     DENSITY_INLINE kernel_encode_t::state_t
-    cheetah_encode_t::continue_(teleport_t *RESTRICT in, location_t *RESTRICT out)
+    cheetah_encode_t::continue_(teleport_t *in, location_t *out)
     {
         state_t return_state;
         uint8_t *pointer_out_before;
@@ -180,7 +180,7 @@ namespace density {
         goto check_signature_state;
     }
     DENSITY_INLINE kernel_encode_t::state_t
-    cheetah_encode_t::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
+    cheetah_encode_t::finish(teleport_t *in, location_t *out)
     {
         state_t return_state;
         uint8_t *pointer_out_before;
@@ -235,7 +235,7 @@ namespace density {
 
     // decode.
     DENSITY_INLINE kernel_decode_t::state_t
-    cheetah_decode_t::check_state(location_t *RESTRICT out)
+    cheetah_decode_t::check_state(location_t *out)
     {
         if (out->available_bytes < cheetah_decompressed_unit_size)
             return state_stall_on_output;
@@ -263,7 +263,7 @@ namespace density {
         return state_ready;
     }
     DENSITY_INLINE void
-    cheetah_decode_t::read_signature(location_t *RESTRICT in)
+    cheetah_decode_t::read_signature(location_t *in)
     {
         DENSITY_MEMCPY(&signature, in->pointer, sizeof(signature));
         in->pointer += sizeof(signature);
@@ -271,14 +271,14 @@ namespace density {
         signatures_count++;
     }
     DENSITY_INLINE void
-    cheetah_decode_t::process_predicted(location_t *RESTRICT out)
+    cheetah_decode_t::process_predicted(location_t *out)
     {
         const uint32_t chunk = dictionary.prediction_entries[last_hash].next_chunk_prediction;
         DENSITY_MEMCPY(out->pointer, &chunk, sizeof(chunk));
         last_hash = hash_algorithm(chunk);
     }
     DENSITY_INLINE void
-    cheetah_decode_t::process_compressed_a(const uint16_t hash, location_t *RESTRICT out)
+    cheetah_decode_t::process_compressed_a(const uint16_t hash, location_t *out)
     {
         __builtin_prefetch(&dictionary.prediction_entries[hash]);
         const uint32_t chunk = dictionary.entries[hash].chunk_a;
@@ -287,7 +287,7 @@ namespace density {
         last_hash = hash;
     }
     DENSITY_INLINE void
-    cheetah_decode_t::process_compressed_b(const uint16_t hash, location_t *RESTRICT out)
+    cheetah_decode_t::process_compressed_b(const uint16_t hash, location_t *out)
     {
         __builtin_prefetch(&dictionary.prediction_entries[hash]);
         cheetah_dictionary_t::entry_t *const entry = &dictionary.entries[hash];
@@ -299,7 +299,7 @@ namespace density {
         last_hash = hash;
     }
     DENSITY_INLINE void
-    cheetah_decode_t::process_uncompressed(const uint32_t chunk, location_t *RESTRICT out)
+    cheetah_decode_t::process_uncompressed(const uint32_t chunk, location_t *out)
     {
         const uint16_t hash = hash_algorithm(chunk);
         __builtin_prefetch(&dictionary.prediction_entries[hash]);
@@ -311,8 +311,7 @@ namespace density {
         last_hash = hash;
     }
     DENSITY_INLINE void
-    cheetah_decode_t::kernel(location_t *RESTRICT in, location_t *RESTRICT out,
-                             const uint8_t mode)
+    cheetah_decode_t::kernel(location_t *in, location_t *out, const uint8_t mode)
     {
         uint16_t hash;
         uint32_t chunk;
@@ -340,7 +339,7 @@ namespace density {
         out->pointer += sizeof(uint32_t);
     }
     DENSITY_INLINE void
-    cheetah_decode_t::process_data(location_t *RESTRICT in, location_t *RESTRICT out)
+    cheetah_decode_t::process_data(location_t *in, location_t *out)
     {
 #ifdef __clang__
         uint_fast8_t count = 0;
@@ -372,7 +371,7 @@ namespace density {
         return exit_process(process_check_signature_state, state_ready);
     }
     DENSITY_INLINE kernel_decode_t::state_t
-    cheetah_decode_t::continue_(teleport_t *RESTRICT in, location_t *RESTRICT out)
+    cheetah_decode_t::continue_(teleport_t *in, location_t *out)
     {
         state_t return_state;
         location_t *read_memory_location;
@@ -403,7 +402,7 @@ namespace density {
         goto check_signature_state;
     }
     DENSITY_INLINE kernel_decode_t::state_t
-    cheetah_decode_t::finish(teleport_t *RESTRICT in, location_t *RESTRICT out)
+    cheetah_decode_t::finish(teleport_t *in, location_t *out)
     {
         state_t return_state;
         location_t *read_memory_location;

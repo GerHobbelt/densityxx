@@ -4,7 +4,7 @@
 
 namespace density {
     uint_fast32_t
-    header_t::read(FILE *RESTRICT rfp)
+    header_t::read(FILE *rfp)
     {
         uint_fast32_t read = (uint_fast32_t)
             fread(&header_generic.magic_number, sizeof(uint8_t), sizeof(uint32_t), rfp);
@@ -39,9 +39,9 @@ namespace density {
         return read;
     }
     uint_fast32_t
-    header_t::write(FILE *RESTRICT wfp,
+    header_t::write(FILE *wfp,
                     const header_origin_type_t header_origin_type,
-                    const struct stat *RESTRICT stat)
+                    const struct stat *stat)
     {
         uint32_t temp32;
         uint64_t temp64;
@@ -71,7 +71,7 @@ namespace density {
         return written;
     }
     bool
-    header_t::restore_file_attributes(const char *RESTRICT file_name)
+    header_t::restore_file_attributes(const char *file_name)
     {
         if (header_generic.origin_type == header_origin_type_file) {
             struct utimbuf ubuf;

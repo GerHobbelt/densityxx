@@ -169,7 +169,7 @@ namespace density {
     }
 
     DENSITY_INLINE void
-    block_encode_base_t::update_integrity_hash(teleport_t *RESTRICT in, bool pending_exit)
+    block_encode_base_t::update_integrity_hash(teleport_t *in, bool pending_exit)
     {
         const uint8_t *const pointer_before = input_pointer;
         const uint8_t *const pointer_after = in->direct.pointer;
@@ -183,7 +183,7 @@ namespace density {
         }
     }
     DENSITY_INLINE encode_state_t
-    block_encode_base_t::write_block_header(teleport_t *RESTRICT in, location_t *RESTRICT out)
+    block_encode_base_t::write_block_header(teleport_t *in, location_t *out)
     {
         if (sizeof(block_header_t) > out->available_bytes) return encode_state_stall_on_output;
         current_mode = target_mode;
@@ -205,7 +205,7 @@ namespace density {
         return encode_state_ready;
     }
     DENSITY_INLINE encode_state_t
-    block_encode_base_t::write_block_footer(teleport_t *RESTRICT in, location_t *RESTRICT out)
+    block_encode_base_t::write_block_footer(teleport_t *in, location_t *out)
     {
         block_footer_t block_footer;
         if (sizeof(block_footer) > out->available_bytes) return encode_state_stall_on_output;
@@ -215,7 +215,7 @@ namespace density {
         return encode_state_ready;
     }
     DENSITY_INLINE encode_state_t
-    block_encode_base_t::write_mode_marker(location_t *RESTRICT out)
+    block_encode_base_t::write_mode_marker(location_t *out)
     {
         block_mode_marker_t block_mode_marker;
         if (sizeof(block_mode_marker) > out->available_bytes)
@@ -398,7 +398,7 @@ namespace density {
     }
 
     DENSITY_INLINE void
-    block_decode_base_t::update_integrity_hash(location_t *RESTRICT out, bool pending_exit)
+    block_decode_base_t::update_integrity_hash(location_t *out, bool pending_exit)
     {
         const uint8_t *const pointer_before = output_pointer;
         const uint8_t *const pointer_after = out->pointer;
@@ -408,7 +408,7 @@ namespace density {
         else update_integrity_data(out);
     }
     DENSITY_INLINE decode_state_t
-    block_decode_base_t::read_block_header(teleport_t *RESTRICT in, location_t *out)
+    block_decode_base_t::read_block_header(teleport_t *in, location_t *out)
     {
         location_t *read_location;
         if (!(read_location = in->read_reserved(sizeof(last_block_header), end_data_overhead)))
@@ -424,7 +424,7 @@ namespace density {
         return decode_state_ready;
     }
     DENSITY_INLINE decode_state_t
-    block_decode_base_t::read_block_mode_marker(teleport_t *RESTRICT in)
+    block_decode_base_t::read_block_mode_marker(teleport_t *in)
     {
         location_t *read_location;
         if (!(read_location = in->read_reserved(sizeof(last_mode_marker), end_data_overhead)))
@@ -434,7 +434,7 @@ namespace density {
         return decode_state_ready;
     }
     DENSITY_INLINE decode_state_t
-    block_decode_base_t::read_block_footer(teleport_t *RESTRICT in, location_t *RESTRICT out)
+    block_decode_base_t::read_block_footer(teleport_t *in, location_t *out)
     {
         location_t *read_location;
         if (!(read_location = in->read(sizeof(last_block_footer))))

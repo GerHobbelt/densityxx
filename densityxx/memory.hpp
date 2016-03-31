@@ -23,7 +23,7 @@ namespace density {
         consume(szdata);
     }
     DENSITY_INLINE void
-    location_t::encapsulate(uint8_t *RESTRICT pointer, const uint_fast64_t bytes)
+    location_t::encapsulate(uint8_t *pointer, const uint_fast64_t bytes)
     {
         this->pointer = pointer;
         available_bytes = bytes;
@@ -48,8 +48,7 @@ namespace density {
         free(original_pointer);
     }
     DENSITY_INLINE void
-    teleport_t::change_input_buffer(const uint8_t *RESTRICT in,
-                                    const uint_fast64_t available_in)
+    teleport_t::change_input_buffer(const uint8_t *in, const uint_fast64_t available_in)
     {
         direct.encapsulate((uint8_t *)in, available_in);
     }
@@ -126,7 +125,7 @@ namespace density {
         return DENSITY_UNLIKELY(reserved >= contained) ? 0: contained - reserved;
     }
     DENSITY_INLINE void
-    teleport_t::copy(location_t *RESTRICT out, const uint_fast64_t bytes)
+    teleport_t::copy(location_t *out, const uint_fast64_t bytes)
     {
         uint_fast64_t from_staging = 0;
         uint_fast64_t from_direct = 0;

@@ -42,17 +42,17 @@ namespace density {
         {   this->process = process; return state; }
 
 
-        DENSITY_INLINE void update_integrity_data(teleport_t *RESTRICT in)
+        DENSITY_INLINE void update_integrity_data(teleport_t *in)
         {   input_pointer = in->direct.pointer; update = false; }
 
-        void update_integrity_hash(teleport_t *RESTRICT in, bool pending_exit);
+        void update_integrity_hash(teleport_t *in, bool pending_exit);
 
-        encode_state_t write_block_header(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        encode_state_t write_block_footer(teleport_t *RESTRICT in, location_t *RESTRICT out);
-        encode_state_t write_mode_marker(location_t *RESTRICT out);
+        encode_state_t write_block_header(teleport_t *in, location_t *out);
+        encode_state_t write_block_footer(teleport_t *in, location_t *out);
+        encode_state_t write_mode_marker(location_t *out);
 
         DENSITY_INLINE void
-        update_totals(teleport_t *RESTRICT in, location_t *RESTRICT out,
+        update_totals(teleport_t *in, location_t *out,
                       const uint_fast64_t available_in_before,
                       const uint_fast64_t available_out_before)
         {
@@ -112,16 +112,16 @@ namespace density {
         DENSITY_INLINE decode_state_t exit_process(process_t process, decode_state_t state)
         {   this->process = process; return state; }
 
-        DENSITY_INLINE void update_integrity_data(location_t *RESTRICT out)
+        DENSITY_INLINE void update_integrity_data(location_t *out)
         {   output_pointer = out->pointer; update = false; }
 
-        void update_integrity_hash(location_t *RESTRICT out, bool pending_exit);
-        decode_state_t read_block_header(teleport_t *RESTRICT in, location_t *out);
-        decode_state_t read_block_mode_marker(teleport_t *RESTRICT in);
-        decode_state_t read_block_footer(teleport_t *RESTRICT in, location_t *RESTRICT out);
+        void update_integrity_hash(location_t *out, bool pending_exit);
+        decode_state_t read_block_header(teleport_t *in, location_t *out);
+        decode_state_t read_block_mode_marker(teleport_t *in);
+        decode_state_t read_block_footer(teleport_t *in, location_t *out);
 
         DENSITY_INLINE void
-        update_totals(teleport_t *RESTRICT in, location_t *RESTRICT out,
+        update_totals(teleport_t *in, location_t *out,
                       const uint_fast64_t available_in_before,
                       const uint_fast64_t available_out_before)
         {

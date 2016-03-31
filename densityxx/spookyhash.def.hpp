@@ -13,7 +13,7 @@ namespace density {
         uint8_t m_remainder;
     public:
         void init(uint64_t seed1, uint64_t seed2);
-        void update(const void *RESTRICT message, size_t length);
+        void update(const void *message, size_t length);
         void final(uint64_t *hash1, uint64_t *hash2);
     };
 }

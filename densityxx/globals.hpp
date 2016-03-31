@@ -39,8 +39,6 @@
 #error Unknow endianness
 #endif
 
-#define RESTRICT
-
 #define DENSITY_MEMCPY  __builtin_memcpy
 #define DENSITY_MEMMOVE  __builtin_memmove
 
