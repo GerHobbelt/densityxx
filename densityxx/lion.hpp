@@ -190,14 +190,14 @@ namespace density {
     lion_encode_t::kernel(location_t *RESTRICT out, const uint16_t hash, const uint32_t chunk)
     {
         lion_dictionary_t *const dictionary = &this->dictionary;
-        lion_dictionary_t::chunk_prediction_entry_t *const predictions =
+        lion_dictionary_t::prediction_t *const predictions =
             &dictionary->predictions[last_hash];
         __builtin_prefetch(&dictionary->predictions[hash]);
         if (*(uint32_t *) predictions != chunk) {
             if (*((uint32_t *) predictions + 1) != chunk) {
                 if (*((uint32_t *) predictions + 2) != chunk) {
-                    lion_dictionary_t::chunk_entry_t *const in_dictionary =
-                        &dictionary->chunks[hash];
+                    lion_dictionary_t::entry_t *const in_dictionary =
+                        &dictionary->entries[hash];
                     if (*(uint32_t *) in_dictionary != chunk) {
                         if (*((uint32_t *) in_dictionary + 1) != chunk) {
                             if (*((uint32_t *) in_dictionary + 2) != chunk) {
@@ -506,8 +506,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
     lion_decode_t::prediction_b(location_t *RESTRICT in, location_t *RESTRICT out,
                                 uint16_t *RESTRICT const hash, uint32_t *RESTRICT const chunk)
     {
-        lion_dictionary_t::chunk_prediction_entry_t *const p =
-            &dictionary.predictions[last_hash];
+        lion_dictionary_t::prediction_t *const p = &dictionary.predictions[last_hash];
         *chunk = p->next_chunk_b;
         update_predictions_model(p, *chunk);
         prediction_generic(out, hash, chunk);
@@ -518,8 +517,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
     lion_decode_t::prediction_c(location_t *RESTRICT in, location_t *RESTRICT out,
                                 uint16_t *RESTRICT const hash, uint32_t *RESTRICT const chunk)
     {
-        lion_dictionary_t::chunk_prediction_entry_t *const p =
-            &dictionary.predictions[last_hash];
+        lion_dictionary_t::prediction_t *const p = &dictionary.predictions[last_hash];
         *chunk = p->next_chunk_c;
         update_predictions_model(p, *chunk);
         prediction_generic(out, hash, chunk);
@@ -532,7 +530,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
     {
         read_hash(in, hash);
         __builtin_prefetch(&dictionary.predictions[*hash]);
-        *chunk = dictionary.chunks[*hash].chunk_a;
+        *chunk = dictionary.entries[*hash].chunk_a;
         dictionary_generic(in, out, hash, chunk);
         last_chunk = *chunk;
         last_hash = *hash;
@@ -543,7 +541,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
     {
         read_hash(in, hash);
         __builtin_prefetch(&dictionary.predictions[*hash]);
-        lion_dictionary_t::chunk_entry_t *entry = &dictionary.chunks[*hash];
+        lion_dictionary_t::entry_t *entry = &dictionary.entries[*hash];
         *chunk = entry->chunk_b;
         update_dictionary_model(entry, *chunk);
         dictionary_generic(in, out, hash, chunk);
@@ -556,7 +554,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
     {
         read_hash(in, hash);
         __builtin_prefetch(&dictionary.predictions[*hash]);
-        lion_dictionary_t::chunk_entry_t *entry = &dictionary.chunks[*hash];
+        lion_dictionary_t::entry_t *entry = &dictionary.entries[*hash];
         *chunk = entry->chunk_c;
         update_dictionary_model(entry, *chunk);
         dictionary_generic(in, out, hash, chunk);
@@ -569,7 +567,7 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
     {
         read_hash(in, hash);
         __builtin_prefetch(&dictionary.predictions[*hash]);
-        lion_dictionary_t::chunk_entry_t *entry = &dictionary.chunks[*hash];
+        lion_dictionary_t::entry_t *entry = &dictionary.entries[*hash];
         *chunk = entry->chunk_d;
         update_dictionary_model(entry, *chunk);
         dictionary_generic(in, out, hash, chunk);
@@ -583,11 +581,11 @@ static const uint8_t lion_decode_bitmasks[DENSITY_LION_DECODE_NUMBER_OF_BITMASK_
         DENSITY_MEMCPY(chunk, in->pointer, sizeof(*chunk));
         in->pointer += sizeof(*chunk);
         *hash = hash_algorithm(*chunk);
-        lion_dictionary_t::chunk_entry_t *entry = &dictionary.chunks[*hash];
+        lion_dictionary_t::entry_t *entry = &dictionary.entries[*hash];
         update_dictionary_model(entry, *chunk);
         DENSITY_MEMCPY(out->pointer, chunk, sizeof(*chunk));
         out->pointer += sizeof(*chunk);
-        lion_dictionary_t::chunk_prediction_entry_t *p = &(dictionary.predictions[last_hash]);
+        lion_dictionary_t::prediction_t *p = &(dictionary.predictions[last_hash]);
         update_predictions_model(p, *chunk);
         last_chunk = *chunk;
         last_hash = *hash;

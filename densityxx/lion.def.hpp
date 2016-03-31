@@ -75,24 +75,20 @@ namespace density {
     class lion_dictionary_t {
     public:
         typedef struct {
-            uint16_t bigram;
-        } bigram_entry_t;
-        typedef struct {
             uint32_t chunk_a;
             uint32_t chunk_b;
             uint32_t chunk_c;
             uint32_t chunk_d;
             uint32_t chunk_e;
-        } chunk_entry_t;
+        } entry_t;
         typedef struct {
             uint32_t next_chunk_a;
             uint32_t next_chunk_b;
             uint32_t next_chunk_c;
-        } chunk_prediction_entry_t;
+        } prediction_t;
 
-        bigram_entry_t bigrams[1 << DENSITY_BITSIZEOF(uint8_t)];
-        chunk_entry_t chunks[1 << hash_bits];
-        chunk_prediction_entry_t predictions[1 << hash_bits];
+        entry_t entries[1 << hash_bits];
+        prediction_t predictions[1 << hash_bits];
         DENSITY_INLINE void reset(void) { memset(this, 0, sizeof(*this)); }
     };
 
@@ -157,7 +153,8 @@ namespace density {
         void process_unit_generic(const uint_fast8_t chunks_per_process_unit,
                                   const uint_fast16_t process_unit_size,
                                   location_t *RESTRICT in, location_t *RESTRICT out);
-        DENSITY_INLINE void process_unit_small(location_t *RESTRICT in, location_t *RESTRICT out)
+        DENSITY_INLINE void
+        process_unit_small(location_t *RESTRICT in, location_t *RESTRICT out)
         {   process_unit_generic(lion_chunks_per_process_unit_small,
                                  lion_process_unit_size_small, in, out); }
         DENSITY_INLINE void
@@ -212,14 +209,13 @@ namespace density {
         {   DENSITY_MEMCPY(&signature, in->pointer, sizeof(signature));
             in->pointer += sizeof(signature); }
         DENSITY_INLINE void
-        update_predictions_model(lion_dictionary_t::chunk_prediction_entry_t *const
-                                 RESTRICT predictions,
+        update_predictions_model(lion_dictionary_t::prediction_t *const RESTRICT predictions,
                                  const uint32_t chunk)
         {   DENSITY_MEMMOVE((uint32_t *) predictions + 1, predictions, 2 * sizeof(uint32_t));
             // Move chunk to the top of the predictions list
             *(uint32_t *) predictions = chunk; }
         DENSITY_INLINE void
-        update_dictionary_model(lion_dictionary_t::chunk_entry_t *const RESTRICT entry,
+        update_dictionary_model(lion_dictionary_t::entry_t *const RESTRICT entry,
                                 const uint32_t chunk)
         {   DENSITY_MEMMOVE((uint32_t *) entry + 1, entry, 3 * sizeof(uint32_t));
             *(uint32_t *) entry = chunk; }
@@ -238,8 +234,7 @@ namespace density {
                            uint16_t *RESTRICT const hash, uint32_t *RESTRICT const chunk)
         {   DENSITY_MEMCPY(out->pointer, chunk, sizeof(*chunk));
             out->pointer += sizeof(*chunk);
-            lion_dictionary_t::chunk_prediction_entry_t *p =
-                &(dictionary.predictions[last_hash]);
+            lion_dictionary_t::prediction_t *p = &(dictionary.predictions[last_hash]);
             update_predictions_model(p, *chunk); }
         void prediction_a(location_t *RESTRICT in, location_t *RESTRICT out,
                           uint16_t *RESTRICT const hash, uint32_t *RESTRICT const chunk);
